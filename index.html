@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GeoPortal — Prefeitura de Bragança Paulista</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+    :root {
+        --blue-dark:  #01305a;
+        --blue:       #0175bc;
+        --blue-light: #0190e8;
+        --accent:     #FFEF00;
+        --accent2:    #ffe44d;
+        --text:       #ffffff;
+        --muted:      #a8cce8;
+        --border:     rgba(255,255,255,0.10);
+        --card-bg:    rgba(1,48,90,0.72);
+        --card-hover: rgba(1,117,188,0.55);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+        width: 100%; min-height: 100%;
+        font-family: 'DM Sans', sans-serif;
+        background: var(--blue-dark);
+        color: var(--text);
+        overflow-x: hidden;
+    }
+
+    /* ── BACKGROUND ──────────────────────────────────── */
+    .bg-layer {
+        position: fixed; inset: 0; z-index: 0;
+        background:
+            radial-gradient(ellipse 120% 80% at 70% 20%, rgba(1,144,232,0.18) 0%, transparent 60%),
+            radial-gradient(ellipse 80% 60% at 10% 80%, rgba(255,239,0,0.07) 0%, transparent 50%),
+            linear-gradient(160deg, #01305a 0%, #012448 60%, #010e1e 100%);
+    }
+    .bg-grid {
+        position: fixed; inset: 0; z-index: 0;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        pointer-events: none;
+    }
+    /* Mapa decorativo fundo */
+    .bg-map-lines {
+        position: fixed; inset: 0; z-index: 0;
+        opacity: 0.04;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cpath d='M0 200 Q100 150 200 200 T400 200' stroke='%23fff' fill='none' stroke-width='1'/%3E%3Cpath d='M0 150 Q100 100 200 150 T400 150' stroke='%23fff' fill='none' stroke-width='0.5'/%3E%3Cpath d='M0 250 Q100 200 200 250 T400 250' stroke='%23fff' fill='none' stroke-width='0.5'/%3E%3Ccircle cx='200' cy='200' r='80' stroke='%23fff' fill='none' stroke-width='0.5'/%3E%3Ccircle cx='200' cy='200' r='140' stroke='%23fff' fill='none' stroke-width='0.3'/%3E%3Cline x1='0' y1='0' x2='400' y2='400' stroke='%23fff' stroke-width='0.3'/%3E%3Cline x1='400' y1='0' x2='0' y2='400' stroke='%23fff' stroke-width='0.3'/%3E%3C/svg%3E");
+        background-size: 400px 400px;
+        pointer-events: none;
+    }
+
+    /* ── CONTEÚDO ─────────────────────────────────────── */
+    .wrapper {
+        position: relative; z-index: 1;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* ── HEADER ───────────────────────────────────────── */
+    header {
+        padding: 28px 48px 0;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        animation: fadeDown 0.7s ease both;
+    }
+    .logo-mark {
+        width: 44px; height: 44px;
+        background: var(--blue);
+        border: 2px solid var(--accent);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Syne', sans-serif;
+        font-size: 18px; font-weight: 800;
+        color: var(--accent);
+        flex-shrink: 0;
+        box-shadow: 0 0 24px rgba(255,239,0,0.2);
+    }
+    .logo-text h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: 13px; font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text);
+    }
+    .logo-text p {
+        font-size: 11px; color: var(--muted);
+        font-weight: 300; letter-spacing: 0.04em;
+    }
+    .header-sep { flex: 1; }
+    .header-tag {
+        font-family: 'Syne', sans-serif;
+        font-size: 10px; font-weight: 600;
+        color: var(--accent);
+        border: 1px solid rgba(255,239,0,0.35);
+        border-radius: 20px;
+        padding: 4px 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero {
+        padding: 64px 48px 48px;
+        max-width: 680px;
+        animation: fadeUp 0.8s 0.15s ease both;
+    }
+    .hero-eyebrow {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 11px; font-weight: 500;
+        color: var(--accent);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+    }
+    .hero-eyebrow::before {
+        content: '';
+        display: block; width: 24px; height: 2px;
+        background: var(--accent);
+        border-radius: 1px;
+    }
+    .hero h2 {
+        font-family: 'Merriweather', serif;
+        font-size: clamp(26px, 3.8vw, 44px);
+        font-weight: 900;
+        line-height: 1.15;
+        color: var(--text);
+        margin-bottom: 16px;
+        letter-spacing: -0.01em;
+    }
+    .hero h2 em {
+        font-style: normal;
+        color: var(--accent);
+    }
+    .hero p {
+        font-size: 14px; color: var(--muted);
+        line-height: 1.7; max-width: 520px;
+    }
+
+    /* ── STATS BAR ────────────────────────────────────── */
+    .stats-bar {
+        display: flex; gap: 32px;
+        padding: 0 48px 48px;
+        animation: fadeUp 0.8s 0.25s ease both;
+    }
+    .stat {
+        display: flex; flex-direction: column; gap: 2px;
+    }
+    .stat-num {
+        font-family: 'Merriweather', serif;
+        font-size: 22px; font-weight: 900;
+        color: var(--accent);
+        letter-spacing: -0.02em;
+    }
+    .stat-label {
+        font-size: 10px; color: var(--muted);
+        letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    /* ── DIVIDER ─────────────────────────────────────── */
+    .divider {
+        margin: 0 48px;
+        border: none;
+        border-top: 1px solid var(--border);
+        animation: fadeUp 0.8s 0.3s ease both;
+    }
+
+    /* ── SECTION TITLE ───────────────────────────────── */
+    .section-head {
+        padding: 40px 48px 24px;
+        display: flex; align-items: baseline; gap: 16px;
+        animation: fadeUp 0.8s 0.35s ease both;
+    }
+    .section-head h3 {
+        font-family: 'Syne', sans-serif;
+        font-size: 11px; font-weight: 700;
+        letter-spacing: 0.12em; text-transform: uppercase;
+        color: var(--muted);
+    }
+    .section-head .line {
+        flex: 1; height: 1px;
+        background: var(--border);
+    }
+    .section-head .count {
+        font-size: 11px; color: var(--muted);
+    }
+
+    /* ── CARDS GRID ──────────────────────────────────── */
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        padding: 0 48px 64px;
+    }
+
+    .map-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px 24px 24px;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: flex; flex-direction: column; gap: 12px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        backdrop-filter: blur(8px);
+        animation: fadeUp 0.7s ease both;
+    }
+    .map-card:nth-child(1) { animation-delay: 0.4s; }
+    .map-card:nth-child(2) { animation-delay: 0.48s; }
+    .map-card:nth-child(3) { animation-delay: 0.56s; }
+    .map-card:nth-child(4) { animation-delay: 0.64s; }
+    .map-card:nth-child(5) { animation-delay: 0.72s; }
+    .map-card:nth-child(6) { animation-delay: 0.80s; }
+    .map-card:nth-child(7) { animation-delay: 0.88s; }
+    .map-card:nth-child(8) { animation-delay: 0.96s; }
+    .map-card:nth-child(9) { animation-delay: 1.04s; }
+
+    .map-card::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(1,117,188,0.15) 0%, transparent 60%);
+        opacity: 0; transition: opacity 0.2s;
+        pointer-events: none;
+    }
+    .map-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(255,239,0,0.45);
+        box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,239,0,0.1);
+        background: var(--card-hover);
+    }
+    .map-card:hover::before { opacity: 1; }
+
+    /* Faixa de cor superior do card */
+    .card-stripe {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .card-icon-wrap {
+        width: 48px; height: 48px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .card-header {
+        display: flex; align-items: flex-start;
+        justify-content: space-between; gap: 8px;
+    }
+
+    .card-badge {
+        font-size: 9px; font-weight: 600;
+        font-family: 'Syne', sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border-radius: 4px;
+        padding: 3px 7px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .card-title {
+        font-family: 'Merriweather', serif;
+        font-size: 15px; font-weight: 700;
+        color: var(--text);
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+    }
+    .card-subtitle {
+        font-size: 11px; color: var(--muted);
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .card-desc {
+        font-size: 12px; color: var(--muted);
+        line-height: 1.65; flex: 1;
+    }
+    .card-tags {
+        display: flex; flex-wrap: wrap; gap: 5px;
+    }
+    .tag-pill {
+        font-size: 10px;
+        color: rgba(168,204,232,0.8);
+        background: rgba(1,117,188,0.2);
+        border: 1px solid rgba(1,117,188,0.3);
+        border-radius: 20px;
+        padding: 2px 9px;
+    }
+    .card-footer {
+        display: flex; align-items: center;
+        justify-content: space-between;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+    }
+    .card-source {
+        font-size: 10px; color: var(--muted);
+        font-weight: 300;
+    }
+    .card-arrow {
+        width: 28px; height: 28px;
+        background: rgba(255,239,0,0.1);
+        border: 1px solid rgba(255,239,0,0.3);
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; color: var(--accent);
+        transition: all 0.15s;
+    }
+    .map-card:hover .card-arrow {
+        background: var(--accent);
+        color: var(--blue-dark);
+        border-color: var(--accent);
+    }
+
+    /* Card "Em breve" */
+    .map-card.soon {
+        opacity: 0.5;
+        cursor: default;
+        pointer-events: none;
+    }
+    .map-card.soon:hover { transform: none; }
+
+    /* ── FOOTER ────────────────────────────────────────── */
+    footer {
+        margin-top: auto;
+        padding: 24px 48px;
+        border-top: 1px solid var(--border);
+        display: flex; align-items: center;
+        gap: 16px;
+        font-size: 10px; color: var(--muted);
+        letter-spacing: 0.04em;
+        animation: fadeUp 0.7s 0.8s ease both;
+    }
+    footer .sep { flex: 1; }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    /* ── ANIMATIONS ─────────────────────────────────────── */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+        from { opacity: 0; transform: translateY(-12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 640px) {
+        header, .hero, .stats-bar, .divider,
+        .section-head, .cards-grid, footer {
+            padding-left: 20px; padding-right: 20px;
+        }
+        .hero { padding-top: 40px; }
+        .stats-bar { gap: 20px; }
+        .cards-grid { grid-template-columns: 1fr; }
+    }
+    </style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="bg-grid"></div>
+<div class="bg-map-lines"></div>
+
+<div class="wrapper">
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo-mark">BP</div>
+        <div class="logo-text">
+            <h1>GeoPortal Bragança Paulista</h1>
+            <p>Secretaria Municipal de Planejamento</p>
+        </div>
+        <div class="header-sep"></div>
+        <span class="header-tag">WebGIS</span>
+    </header>
+
+    <!-- HERO -->
+    <div class="hero">
+        <span class="hero-eyebrow">Plataforma de Dados Geoespaciais</span>
+        <h2>Mapas <em>temáticos</em><br>do município</h2>
+        <p>Explore dados territoriais, sociais e urbanísticos de Bragança Paulista de forma interativa. Selecione um tema abaixo para abrir o visualizador correspondente.</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-bar">
+        <div class="stat">
+            <span class="stat-num">10</span>
+            <span class="stat-label">Temas disponíveis</span>
+        </div>
+        <div class="stat">
+            <span class="stat-num">60+</span>
+            <span class="stat-label">Camadas ativas</span>
+        </div>
+        <div class="stat">
+            <span class="stat-num">2018–26</span>
+            <span class="stat-label">Dados atualizados</span>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SEÇÃO MAPAS -->
+    <div class="section-head">
+        <h3>Mapas disponíveis</h3>
+        <div class="line"></div>
+        <span class="count">10 visualizadores</span>
+    </div>
+
+    <div class="cards-grid">
+
+        <!-- CENSO 2022 -->
+        <a class="map-card" href="censo2022/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, #3db87a, #0b803f);"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(61,184,122,0.12);">🏘️</div>
+                <span class="card-badge" style="background:rgba(61,184,122,0.15);color:#3db87a;border:1px solid rgba(61,184,122,0.3);">IBGE</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Dados Demográficos</div>
+                <div class="card-title">Censo 2022</div>
+            </div>
+            <div class="card-desc">Distribuição populacional por setores censitários — domicílios, moradores, faixa etária e tipos de habitação.</div>
+            <div class="card-tags">
+                <span class="tag-pill">Setores Censitários</span>
+                <span class="tag-pill">Domicílios</span>
+                <span class="tag-pill">População</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: IBGE · 2022</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+
+        
+
+        
+
+        <!-- INFRAESTRUTURA / VIAS -->
+        <a class="map-card" href="infraestrutura/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, #6366f1, #4338ca);"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(99,102,241,0.12);">🛣️</div>
+                <span class="card-badge" style="background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);">SMMU</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Malha Viária</div>
+                <div class="card-title">Infraestrutura &amp; Vias</div>
+            </div>
+            <div class="card-desc">Classificação viária, pavimentação, equipamentos urbanos e obras em andamento no município.</div>
+            <div class="card-tags">
+                <span class="tag-pill">Vias</span>
+                <span class="tag-pill">Pavimentação</span>
+                <span class="tag-pill">Equipamentos</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: SMMU · SME · SMSaúde · SEMADS · SMCT · 2025</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+
+        <!-- IPVS -->
+        <a class="map-card" href="ipvs/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, #f43f5e, #be123c);"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(244,63,94,0.12);">📊</div>
+                <span class="card-badge" style="background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.3);">SEADE</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Vulnerabilidade Social</div>
+                <div class="card-title">IPVS</div>
+            </div>
+            <div class="card-desc">Índice Paulista de Vulnerabilidade Social cruzado com escolaridade, cor ou raça, tipo de domicílio e composição familiar do Censo. Mapeamento das áreas de maior fragilidade socioeconômica por setor censitário.</div>
+            <div class="card-tags">
+                <span class="tag-pill">IPVS</span>
+                <span class="tag-pill">Renda</span>
+                <span class="tag-pill">Vulnerabilidade</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: SEADE · 2023</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+
+        <!-- RENDA MÉDIA -->
+        <a class="map-card" href="renda/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, #7c3aed, #f0f921);"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(124,58,237,0.12);">💰</div>
+                <span class="card-badge" style="background:rgba(124,58,237,0.15);color:#a78bfa;border:1px solid rgba(124,58,237,0.3);">IBGE</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Renda e Distribuição</div>
+                <div class="card-title">Renda Média dos Responsáveis</div>
+            </div>
+            <div class="card-desc">Rendimento nominal médio mensal dos responsáveis por domicílios particulares permanentes ocupados, por setor censitário (Censo 2022).</div>
+            <div class="card-tags">
+                <span class="tag-pill">Renda Média</span>
+                <span class="tag-pill">Domicílios</span>
+                <span class="tag-pill">Censo 2022</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: IBGE · 2022</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+
+        <!-- DENSIDADE DEMOGRÁFICA -->
+        <a class="map-card" href="densidade/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, rgba(43,131,186,1), rgba(215,25,28,1));"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(43,131,186,0.12);">🏘️</div>
+                <span class="card-badge" style="background:rgba(43,131,186,0.15);color:#60aee0;border:1px solid rgba(43,131,186,0.3);">IBGE</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Distribuição Territorial</div>
+                <div class="card-title">Densidade Demográfica</div>
+            </div>
+            <div class="card-desc">Habitantes por km² em duas escalas — por bairro e por setor censitário, revelando as variações internas que a média do bairro esconde, com base nos dados do Censo 2022 (IBGE). Dez faixas de densidade do menor ao maior adensamento.</div>
+            <div class="card-tags">
+                <span class="tag-pill">Bairros</span>
+                <span class="tag-pill">hab/km²</span>
+                <span class="tag-pill">Censo 2022</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: IBGE · 2022</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+
+        <!-- QUEIMADAS -->
+        <a class="map-card" href="queimadas/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, #ff6b00, #ef4444);"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(255,107,0,0.12);">🔥</div>
+                <span class="card-badge" style="background:rgba(255,107,0,0.15);color:#fb923c;border:1px solid rgba(255,107,0,0.3);">INPE</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Série Histórica 2015–2025</div>
+                <div class="card-title">Queimadas</div>
+            </div>
+            <div class="card-desc">Focos de incêndio detectados por satélite pelo INPE em Bragança Paulista entre 2015 e 2025. Filtro interativo por ano, mapa de calor de densidade histórica e simbologia por tipo de uso do solo e FRP.</div>
+            <div class="card-tags">
+                <span class="tag-pill">BDQueimadas</span>
+                <span class="tag-pill">Satélite</span>
+                <span class="tag-pill">2015–2025</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: INPE · SMMA · 2025</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+
+        <!-- OCORRÊNCIAS POLICIAIS -->
+        <a class="map-card" href="ocorrencias/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, #ef4444, #b91c1c);"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(239,68,68,0.12);">🚔</div>
+                <span class="card-badge" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);">SSP</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Guarda Municipal</div>
+                <div class="card-title">Atendimentos GM</div>
+            </div>
+            <div class="card-desc">Atendimentos da Guarda Municipal por bairro, em número absoluto e por mil habitantes. Registro de atividade, não estatística criminal — maiores categorias, crimes graves e totais.</div>
+            <div class="card-tags">
+                <span class="tag-pill">Abairramento</span>
+                <span class="tag-pill">Crimes Graves</span>
+                <span class="tag-pill">Atendimentos</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: SSP · BP</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+        <!-- FLUXOS INTERMUNICIPAIS -->
+        <a class="map-card" href="mapa01/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, #38bdf8, #0369a1);"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(56,189,248,0.12);">🌐</div>
+                <span class="card-badge" style="background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);">REGIC 2018</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Estrutura Regional</div>
+                <div class="card-title">Fluxos Intermunicipais</div>
+            </div>
+            <div class="card-desc">Relações de Bragança com os 41 municípios do entorno — saúde, educação, turismo e serviços, nas duas direções.</div>
+            <div class="card-tags">
+                <span class="tag-pill">REGIC</span>
+                <span class="tag-pill">Mancha Urbana</span>
+                <span class="tag-pill">Polarização</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: IBGE REGIC · 2018</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+
+        <!-- CADASTRO IMOBILIÁRIO -->
+        <a class="map-card" href="cadastro/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, #f5a623, #c77800);"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(245,166,35,0.12);">🏗️</div>
+                <span class="card-badge" style="background:rgba(245,166,35,0.15);color:#f5a623;border:1px solid rgba(245,166,35,0.3);">CADASTRO</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Uso do Solo e Edificações</div>
+                <div class="card-title">Cadastro Imobiliário</div>
+            </div>
+            <div class="card-desc">Lotes e edificações revisados pelo Cadastro Municipal — uso e ocupação, cheios e vazios, gabarito e taxa de ocupação.</div>
+            <div class="card-tags">
+                <span class="tag-pill">70.619 lotes</span>
+                <span class="tag-pill">83.558 edificações</span>
+                <span class="tag-pill">Gabarito</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: Cadastro Municipal · 2026</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+
+        <!-- HABITAÇÃO — CADHI -->
+        <a class="map-card" href="habitacao/index.html">
+            <div class="card-stripe" style="background: linear-gradient(90deg, #e879a6, #b4356f);"></div>
+            <div class="card-header">
+                <div class="card-icon-wrap" style="background: rgba(232,121,166,0.12);">🏠</div>
+                <span class="card-badge" style="background:rgba(232,121,166,0.15);color:#e879a6;border:1px solid rgba(232,121,166,0.3);">CADHI</span>
+            </div>
+            <div>
+                <div class="card-subtitle">Demanda Habitacional</div>
+                <div class="card-title">Habitação</div>
+            </div>
+            <div class="card-desc">Famílias inscritas no Cadastro Habitacional de Interesse Social — renda, condição de moradia, precariedade e área de risco.</div>
+            <div class="card-tags">
+                <span class="tag-pill">21.460 famílias</span>
+                <span class="tag-pill">Precariedade</span>
+                <span class="tag-pill">Renda</span>
+            </div>
+            <div class="card-footer">
+                <span class="card-source">Fonte: CADHI · 2022 e 2024</span>
+                <div class="card-arrow">→</div>
+            </div>
+        </a>
+
+    </div><!-- /cards-grid -->
+
+    <!-- FOOTER -->
+    <footer>
+        <span>© 2025 Prefeitura Municipal de Bragança Paulista</span>
+        <div class="sep"></div>
+        <span>Secretaria Municipal de Planejamento</span>
+        <span style="color:var(--border)">|</span>
+        <a href="#">Dados Abertos</a>
+        <span style="color:var(--border)">|</span>
+        <a href="#">Contato</a>
+    </footer>
+
+</div><!-- /wrapper -->
+</body>
+</html>

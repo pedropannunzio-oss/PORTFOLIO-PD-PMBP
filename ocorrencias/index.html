@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+<title>Segurança Urbana — Guarda Municipal · Bragança Paulista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="js/leaflet.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;}
+:root{--blue:#0175bc;--accent:#FFEF00;--bg:#0d1b2a;--bg-panel:#0f2236;--bg-panel2:#132b42;
+  --bg-card:#1a3550;--border:rgba(255,255,255,.10);--text:#e8eaf0;--muted:#7a9ab5;
+  --header-h:52px;--sidebar-w:318px;--rw:286px;}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);}
+#map{position:fixed!important;top:var(--header-h)!important;left:0;right:0;bottom:0;width:auto!important;height:auto!important;}
+.leaflet-top,.leaflet-bottom{display:none!important;}
+
+#hd{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--blue);
+  border-bottom:3px solid var(--accent);display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+#hd .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+#hd h1{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin:0;}
+#hd h1 span{color:var(--accent);}
+#hd .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;margin:0;}
+#hd .sep{flex:1;}
+.badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
+  border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+#back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);color:rgba(255,255,255,.8);
+  font-size:12px;padding:6px 10px;border-radius:6px;text-decoration:none;}
+#back:hover{color:var(--accent);}
+.hbtn{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);color:var(--accent);
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:6px 12px;border-radius:6px;cursor:pointer;}
+.hbtn:hover{background:rgba(255,239,0,.18);}
+
+.pane{position:fixed;top:var(--header-h);height:calc(100vh - var(--header-h));
+  background:var(--bg-panel);z-index:8000;display:flex;flex-direction:column;
+  transition:transform .25s;overflow:hidden;}
+#sb{left:0;width:var(--sidebar-w);border-right:1px solid var(--border);}
+#sb.hidden{transform:translateX(-100%);}
+#rb{right:0;width:var(--rw);border-left:1px solid var(--border);}
+#rb.hidden{transform:translateX(100%);}
+.pane-h{padding:12px 15px 9px;border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.pane-h span{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--accent);
+  letter-spacing:.07em;text-transform:uppercase;}
+.pane-b{flex:1;overflow-y:auto;min-height:0;}
+.pane-b::-webkit-scrollbar{width:5px;}
+.pane-b::-webkit-scrollbar-track{background:transparent;}
+.pane-b::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px;}
+/* cartão da unidade sob o cursor */
+.sel-card{background:rgba(255,239,0,.07);border-left:2px solid var(--accent);
+  border-radius:0 5px 5px 0;padding:9px 11px;margin-bottom:13px;}
+.sel-n{font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px;}
+.sel-g{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;}
+.sel-f{display:flex;flex-direction:column;}
+.sel-k{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.sel-v{font-size:13px;font-weight:700;color:var(--accent);font-family:'Syne',sans-serif;}
+.sel-d{font-size:10px;margin-top:7px;font-weight:600;}
+.sel-vazio{font-size:11px;color:var(--muted);font-style:italic;line-height:1.5;
+  padding:9px 11px;border-left:2px solid var(--border);margin-bottom:13px;}
+/* escala com indicador de posição */
+.scale-wrap{position:relative;padding-top:17px;}
+.scale-ind{position:absolute;top:1px;transform:translateX(-50%);transition:left .22s ease;}
+.scale-ind i{display:block;width:0;height:0;margin:0 auto;border-left:5px solid transparent;
+  border-right:5px solid transparent;border-top:6px solid var(--accent);}
+.scale-ind b{display:block;position:absolute;top:-15px;left:50%;transform:translateX(-50%);
+  font-family:'Syne',sans-serif;font-size:9.5px;font-weight:700;color:#000;white-space:nowrap;
+  background:var(--accent);padding:1px 6px;border-radius:3px;}
+.scale-line{position:absolute;top:17px;width:2px;height:15px;background:var(--accent);
+  transform:translateX(-50%);box-shadow:0 0 5px rgba(255,239,0,.85);transition:left .22s ease;}
+.lgd-lab{display:flex;justify-content:space-between;font-family:'Syne',sans-serif;
+  font-size:9px;font-weight:600;color:var(--muted);margin-top:5px;}
+@media(max-width:1100px){#rb{display:none;}}
+.sec{border-bottom:1px solid var(--border);flex-shrink:0;padding-bottom:11px;}
+.lbl{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--muted);
+  letter-spacing:.08em;text-transform:uppercase;padding:13px 16px 8px;display:block;}
+.hint{font-size:10.5px;color:var(--muted);line-height:1.5;padding:0 16px;font-style:italic;}
+
+.esc{display:flex;margin:0 16px 6px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.esc button{flex:1;background:var(--bg-card);border:none;color:var(--muted);font-family:'DM Sans',sans-serif;
+  font-size:11.5px;font-weight:600;padding:9px 6px;cursor:pointer;transition:all .15s;line-height:1.25;}
+.esc button small{display:block;font-size:9.5px;font-weight:400;opacity:.75;margin-top:2px;}
+.esc button.on{background:rgba(255,239,0,.14);color:var(--accent);}
+#tema{width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 9px;border-radius:6px;cursor:pointer;}
+
+.ltr{display:flex;align-items:center;gap:10px;padding:6px 16px;}
+.ltr label:not(.tg){flex:1;font-size:12px;color:var(--text);cursor:pointer;}
+.tg{position:relative;width:32px;height:18px;flex:0 0 32px;}
+.tg input{opacity:0;width:0;height:0;position:absolute;}
+.trk{position:absolute;inset:0;background:var(--bg-card);border-radius:9px;cursor:pointer;transition:background .2s;border:1px solid var(--border);}
+.trk::after{content:'';position:absolute;left:2px;top:2px;width:12px;height:12px;background:var(--muted);border-radius:50%;transition:all .2s;}
+.tg input:checked + .trk{background:rgba(255,239,0,.15);border-color:var(--accent);}
+.tg input:checked + .trk::after{background:var(--accent);left:16px;}
+.opr{display:flex;align-items:center;gap:9px;padding:2px 16px 4px 34px;}
+.opr label{font-size:10px;color:var(--muted);width:58px;flex-shrink:0;}
+.opr input{flex:1;height:3px;accent-color:var(--accent);cursor:pointer;}
+.opr span{font-size:10px;color:var(--muted);width:30px;text-align:right;}
+
+#lg{padding:12px 14px;}
+.g{margin-bottom:15px;}
+.gt{font-family:'Syne',sans-serif;font-size:9.5px;font-weight:700;color:var(--muted);
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px;}
+.li{display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer;padding:2px 4px;border-radius:4px;transition:opacity .15s;}
+.li:hover{background:rgba(255,255,255,.06);}
+.li.off{opacity:.32;}
+.li.off .sw{filter:grayscale(1);}
+.sw{width:17px;height:12px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
+.li span{font-size:11px;color:var(--text);line-height:1.3;flex:1;}
+.li .cnt{font-size:9.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.note{font-size:10px;color:var(--muted);line-height:1.5;padding:5px 3px 0;font-style:italic;}
+.rk{display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:4px;font-size:11px;cursor:pointer;}
+.rk:hover{background:rgba(255,255,255,.06);}
+.rk .n{width:14px;color:var(--muted);font-size:10px;text-align:right;flex-shrink:0;}
+.rk .m{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rk .p{font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent);flex-shrink:0;}
+
+.bmr{display:flex;gap:7px;padding:0 16px;}
+.bmb{flex:1;background:var(--bg-card);border:1px solid var(--border);color:var(--muted);
+  font-size:11px;padding:6px 4px;border-radius:6px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;}
+.bmb.on{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,.08);}
+
+.leaflet-popup-content-wrapper{background:var(--bg-panel2)!important;border:1px solid var(--border)!important;
+  border-top:3px solid var(--accent)!important;border-radius:10px!important;
+  box-shadow:0 8px 32px rgba(0,0,0,.5)!important;width:330px!important;}
+.leaflet-popup-tip{background:var(--bg-panel2)!important;}
+.leaflet-popup-content{color:var(--text)!important;font-family:'DM Sans',sans-serif!important;font-size:12px!important;
+  margin:0!important;padding:14px 16px!important;max-height:62vh!important;overflow-y:auto!important;overflow-x:hidden!important;}
+.leaflet-popup-close-button{color:var(--muted)!important;}
+.ph{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.15;}
+.ps{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:10px;}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:9px 0 4px;}
+.pf{display:flex;flex-direction:column;}
+.pk{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.pv{font-size:14px;font-weight:700;color:var(--accent);font-family:'Syne',sans-serif;}
+.chart{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);}
+.chart-t{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.bar-row{margin-bottom:8px;}
+.bar-lb{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px;}
+.bar-lb .n{font-size:11px;color:var(--text);}
+.bar-lb .v{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;}
+.bar-bg{height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
+.bar-fl{height:100%;border-radius:4px;}
+.bar-sub{font-size:9.5px;color:var(--muted);margin-top:2px;}
+.pt{width:100%;border-collapse:collapse;margin-top:9px;}
+.pt th{text-align:left;padding:5px 8px 5px 0;font-size:10px;font-weight:600;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid rgba(255,255,255,.06);width:58%;}
+.pt td{padding:5px 0 5px 8px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.06);
+  text-align:right;font-variant-numeric:tabular-nums;}
+.pt tr:last-child th,.pt tr:last-child td{border-bottom:none;}
+.tag{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;margin-top:9px;}
+.pexp{font-size:10.5px;color:var(--muted);line-height:1.5;margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.08);}
+
+
+/* barra de legenda contínua */
+.lgd-wrap{position:relative;margin:5px 0 3px;}
+.lgd-bar{height:14px;border-radius:4px;width:100%;position:relative;cursor:crosshair;
+  border:1px solid rgba(255,255,255,.12);}
+.lgd-ind{position:absolute;top:-5px;width:2px;height:24px;background:rgba(255,239,0,.95);
+  border-radius:1px;pointer-events:none;display:none;box-shadow:0 0 4px rgba(255,239,0,.5);transform:translateX(-50%);}
+.lgd-tip{position:absolute;bottom:20px;left:0;transform:translateX(-50%);background:var(--bg-panel2);
+  border:1px solid rgba(255,239,0,.5);border-radius:3px;padding:2px 6px;font-size:9px;color:var(--accent);
+  white-space:nowrap;pointer-events:none;font-family:'Syne',sans-serif;font-weight:700;display:none;z-index:5;}
+.lgd-lbl{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);
+  margin-top:3px;font-family:'Syne',sans-serif;font-weight:600;}
+
+/* barra de rolagem no padrão do restante */
+.leaflet-popup-content::-webkit-scrollbar{width:5px;}
+.leaflet-popup-content::-webkit-scrollbar-track{background:transparent;}
+.leaflet-popup-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px;}
+.leaflet-popup-content::-webkit-scrollbar-thumb:hover{background:rgba(255,239,0,.4);}
+.leaflet-popup-content{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent;}
+
+
+#md{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:99000;align-items:center;justify-content:center;}
+#md.open{display:flex;}
+#mb{background:var(--bg-panel2);border:1px solid var(--border);border-radius:14px;padding:26px 30px;width:340px;}
+#mt{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;}
+#mdesc{font-size:12px;color:var(--muted);margin:0 0 18px;}
+#mbtn{display:flex;gap:10px;margin-bottom:14px;}
+#mst{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:10px;text-align:center;}
+#mcl{width:100%;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:12px;padding:8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.eb{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.eb:hover{border-color:var(--accent);color:var(--accent);}
+
+#ob{position:fixed;inset:0;z-index:99999;background:rgba(1,48,90,.93);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;}
+#ob.visible{display:flex;}
+#obb{background:var(--bg-panel2);border:1px solid var(--border);border-radius:16px;padding:30px;max-width:460px;width:92%;}
+#obi{font-size:32px;margin-bottom:10px;}
+#obt{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:10px;}
+#obd{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;}
+#obd b{color:var(--text);}
+#obl{background:rgba(255,255,255,.04);border-radius:8px;padding:11px 13px;margin-bottom:18px;font-size:12px;line-height:1.7;color:var(--muted);}
+#obbt{width:100%;background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px;border:none;border-radius:8px;cursor:pointer;}
+
+/* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
+#hd h1, #header h1, #pd-header h1 {
+  font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:#fff;
+  text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
+}
+#hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
+#hd .sub, #header .sub, #pd-header .sub,
+#hd .subtitle, #header .subtitle, #pd-header .subtitle {
+  font-size:11px; color:rgba(255,255,255,.65); font-weight:300;
+  white-space:nowrap; margin:0; line-height:1.3;
+}
+#hd .badge, #header .badge, #pd-header .badge,
+#hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
+  border:1px solid rgba(255,239,0,.4); background:transparent;
+  padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
+}
+</style>
+</head>
+<body>
+
+<div id="hd">
+  <div class="dot"></div>
+  <div>
+    <h1>Segurança Urbana <span>Guarda Municipal</span></h1>
+    <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
+  </div>
+  <div class="sep"></div>
+  <span class="badge">GM · 2024–2026</span>
+  <a id="back" href="../portal.html">&#8592; Portal</a>
+  <button class="hbtn" onclick="abrirExport()">&#8595; Exportar</button>
+  <button class="hbtn" onclick="togglePainel()">&#9776; Painel</button>
+  <button class="hbtn" onclick="toggleLegenda()">&#9636; Legenda</button>
+</div>
+
+<div id="map"></div>
+
+<div id="sb" class="pane">
+  <div class="sec">
+    <span class="lbl">Indicador</span>
+    <div class="esc">
+      <button id="e-taxa" class="on" onclick="setInd('taxa')">Taxa<small>por mil habitantes</small></button>
+      <button id="e-bruto" onclick="setInd('bruto')">Absoluto<small>nº de ocorrências</small></button>
+    </div>
+    <div style="padding:8px 16px 0">
+      <select id="tema" onchange="setTema(this.value)">
+        <option value="total">Todas as ocorrências</option>
+        <option value="graves">Crimes graves</option>
+        <option value="sossego">Perturbação do sossego</option>
+        <option value="violencia">Violência doméstica</option>
+        <option value="rua">Pessoa em situação de rua</option>
+        <option value="furto">Furto</option>
+        <option value="trafico">Tráfico de drogas</option>
+      </select>
+    </div>
+    <p class="hint" id="esc-hint">Ocorrências por mil habitantes. Corrige o efeito do tamanho do bairro e revela a intensidade real do atendimento.</p>
+  </div>
+
+  <div class="sec">
+    <span class="lbl">Camadas</span>
+    <div class="ltr"><label for="k-dens">Ocorrências</label>
+      <label class="tg"><input type="checkbox" id="k-dens" checked onchange="cam('dens',this.checked)"><span class="trk"></span></label></div>
+    <div class="opr"><label>Opacidade</label>
+      <input type="range" min="0" max="1" step=".05" value=".82" oninput="op(this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'"><span>82%</span></div>
+    <div class="ltr"><label for="k-lim">Limite municipal</label>
+      <label class="tg"><input type="checkbox" id="k-lim" checked onchange="cam('lim',this.checked)"><span class="trk"></span></label></div>
+    <div class="ltr"><label for="k-vias">Sistema viário</label>
+      <label class="tg"><input type="checkbox" id="k-vias" checked onchange="cam('vias',this.checked)"><span class="trk"></span></label></div>
+    <div class="ltr"><label for="k-rot">Nomes dos bairros</label>
+      <label class="tg"><input type="checkbox" id="k-rot" onchange="cam('rot',this.checked)"><span class="trk"></span></label></div>
+  </div>
+
+  <div class="sec">
+    <span class="lbl">Mapa base</span>
+    <div class="bmr">
+      <button class="bmb on" onclick="bm('dark',this)">Escuro</button>
+      <button class="bmb" onclick="bm('osm',this)">Mapa</button>
+      <button class="bmb" onclick="bm('sat',this)">Satélite</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="rb" class="pane">
+  <div class="pane-h"><span id="rb-t">Legenda</span></div>
+  <div class="pane-b"><div id="lg"></div></div>
+</div>
+
+<div id="md"><div id="mb">
+  <div id="mt">&#8595; Exportar mapa</div>
+  <p id="mdesc">O mapa é capturado como está na tela, com a legenda do indicador selecionado.</p>
+  <div id="mbtn"><button class="eb" onclick="exportar('jpeg')">Imagem JPEG</button>
+    <button class="eb" onclick="exportar('pdf')">PDF</button></div>
+  <div id="mst"></div><button id="mcl" onclick="fecharExport()">Cancelar</button>
+</div></div>
+
+<div id="ob"><div id="obb">
+  <div id="obi">&#128737;</div>
+  <div id="obt">Segurança Urbana</div>
+  <div id="obd">Registros de atendimento da <b>Guarda Municipal</b> por bairro, de 2024 a 2026. São <b>24.127 ocorrências</b>, das quais apenas 1% são crimes graves — a maior parte é atividade preventiva, apoio à população e mediação de conflitos.</div>
+  <div id="obl">
+    <b style="color:#e8eaf0">Taxa por mil habitantes</b> — corrige o efeito do tamanho do bairro<br>
+    <b style="color:#e8eaf0">Números absolutos</b> — volume de atendimentos
+  </div>
+  <div id="obd">Escolha o indicador e o tema no painel à esquerda. Clique num bairro para ver o detalhamento por tipo de ocorrência.</div>
+  <button id="obbt" onclick="fecharOb()">Explorar o mapa</button>
+</div></div>
+
+<script src="data/json_limite.js"></script>
+<script src="data/json_bairros.js"></script>
+<script src="data/json_vias.js"></script>
+
+<script>
+(function(){
+var map=L.map('map',{zoomControl:false,maxZoom:18,minZoom:9})
+  .fitBounds([[-23.10,-46.75],[-22.72,-46.30]]);
+L.control.zoom({position:'topright'}).addTo(map);
+
+var bms={
+ dark:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{
+        referrerPolicy: 'strict-origin-when-cross-origin',attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:20,maxNativeZoom:16,crossOrigin:'anonymous'}),
+ osm:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:19,maxNativeZoom:17,crossOrigin:'anonymous',referrerPolicy:'strict-origin-when-cross-origin'}),
+ sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri, Maxar, Earthstar Geographics',maxZoom:19,maxNativeZoom:17,crossOrigin:'anonymous'})};
+bms.dark.addTo(map);
+['dens','vias','lim','rot'].forEach(function(p,i){map.createPane('p_'+p);map.getPane('p_'+p).style.zIndex=400+i;});
+map.getPane('p_vias').style.pointerEvents='none';
+
+// ── temas e escalas ───────────────────────────────────────────────────────
+var TEMAS={
+ total:    {lbl:'Todas as ocorrências', bruto:'total_ocorrencias', taxa:'taxa_total_1000',   brk:[25,60,120,250], decT:1},
+ graves:   {lbl:'Crimes graves', bruto:'crimes_graves', taxa:'taxa_graves_1000',             brk:[0.5,1,2,3.5], decT:2},
+ sossego:  {lbl:'Perturbação do sossego', bruto:'tipo_perturbação_do_sossego', taxa:'taxa_sossego_1000', brk:[3,8,18,40], decT:1},
+ violencia:{lbl:'Violência doméstica', bruto:'tipo_violência_doméstica', taxa:'taxa_violencia_dom_1000', brk:[1,2.5,5,10], decT:2},
+ rua:      {lbl:'Pessoa em situação de rua', bruto:'tipo_pessoa_em_sit_de_rua', taxa:'taxa_sit_rua_1000', brk:[0.5,2,6,20], decT:2},
+ furto:    {lbl:'Furto', bruto:'tipo_furto', taxa:'taxa_furto_1000',                         brk:[0.5,1.5,3,7], decT:2},
+ trafico:  {lbl:'Tráfico de drogas', bruto:'grave_tráfico_de_drogas', taxa:'taxa_trafico_1000', brk:[0.2,0.5,1,2], decT:2}};
+var RAMPA=['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15'];
+var SEMDADO='#3d5165';
+var ind='taxa', tema='total', OP=0.82, FILTRO={}, SEL=null;
+
+function nf(v,d){return v==null||isNaN(v)?'—':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+function cfg(){return TEMAS[tema];}
+function dec(){return ind==='taxa'?cfg().decT:0;}
+function valor(p){var v=p[ind==='taxa'?cfg().taxa:cfg().bruto];return (v==null||isNaN(v))?null:v;}
+function quebras(){
+  if(ind==='taxa')return cfg().brk;
+  var vs=json_bairros.features.map(function(f){return f.properties[cfg().bruto];})
+    .filter(function(v){return v!=null;}).sort(function(a,b){return a-b;});
+  if(!vs.length)return [1,2,3,4];
+  var q=[1,2,3,4].map(function(i){return vs[Math.floor(vs.length*i/5)];});
+  return q.map(function(v,i){return i&&v<=q[i-1]?q[i-1]+1:v;});}
+function classeIdx(v){
+  if(v==null)return -1;
+  var b=quebras();
+  for(var i=0;i<b.length;i++) if(v<=b[i]) return i;
+  return b.length;}
+function corV(v){var i=classeIdx(v);return i<0?SEMDADO:RAMPA[i];}
+function rotulos(){
+  var b=quebras(), d=dec();
+  var r=['Até '+nf(b[0],d)];
+  for(var i=0;i<b.length-1;i++) r.push(nf(b[i],d)+' a '+nf(b[i+1],d));
+  r.push('Acima de '+nf(b[b.length-1],d));
+  return r;}
+function gradCSS(r){var n=r.length,s=[];
+  for(var i=0;i<n;i++){s.push(r[i]+' '+(i/n*100).toFixed(3)+'%',r[i]+' '+((i+1)/n*100).toFixed(3)+'%');}
+  return 'linear-gradient(to right,'+s.join(',')+')';}
+function valorNaPos(t){return rotulos()[Math.min(4,Math.floor(t*5))];}
+function posNaEscala(v){var i=classeIdx(v);return i<0?null:(i+0.5)/5*100;}
+function oculto(f){var r=rotulos(),i=classeIdx(valor(f.properties));
+  return FILTRO.a && !FILTRO.a.has(i<0?'Sem dado':r[i]);}
+function est(f){
+  if(oculto(f))return{fillOpacity:0,opacity:0,weight:0};
+  return{color:'#0d1b2a',weight:.7,opacity:.55,fill:true,fillColor:corV(valor(f.properties)),fillOpacity:OP};}
+function barra(lb,val,pct,c,sub){
+  return '<div class="bar-row"><div class="bar-lb"><span class="n">'+lb+'</span>'+
+   '<span class="v" style="color:'+c+'">'+val+'</span></div>'+
+   '<div class="bar-bg"><div class="bar-fl" style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+c+'"></div></div>'+
+   (sub?'<div class="bar-sub">'+sub+'</div>':'')+'</div>';}
+
+// ── popup ─────────────────────────────────────────────────────────────────
+var TIPOS=[['Atividade preventiva','tipo_atividade_preventiva','#4ade80'],
+  ['Averiguação','tipo_averiguação','#60a5fa'],
+  ['Perturbação do sossego','tipo_perturbação_do_sossego','#a78bfa'],
+  ['Apoio e auxílio','tipo_apoio_auxílio','#38bdf8'],
+  ['Abordagem','tipo_abordagem','#fbbf24'],
+  ['Patrulhamento','tipo_patrulhamento_policiamento','#94a3b8'],
+  ['Orientação das partes','tipo_orientação_das_partes','#c084fc'],
+  ['Pessoa em sit. de rua','tipo_pessoa_em_sit_de_rua','#fb923c'],
+  ['Violência doméstica','tipo_violência_doméstica','#f43f5e'],
+  ['Disparo de alarme','tipo_disparo_de_alarme','#64748b'],
+  ['Desinteligência','tipo_desinteligência','#94a3b8'],
+  ['Furto','tipo_furto','#de2d26']];
+var GRAVES=[['Tráfico de drogas','grave_tráfico_de_drogas'],['Roubo','grave_roubo'],
+  ['Estupro','grave_estupro'],['Importunação sexual','grave_importunação_sexual'],
+  ['Feminicídio','grave_feminicídio'],['Sequestro','grave_sequestro'],
+  ['Porte ilegal de arma','grave_porte_ilegal_de_arma'],['Homicídio','grave_homicídio'],
+  ['Tentativa de homicídio','grave_tentativa_de_homicídio'],
+  ['Lesão corporal grave','grave_lesão_corporal_grave'],
+  ['Disparo de arma de fogo','grave_disparo_arma_de_fogo']];
+
+function popBairro(p){
+  var v=valor(p), cc=corV(v);
+  var t='<div class="ph">'+p.bairro+'</div><div class="ps">Guarda Municipal · 2024 a 2026</div>';
+  t+='<div class="pgrid">'+
+     '<div class="pf"><span class="pk">Ocorrências</span><span class="pv">'+nf(p.total_ocorrencias)+'</span></div>'+
+     '<div class="pf"><span class="pk">Por mil habitantes</span><span class="pv" style="color:'+cc+'">'+
+       (p.taxa_total_1000==null?'—':nf(p.taxa_total_1000,1))+'</span></div></div>';
+  t+= p.populacao ? '<div class="bar-sub">'+nf(p.populacao)+' habitantes</div>'
+    : '<div class="bar-sub" style="color:#fb923c">Sem correspondência no recorte censitário — taxa não calculável</div>';
+  if(p.taxa_confiavel==='Denominador pequeno')
+    t+='<div class="bar-sub" style="color:#fb923c;margin-top:5px">⚠ Bairro com menos de 500 habitantes. '+
+       'A taxa por mil oscila muito com poucos registros e deve ser lida com cautela.</div>';
+
+  if(p.taxa_total_1000!=null){
+    var dif=p.taxa_total_1000-136.5, ac=dif>=0;
+    t+='<div class="chart"><div class="chart-t">Comparação com o município</div>'+
+       barra('Este bairro',nf(p.taxa_total_1000,1),p.taxa_total_1000/660.7*100,cc,'por mil habitantes')+
+       barra('Média municipal','136,5',136.5/660.7*100,'#7a9ab5','o maior do município é 660,7')+
+       '</div><div class="bar-sub" style="margin-top:-4px;color:'+(ac?'#fb923c':'#4ade80')+'">'+
+       (ac?'▲ ':'▼ ')+nf(Math.abs(dif),1)+' '+(ac?'acima':'abaixo')+' da média municipal</div>';}
+
+  var tp=TIPOS.map(function(x){return [x[0],p[x[1]]||0,x[2]];})
+    .filter(function(x){return x[1]>0;}).sort(function(a,b){return b[1]-a[1];});
+  if(tp.length){
+    var mx=tp[0][1];
+    t+='<div class="chart"><div class="chart-t">Tipos de ocorrência</div>';
+    tp.slice(0,8).forEach(function(x){
+      t+=barra(x[0],nf(x[1]),x[1]/mx*100,x[2],nf(x[1]/p.total_ocorrencias*100,1)+'% dos atendimentos');});
+    t+='</div>';}
+
+  var gr=GRAVES.map(function(x){return [x[0],p[x[1]]||0];})
+    .filter(function(x){return x[1]>0;}).sort(function(a,b){return b[1]-a[1];});
+  t+='<div class="chart"><div class="chart-t">Crimes graves — '+nf(p.crimes_graves)+
+     ' ('+nf(p.pct_graves||0,2)+'% do total)</div>';
+  if(gr.length){var mg=gr[0][1];
+    gr.forEach(function(x){t+=barra(x[0],nf(x[1]),x[1]/mg*100,'#de2d26','');});}
+  else t+='<div class="bar-sub">Nenhum crime grave registrado no período.</div>';
+  t+='</div>';
+
+  if(p.ipvs_medio!=null)
+    t+='<table class="pt">'+
+       '<tr><th>IPVS predominante</th><td>'+(p.ipvs_nivel||'—')+'</td></tr>'+
+       '<tr><th>IPVS médio</th><td>'+nf(p.ipvs_medio,2)+'</td></tr>'+
+       '<tr><th>Em alta vulnerabilidade</th><td>'+nf(p.pct_alta_vulnerabilidade,1)+'%</td></tr>'+
+       '<tr><th>Densidade</th><td>'+nf(p.densidade_hab_km2)+' hab/km²</td></tr>'+
+       '<tr><th>Área</th><td>'+nf(p.area_km2,2)+' km²</td></tr></table>';
+
+  t+='<div class="pexp">Registros de atendimento da Guarda Municipal, não estatística criminal. '+
+     'Volume elevado pode indicar presença ativa da GM no bairro, e não necessariamente insegurança.</div>';
+  return t;}
+
+// ── camadas ───────────────────────────────────────────────────────────────
+var Llim=L.geoJson(json_limite,{pane:'p_lim',interactive:false,
+  style:{color:'#FFEF00',weight:2.2,opacity:.9,fill:false}});
+var VIA={'Regional':{c:'#ffffff',w:2.2,o:.72},'Arterial':{c:'#f0f6fb',w:1.7,o:.62},
+  'Arterial Secundária':{c:'#d8e6f2',w:1.2,o:.52},'Coletora':{c:'#b9cddd',w:.8,o:.40},
+  'Local':{c:'#8fa6b8',w:.45,o:.26}};
+var Lvias=L.geoJson(json_vias,{pane:'p_vias',interactive:false,
+  style:function(f){var v=VIA[f.properties.hierarquia]||VIA['Local'];
+    return{color:v.c,weight:v.w,opacity:v.o,interactive:false};}});
+var Lb=L.geoJson(json_bairros,{pane:'p_dens',style:est,
+  onEachFeature:function(f,l){l.bindPopup(popBairro(f.properties),{maxHeight:430});}});
+var Lrot=L.layerGroup([],{pane:'p_rot'});
+json_bairros.features.forEach(function(f){
+  var c=L.geoJSON(f).getBounds().getCenter();
+  L.marker(c,{pane:'p_rot',interactive:false,icon:L.divIcon({className:'',
+    html:'<div style="font:600 10px DM Sans,sans-serif;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000;white-space:nowrap;transform:translate(-50%,-50%)">'+f.properties.bairro+'</div>',
+    iconSize:[0,0]})}).addTo(Lrot);});
+Lb.addTo(map); Lvias.addTo(map); Llim.addTo(map);
+var CAM={dens:Lb,vias:Lvias,lim:Llim,rot:Lrot};
+
+var _destacado=null;
+function limparDestaque(){
+  if(!_destacado)return;
+  try{ _destacado.setStyle(est(_destacado.feature)); }catch(e){}
+  _destacado=null;}
+function destacar(l){
+  if(_destacado===l)return;
+  limparDestaque(); _destacado=l;
+  l.setStyle({weight:2.4,color:'#FFEF00',opacity:1});
+  if(l.bringToFront)l.bringToFront();}
+function ligarHover(gl){
+  gl.eachLayer(function(l){
+    l.on('mouseover',function(){
+      if(oculto(l.feature)){limparDestaque();SEL=null;legenda();return;}
+      destacar(l); SEL=l.feature.properties; legenda();});
+    l.on('mouseout',function(){
+      if(_destacado===l){limparDestaque();SEL=null;legenda();}});});}
+ligarHover(Lb);
+['mouseout','dragstart','zoomstart','movestart','popupclose'].forEach(function(ev){
+  map.on(ev,function(){ if(_destacado){limparDestaque();SEL=null;legenda();} });});
+
+// ── legenda ───────────────────────────────────────────────────────────────
+function legenda(){
+  var feats=json_bairros.features, r=rotulos(), cont={};
+  feats.forEach(function(f){var i=classeIdx(valor(f.properties));
+    var k=i<0?'Sem dado':r[i]; cont[k]=(cont[k]||0)+1;});
+  var h='';
+
+  if(SEL){
+    var v=valor(SEL), cc=corV(v);
+    h+='<div class="sel-card" style="border-left-color:'+cc+'"><div class="sel-n">'+SEL.bairro+'</div>'+
+       '<div class="sel-g">'+
+       '<div class="sel-f"><span class="sel-k">'+(ind==='taxa'?'Por mil hab.':'Ocorrências')+'</span>'+
+         '<span class="sel-v" style="color:'+cc+'">'+(v==null?'—':nf(v,dec()))+'</span></div>'+
+       '<div class="sel-f"><span class="sel-k">População</span><span class="sel-v">'+nf(SEL.populacao)+'</span></div>'+
+       '<div class="sel-f"><span class="sel-k">Total no período</span><span class="sel-v" style="font-size:11.5px">'+nf(SEL.total_ocorrencias)+'</span></div>'+
+       '<div class="sel-f"><span class="sel-k">Crimes graves</span><span class="sel-v" style="font-size:11.5px">'+nf(SEL.crimes_graves)+'</span></div>'+
+       '</div>';
+    if(SEL.taxa_total_1000!=null){
+      var dif=SEL.taxa_total_1000-136.5, ac=dif>=0;
+      h+='<div class="sel-d" style="color:'+(ac?'#fb923c':'#4ade80')+'">'+
+         (ac?'▲ ':'▼ ')+nf(Math.abs(dif),1)+' ante a média municipal (136,5)</div>';}
+    h+='</div>';
+  }else h+='<div class="sel-vazio">Passe o cursor sobre um bairro para ver seus números e a posição na escala.</div>';
+
+  var pos=SEL?posNaEscala(valor(SEL)):null;
+  h+='<div class="g"><div class="gt">'+cfg().lbl+' — '+(ind==='taxa'?'por mil hab.':'nº absoluto')+'</div>'+
+     '<div class="scale-wrap">'+
+     (pos!==null?'<div class="scale-ind" style="left:'+pos+'%"><b>'+nf(valor(SEL),dec())+'</b><i></i></div>':'')+
+     '<div class="lgd-bar" id="lgd-bar" style="background:'+gradCSS(RAMPA)+'">'+
+     '<div class="lgd-ind" id="lgd-ind"></div><div class="lgd-tip" id="lgd-tip"></div></div>'+
+     (pos!==null?'<div class="scale-line" style="left:'+pos+'%"></div>':'')+
+     '</div><div class="lgd-lab"><span>Menor</span><span>Maior</span></div></div>';
+
+  h+='<div class="g" style="margin-top:-4px"><div class="gt">Faixas</div>';
+  r.slice().reverse().forEach(function(lb,k){
+    var ci=r.length-1-k, on=!FILTRO.a||FILTRO.a.has(lb);
+    h+='<div class="li'+(on?'':' off')+'" onclick="filtrar(\''+lb.replace(/'/g,"\\'")+'\')">'+
+       '<div class="sw" style="background:'+RAMPA[ci]+'"></div><span>'+lb+'</span>'+
+       '<span class="cnt">'+(cont[lb]||0)+'</span></div>';});
+  if(cont['Sem dado'])
+    h+='<div class="li"><div class="sw" style="background:'+SEMDADO+'"></div><span>Sem dado</span>'+
+       '<span class="cnt">'+cont['Sem dado']+'</span></div>';
+  h+='<div class="note">Clique numa faixa para ocultá-la. O número é a quantidade de bairros.</div></div>';
+
+  var top=feats.slice().filter(function(f){return valor(f.properties)!=null;})
+    .sort(function(a,b){return valor(b.properties)-valor(a.properties);}).slice(0,10);
+  h+='<div class="g"><div class="gt">Maiores '+(ind==='taxa'?'taxas':'volumes')+'</div>';
+  top.forEach(function(f,k){var p=f.properties;
+    h+='<div class="rk" onclick="irPara('+k+')"><span class="n">'+(k+1)+'</span>'+
+       '<span class="m">'+p.bairro+'</span>'+
+       '<span class="p" style="color:'+corV(valor(p))+'">'+nf(valor(p),dec())+
+       (p.taxa_confiavel==='Denominador pequeno'?' <span style="color:#fb923c;font-size:9px">*</span>':'')+'</span></div>';});
+  h+='<div class="note">* bairro com menos de 500 habitantes — a taxa oscila muito e deve ser lida com cautela.</div></div>';
+
+  h+='<div class="g"><div class="gt">Natureza dos atendimentos</div>';
+  [['Atividade preventiva',4842,'#4ade80'],['Averiguação',3818,'#60a5fa'],
+   ['Perturbação do sossego',3106,'#a78bfa'],['Apoio e auxílio',2388,'#38bdf8'],
+   ['Abordagem',1752,'#fbbf24'],['Patrulhamento',1540,'#94a3b8'],
+   ['Orientação das partes',1367,'#c084fc'],['Pessoa em sit. de rua',742,'#fb923c'],
+   ['Disparo de alarme',608,'#64748b'],['Violência doméstica',556,'#f43f5e'],
+   ['Desinteligência',363,'#94a3b8'],['Furto',334,'#de2d26']].forEach(function(x){
+    h+='<div class="bar-row"><div class="bar-lb"><span class="n" style="font-size:10px">'+x[0]+'</span>'+
+       '<span class="v" style="color:'+x[2]+';font-size:10.5px">'+nf(x[1])+'</span></div>'+
+       '<div class="bar-bg" style="height:5px"><div class="bar-fl" style="width:'+(x[1]/4842*100)+'%;background:'+x[2]+'"></div></div></div>';});
+  h+='<div class="note">Município, 2024 a 2026. Total de 24.127 registros.</div></div>';
+
+  h+='<div class="g"><div class="gt">Síntese municipal</div><table class="pt" style="margin-top:0">'+
+     '<tr><th>Período</th><td>2024 a 2026</td></tr>'+
+     '<tr><th>Total de ocorrências</th><td>24.127</td></tr>'+
+     '<tr><th>Taxa por mil habitantes</th><td>136,5</td></tr>'+
+     '<tr><th>Crimes graves</th><td>243 (1,0%)</td></tr>'+
+     '<tr><th>Taxa de crimes graves</th><td>1,37 por mil</td></tr></table></div>';
+
+  h+='<div class="g"><div class="note" style="font-style:normal;background:rgba(255,239,0,.07);'+
+     'border-left:2px solid var(--accent);padding:9px 10px;border-radius:0 5px 5px 0">'+
+     '<b style="color:var(--accent)">O que este mapa mede</b><br>Registros de <b>atendimento da Guarda Municipal</b>, '+
+     'não estatística criminal. Apenas 1% corresponde a crimes graves. Volume elevado pode indicar presença ativa '+
+     'da GM, e não necessariamente insegurança.</div></div>';
+
+  if(document.getElementById('k-vias').checked)
+    h+='<div class="g"><div class="gt">Hierarquia viária</div>'+
+       [['Regional',2.6],['Arterial',2.1],['Arterial Secundária',1.6],['Coletora',1.2],['Local',1]].map(function(x){
+         var v=VIA[x[0]];
+         return '<div class="li"><div class="sw" style="height:'+x[1]+'px;background:'+v.c+';border:none;opacity:'+
+           Math.max(.45,v.o)+'"></div><span>'+x[0]+'</span></div>';}).join('')+
+       '<div class="note">Camada de referência. Eixo de logradouro da base municipal.</div></div>';
+
+  document.getElementById('lg').innerHTML=h;
+  ligarSonda();}
+
+function ligarSonda(){
+  var bar=document.getElementById('lgd-bar');
+  if(!bar)return;
+  var i=document.getElementById('lgd-ind'), tp=document.getElementById('lgd-tip');
+  bar.onmousemove=function(e){
+    var rc=bar.getBoundingClientRect(), t=Math.max(0,Math.min(.999,(e.clientX-rc.left)/rc.width));
+    i.style.display='block'; i.style.left=(t*100)+'%';
+    tp.style.display='block'; tp.style.left=(t*100)+'%';
+    tp.textContent=valorNaPos(t);};
+  bar.onmouseleave=function(){i.style.display='none';tp.style.display='none';};}
+
+// ── controles ─────────────────────────────────────────────────────────────
+window.irPara=function(i){
+  var top=json_bairros.features.filter(function(f){return valor(f.properties)!=null;})
+    .sort(function(a,b){return valor(b.properties)-valor(a.properties);}).slice(0,10);
+  var f=top[i]; if(!f)return;
+  map.fitBounds(L.geoJSON(f).getBounds(),{maxZoom:15,animate:true});
+  Lb.eachLayer(function(l){if(l.feature.properties.bairro===f.properties.bairro)l.openPopup();});};
+window.setInd=function(e){
+  if(e===ind)return;
+  ind=e; FILTRO={}; SEL=null;
+  document.getElementById('e-taxa').classList.toggle('on',e==='taxa');
+  document.getElementById('e-bruto').classList.toggle('on',e==='bruto');
+  document.getElementById('esc-hint').textContent = e==='taxa'
+    ? 'Ocorrências por mil habitantes. Corrige o efeito do tamanho do bairro e revela a intensidade real do atendimento.'
+    : 'Número absoluto de ocorrências. Mostra o volume de trabalho, mas acompanha em grande parte o tamanho da população.';
+  Lb.setStyle(est); legenda();};
+window.setTema=function(t){tema=t;FILTRO={};SEL=null;Lb.setStyle(est);legenda();};
+window.filtrar=function(cls){
+  if(!FILTRO.a) FILTRO.a=new Set(rotulos().concat(['Sem dado']));
+  if(FILTRO.a.has(cls)) FILTRO.a.delete(cls); else FILTRO.a.add(cls);
+  Lb.setStyle(est);
+  Lb.eachLayer(function(l){if(l._path)l._path.style.pointerEvents=oculto(l.feature)?'none':'';});
+  SEL=null; legenda();};
+window.cam=function(k,on){
+  if(on)CAM[k].addTo(map); else map.removeLayer(CAM[k]);
+  if(k==='vias')legenda();};
+window.op=function(v){OP=parseFloat(v);Lb.setStyle(est);};
+window.bm=function(n,b){Object.values(bms).forEach(function(l){map.removeLayer(l);});
+  bms[n].addTo(map);bms[n].bringToBack();
+  document.querySelectorAll('.bmb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');};
+window.togglePainel=function(){document.getElementById('sb').classList.toggle('hidden');};
+window.toggleLegenda=function(){document.getElementById('rb').classList.toggle('hidden');};
+
+// ── exportação ────────────────────────────────────────────────────────────
+window.abrirExport=function(){document.getElementById('mst').textContent='';document.getElementById('md').classList.add('open');};
+window.fecharExport=function(){document.getElementById('md').classList.remove('open');};
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);
+  c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
+function nrt(c,cx,cy,s){c.save();c.fillStyle='#fff';c.strokeStyle='#000';c.lineWidth=.5;
+  c.beginPath();c.moveTo(cx,cy-s);c.lineTo(cx+s*.4,cy+s*.2);c.lineTo(cx,cy+s*.05);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#666';c.beginPath();c.moveTo(cx,cy-s);c.lineTo(cx-s*.4,cy+s*.2);c.lineTo(cx,cy+s*.05);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#fff';c.font='bold 10px Arial';c.textAlign='center';c.fillText('N',cx,cy-s-6);c.restore();}
+function dl(d,n){var a=document.createElement('a');a.href=d;a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a);}
+
+window.exportar=function(fmt){
+  var st=document.getElementById('mst');st.textContent='Capturando…';
+  var el=document.getElementById('map'),W=el.offsetWidth,H=el.offsetHeight,mr=el.getBoundingClientRect();
+  var cv=document.createElement('canvas');cv.width=W;cv.height=H;var c=cv.getContext('2d');
+  c.fillStyle='#0d1b2a';c.fillRect(0,0,W,H);
+  map.eachLayer(function(l){if(!l._tiles)return;
+    Object.keys(l._tiles).forEach(function(k){var t=l._tiles[k],im=t.el;
+      if(!im||im.tagName!=='IMG'||!im.complete)return;var r=im.getBoundingClientRect();
+      try{c.drawImage(im,Math.round(r.left-mr.left),Math.round(r.top-mr.top),Math.round(r.width)||256,Math.round(r.height)||256);}catch(e){}});});
+  st.textContent='Renderizando…';
+  setTimeout(function(){
+    function pt(lng,lat){var p=map.latLngToContainerPoint(L.latLng(lat,lng));return[p.x,p.y];}
+    function pol(gl,sf,skip){if(!map.hasLayer(gl))return;
+      gl.eachLayer(function(l){if(!l.feature)return;if(skip&&skip(l.feature))return;
+        var s=sf(l.feature),g=l.feature.geometry,tp=g.type;
+        if(tp!=='Polygon'&&tp!=='MultiPolygon')return;
+        (tp==='Polygon'?[g.coordinates]:g.coordinates).forEach(function(poly){c.beginPath();
+          poly.forEach(function(ring){ring.forEach(function(co,i){var q=pt(co[0],co[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});c.closePath();});
+          if(s.fillColor&&s.fillOpacity>0){c.globalAlpha=s.fillOpacity;c.fillStyle=s.fillColor;c.fill('evenodd');}
+          if(s.color&&s.weight>0){c.globalAlpha=s.opacity||1;c.strokeStyle=s.color;c.lineWidth=s.weight;c.stroke();}});
+        c.globalAlpha=1;});}
+    pol(Lb,est,oculto);
+    if(map.hasLayer(Lvias))[5,4,3,2,1].forEach(function(o){
+      Lvias.eachLayer(function(l){if(!l.feature)return;
+        var p=l.feature.properties;if(p.ordem_hier!==o)return;
+        var v=VIA[p.hierarquia]||VIA['Local'],g=l.feature.geometry;
+        (g.type==='LineString'?[g.coordinates]:g.coordinates).forEach(function(cs){
+          c.beginPath();cs.forEach(function(co,i){var q=pt(co[0],co[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});
+          c.globalAlpha=v.o;c.strokeStyle=v.c;c.lineWidth=v.w;c.lineCap='round';c.stroke();});
+        c.globalAlpha=1;});});
+    if(map.hasLayer(Llim))pol(Llim,function(){return{color:'#FFEF00',weight:2.2,opacity:.9,fillOpacity:0};});
+
+    var P=14,t1='Segurança Urbana — Guarda Municipal · Bragança Paulista',
+        t2=cfg().lbl+' · '+(ind==='taxa'?'por mil habitantes':'números absolutos')+' · 2024 a 2026';
+    c.font='bold 13px Arial';var w1=c.measureText(t1).width;
+    c.font='10px Arial';var w2=c.measureText(t2).width;
+    var tW=Math.max(w1,w2)+P*2+4,tH=44;
+    c.fillStyle='rgba(1,117,188,.96)';rr(c,P,P,tW,tH,8);c.fill();
+    c.fillStyle='#FFEF00';c.fillRect(P,P+tH-3,tW,3);
+    c.fillStyle='#fff';c.font='bold 13px Arial';c.textAlign='left';c.fillText(t1,P*2,P+19);
+    c.fillStyle='#FFEF00';c.font='10px Arial';c.fillText(t2,P*2,P+34);
+    nrt(c,W-44,56,18);
+
+    var r=rotulos();
+    var its=r.map(function(lb,i){return [lb,RAMPA[i]];}).reverse()
+      .filter(function(x){return !FILTRO.a||FILTRO.a.has(x[0]);});
+    if(its.length){
+      var rh=15,gp=9,LP=11,mw=0;c.font='9px Arial';
+      its.forEach(function(x){mw=Math.max(mw,c.measureText(x[0]).width);});
+      var lw=Math.min(mw+34+LP*2,215),lh=rh+its.length*rh+gp*2+6,lx=P,ly=H-lh-30;
+      c.globalAlpha=.95;c.fillStyle='rgba(1,48,90,.95)';rr(c,lx,ly,lw,lh,8);c.fill();
+      c.strokeStyle='rgba(255,239,0,.35)';c.lineWidth=1;rr(c,lx,ly,lw,lh,8);c.stroke();c.globalAlpha=1;
+      var cy=ly+gp;
+      c.fillStyle='#a8cce8';c.font='bold 8px Arial';
+      c.fillText(ind==='taxa'?'POR MIL HABITANTES':'Nº DE OCORRÊNCIAS',lx+LP,cy+9);cy+=rh+2;
+      its.forEach(function(x){
+        c.fillStyle=x[1];c.fillRect(lx+LP,cy+2,14,10);
+        c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=.5;c.strokeRect(lx+LP,cy+2,14,10);
+        c.fillStyle='#e8eaf0';c.font='9px Arial';c.fillText(x[0],lx+LP+20,cy+10);cy+=rh;});}
+    c.fillStyle='rgba(255,255,255,.55)';c.font='8px Arial';c.textAlign='right';
+    c.fillText('Fonte: Guarda Municipal de Bragança Paulista · população: IBGE Censo 2022',W-12,H-10);
+
+    try{var img=cv.toDataURL('image/jpeg',.93),fn='seguranca_'+tema+'_'+ind;
+      if(fmt==='jpeg'){dl(img,fn+'.jpg');}
+      else{var o=W>H?'landscape':'portrait',mW=W*.2646,mH=H*.2646;
+        var pdf=new jspdf.jsPDF({orientation:o,unit:'mm',format:[mW,mH]});
+        pdf.addImage(img,'JPEG',0,0,mW,mH);pdf.save(fn+'.pdf');}
+      st.textContent='✓ Download iniciado!';setTimeout(fecharExport,1500);
+    }catch(e){st.textContent='✗ Erro: '+e.message;}
+  },40);};
+
+var OB='bp_seguranca_v2';
+window.fecharOb=function(){document.getElementById('ob').classList.remove('visible');localStorage.setItem(OB,'1');};
+if(!localStorage.getItem(OB))document.getElementById('ob').classList.add('visible');
+
+legenda();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+GEOPORTAL - REVISAO DO PLANO DIRETOR
+Braganca Paulista | Divisao de Planejamento
+Secretaria Municipal de Planejamento
+
+ESTRUTURA
+  index.html ..... pagina inicial do portal (12 mapas)
+  portal.html .... copia da pagina inicial; e para onde apontam
+                   os botoes "Portal" dentro de cada mapa.
+                   Manter os DOIS arquivos.
+  geopackages/ ... bases em GeoPackage (EPSG:31983), cada uma
+                   com projeto QGIS embutido e estilos
+  relatorios/ .... relatorios tecnicos e diagnosticos (.docx)
+
+  Os arquivos *_COMPLETO.zip na raiz sao os pacotes de entrega
+  de cada mapa (GeoPackage + QML + projeto QGIS + WebGIS +
+  relatorio). Nao precisam ir para o servidor de publicacao.
+
+MAPAS PUBLICADOS (10)
+
+  mapa01/ ......... Fluxos Intermunicipais (REGIC 2018)
+                    41 municipios, 4 temas, 2 direcoes
+  censo2022/ ...... Censo 2022 por setor censitario
+  densidade/ ...... Densidade Demografica
+                    duas escalas: bairro e setor censitario
+  renda/ .......... Renda Media dos Responsaveis
+  ipvs/ ........... Vulnerabilidade Social (SEADE)
+                    cruzado com escolaridade, cor/raca e moradia
+  habitacao/ ...... Demanda Habitacional (CADHI 2022 e 2024)
+                    21.460 familias, 8 indicadores
+  cadastro/ ....... Cadastro Imobiliario e Edificacoes
+                    70.619 lotes, 83.558 edificacoes
+  infraestrutura/ . Infraestrutura e Vias
+  queimadas/ ...... Focos de Incendio (INPE)
+  ocorrencias/ .... Atendimentos da Guarda Municipal
+                    absoluto e por mil habitantes
+
+NAO PUBLICADOS NO PORTAL
+  As pastas legislacao/ e meioambiente/ continuam no pacote,
+  mas NAO tem card na pagina inicial: ambas estao em estagio
+  inicial de elaboracao.
+
+  legislacao/ ..... Legislacao Urbanistica e Zoneamento
+                    Em elaboracao. Acessivel por URL direta.
+  meioambiente/ ... Meio Ambiente
+                    Em elaboracao. Faltam ainda as 7 camadas de
+                    dados (hidrografia, nascentes, APP, curvas
+                    de nivel, bacias e unidades de conservacao):
+                    reenviar a pasta data/ do export original.
+
+  Para republicar qualquer um dos dois, basta reinserir o card
+  correspondente em index.html e portal.html e atualizar as
+  contagens ("10 visualizadores" e o stat-num de Temas).
+
+PUBLICACAO
+  Copiar toda a pasta para o servidor. Os mapas usam caminhos
+  relativos, entao a estrutura de pastas deve ser preservada.
+
+  IMPORTANTE - o mapa cadastro/ usa TILES VETORIAIS e NAO
+  funciona aberto direto do disco (file://). Precisa ser
+  servido por HTTP. Os demais funcionam de qualquer forma.
+  Para testar localmente, na raiz da pasta:
+      python3 -m http.server 8000
+  e acessar http://localhost:8000
+
+MAPAS BASE - TODOS DA ESRI (sem chave de API)
+  Escuro ..... Canvas/World_Dark_Gray_Base    ate zoom 16
+  Mapa ....... World_Street_Map               ate zoom 17
+  Satelite ... World_Imagery                  ate zoom 17
+
+  URL base: https://server.arcgisonline.com/ArcGIS/rest/services/
+            <SERVICO>/MapServer/tile/{z}/{y}/{x}
+
+  ATENCAO 1 - A Esri usa a ordem {z}/{y}/{x}, e NAO {z}/{x}/{y}
+  como a maioria dos servicos XYZ. Inverter produz tiles
+  embaralhados.
+
+  ATENCAO 2 - Nao usar os enderecos ibasemaps-api.arcgis.com nem
+  static-map-tiles-api.arcgis.com: esses EXIGEM token.
+  Apenas server.arcgisonline.com e livre.
+
+  ATENCAO 3 - Acima do maxNativeZoom de cada servico o Leaflet
+  escala o tile. Como o mapa base fica sob camadas opacas, o
+  leve borrao nao compromete a leitura.
+
+  POR QUE MUDAMOS
+  - CARTO passou a exigir chave nos basemaps antes anonimos e
+    passou a servir a marca d'agua "API KEY REQUIRED".
+  - OpenStreetMap responde 403 por politica de uso, sobretudo
+    quando o arquivo e aberto localmente (sem Referer).
+  - O satelite do Google usava um endpoint interno
+    (mt1.google.com/vt), nao documentado e em desacordo com os
+    Termos da Plataforma Google Maps. Por se tratar de portal
+    institucional, foi substituido.
+
+  Se a Esri tambem vier a restringir, a alternativa definitiva e
+  servir os tiles do proprio servidor da Prefeitura, ou usar o
+  aerolevantamento municipal quando estiver disponivel.
+
+HEADERS UNIFORMIZADOS
+  Todos os 12 mapas seguem o padrao do IPVS:
+    ponto amarelo > titulo (destaque em amarelo no subtitulo)
+    > linha "Revisao do Plano Diretor - Braganca Paulista"
+    > separador flexivel > badge com a fonte do dado
+    > link Portal > botoes de acao
+
+  O bloco CSS "header uniformizado (padrao IPVS)" no fim da
+  folha de estilo de cada mapa normaliza h1, subtitulo e badge
+  independentemente do id do header (#hd, #header ou
+  #pd-header). Se um mapa novo for adicionado, copiar esse
+  bloco para ele.
+
+  ATENCAO: nao acrescentar um segundo elemento com flex:1 no
+  header. Dois separadores dividem o espaco entre si e empurram
+  o conteudo para a esquerda, que foi o que ocorreu no censo2022.
+
+LINGUAGEM VISUAL COMUM
+  Cabecalho azul com faixa amarela, painel de controles a
+  esquerda, painel de legenda a direita com indicador de
+  posicao na escala, popups com graficos comparativos,
+  exportacao em JPEG e PDF com legenda e rosa dos ventos.

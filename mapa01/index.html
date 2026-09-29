@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+<title>Estrutura Regional e Fluxos · Bragança Paulista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="js/leaflet.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;}
+:root{--blue:#0175bc;--accent:#FFEF00;--bg:#0d1b2a;--bg-panel:#0f2236;--bg-panel2:#132b42;
+  --bg-card:#1a3550;--border:rgba(255,255,255,.10);--text:#e8eaf0;--muted:#7a9ab5;
+  --header-h:52px;--sidebar-w:320px;--in:#4ade80;--out:#fb923c;}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);}
+#map{position:fixed!important;top:var(--header-h)!important;left:0;right:0;bottom:0;width:auto!important;height:auto!important;}
+.leaflet-top,.leaflet-bottom{display:none!important;}
+
+#hd{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--blue);
+  border-bottom:3px solid var(--accent);display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+#hd .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+#hd h1{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;
+  letter-spacing:.04em;white-space:nowrap;margin:0;}
+#hd h1 span{color:var(--accent);}
+#hd .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;margin:0;}
+#hd .sep{flex:1;}
+.badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
+  border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+#back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);color:rgba(255,255,255,.8);
+  font-size:12px;padding:6px 10px;border-radius:6px;text-decoration:none;}
+#back:hover{color:var(--accent);}
+.hbtn{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);color:var(--accent);
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:6px 12px;border-radius:6px;cursor:pointer;}
+.hbtn:hover{background:rgba(255,239,0,.18);}
+
+#sb{position:fixed;top:var(--header-h);left:0;width:var(--sidebar-w);height:calc(100vh - var(--header-h));
+  background:var(--bg-panel);border-right:1px solid var(--border);z-index:8000;display:flex;
+  flex-direction:column;transition:transform .25s;overflow:hidden;}
+#sb.hidden{transform:translateX(-100%);}
+.sec{border-bottom:1px solid var(--border);flex-shrink:0;padding-bottom:10px;}
+.lbl{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--muted);
+  letter-spacing:.08em;text-transform:uppercase;padding:13px 16px 8px;display:block;}
+.hint{font-size:10.5px;color:var(--muted);line-height:1.5;padding:0 16px 8px;font-style:italic;}
+
+/* modo origem/destino */
+.mode{display:flex;gap:0;margin:0 16px 4px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.mode button{flex:1;background:var(--bg-card);border:none;color:var(--muted);font-family:'DM Sans',sans-serif;
+  font-size:11.5px;font-weight:600;padding:9px 6px;cursor:pointer;transition:all .15s;line-height:1.25;}
+.mode button small{display:block;font-size:9.5px;font-weight:400;opacity:.75;margin-top:2px;}
+.mode button.on{background:rgba(255,239,0,.14);color:var(--accent);}
+.mode button:first-child.on{box-shadow:inset 3px 0 0 var(--in);}
+.mode button:last-child.on{box-shadow:inset 3px 0 0 var(--out);}
+
+/* temas */
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 16px;}
+.themes button{background:var(--bg-card);border:1px solid var(--border);color:var(--muted);
+  font-family:'DM Sans',sans-serif;font-size:11px;padding:9px 6px;border-radius:7px;cursor:pointer;transition:all .15s;}
+.themes button.on{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,.08);}
+.themes button i{display:block;font-style:normal;font-size:15px;margin-bottom:3px;}
+
+.sub-t{padding:8px 16px 0;}
+.scale{display:flex;gap:0;margin:9px 16px 0;border-radius:7px;overflow:hidden;border:1px solid var(--border);}
+.scale button{flex:1;background:var(--bg-card);border:none;color:var(--muted);font-family:'DM Sans',sans-serif;
+  font-size:10.5px;font-weight:600;padding:8px 5px;cursor:pointer;transition:all .15s;line-height:1.3;}
+.scale button small{display:block;font-size:9px;font-weight:400;opacity:.7;margin-top:1px;}
+.scale button.on{background:rgba(255,239,0,.13);color:var(--accent);}
+.scale button:disabled{opacity:.35;cursor:not-allowed;}
+.sub-t select{width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 9px;border-radius:6px;cursor:pointer;}
+
+.ltr{display:flex;align-items:center;gap:10px;padding:6px 16px;}
+.ltr label:not(.tg){flex:1;font-size:12px;color:var(--text);cursor:pointer;}
+.tg{position:relative;width:32px;height:18px;flex:0 0 32px;}
+.tg input{opacity:0;width:0;height:0;position:absolute;}
+.trk{position:absolute;inset:0;background:var(--bg-card);border-radius:9px;cursor:pointer;
+  transition:background .2s;border:1px solid var(--border);}
+.trk::after{content:'';position:absolute;left:2px;top:2px;width:12px;height:12px;background:var(--muted);
+  border-radius:50%;transition:all .2s;}
+.tg input:checked + .trk{background:rgba(255,239,0,.15);border-color:var(--accent);}
+.tg input:checked + .trk::after{background:var(--accent);left:16px;}
+.opr{display:flex;align-items:center;gap:9px;padding:2px 16px 4px 34px;}
+.opr label{font-size:10px;color:var(--muted);width:58px;flex-shrink:0;}
+.opr input{flex:1;height:3px;accent-color:var(--accent);cursor:pointer;}
+.opr span{font-size:10px;color:var(--muted);width:30px;text-align:right;}
+
+#lg{flex:1;overflow-y:auto;padding:12px 14px;min-height:0;}
+#lg::-webkit-scrollbar,#sb::-webkit-scrollbar{width:4px;}
+#lg::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
+.g{margin-bottom:14px;}
+.gt{font-family:'Syne',sans-serif;font-size:9.5px;font-weight:700;color:var(--muted);
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;}
+.li{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.sw{width:16px;height:12px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
+.swc{border-radius:50%;flex-shrink:0;border:1.5px solid #fff;}
+.swl{height:3px;border-radius:2px;flex-shrink:0;width:22px;}
+.li span{font-size:11px;color:var(--text);line-height:1.3;}
+.note{font-size:10px;color:var(--muted);line-height:1.5;padding:4px 2px 0;font-style:italic;}
+#rank{padding:2px 2px 0;}
+.rk{display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:4px;font-size:11px;cursor:pointer;}
+.rk:hover{background:rgba(255,255,255,.06);}
+.rk .n{width:15px;color:var(--muted);font-size:10px;text-align:right;flex-shrink:0;}
+.rk .m{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rk .p{font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;}
+
+.bmr{display:flex;gap:7px;padding:0 16px;}
+.bmb{flex:1;background:var(--bg-card);border:1px solid var(--border);color:var(--muted);
+  font-size:11px;padding:6px 4px;border-radius:6px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;}
+.bmb.on{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,.08);}
+
+.leaflet-popup-content-wrapper{background:var(--bg-panel2)!important;border:1px solid var(--border)!important;
+  border-radius:10px!important;box-shadow:0 8px 32px rgba(0,0,0,.5)!important;width:330px!important;}
+.leaflet-popup-tip{background:var(--bg-panel2)!important;}
+.leaflet-popup-content{color:var(--text)!important;font-family:'DM Sans',sans-serif!important;font-size:12px!important;
+  margin:0!important;padding:14px 16px!important;max-height:60vh!important;overflow-y:auto!important;overflow-x:hidden!important;}
+.leaflet-popup-close-button{color:var(--muted)!important;}
+.ph{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.15;}
+.ps{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:10px;}
+.pt{width:100%;border-collapse:collapse;}
+.pt th{text-align:left;padding:5px 8px 5px 0;font-size:10px;font-weight:600;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid rgba(255,255,255,.06);width:56%;word-break:break-word;}
+.pt td{padding:5px 0 5px 8px;font-size:12px;color:var(--text);border-bottom:1px solid rgba(255,255,255,.06);
+  text-align:right;font-variant-numeric:tabular-nums;}
+.pt tr:last-child th,.pt tr:last-child td{border-bottom:none;}
+.tag{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;margin-top:9px;}
+.pexp{font-size:11px;color:var(--muted);line-height:1.5;margin-top:9px;padding-top:9px;
+  border-top:1px solid rgba(255,255,255,.08);}
+/* gráfico de barras no popup */
+.chart{margin:10px 0 4px;}
+.chart-t{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.chart-t::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.09);}
+.bar-row{margin-bottom:8px;}
+.bar-lb{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px;}
+.bar-lb .n{font-size:11px;color:var(--text);line-height:1.25;}
+.bar-lb .v{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0;}
+.bar-bg{height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
+.bar-fl{height:100%;border-radius:4px;transition:width .3s;}
+.bar-sub{font-size:9.5px;color:var(--muted);margin-top:2px;}
+/* comparativo entre temas */
+.mini{display:flex;gap:5px;margin-top:9px;}
+.mini-c{flex:1;background:rgba(255,255,255,.04);border-radius:6px;padding:6px 5px;text-align:center;}
+.mini-c.on{background:rgba(255,239,0,.10);box-shadow:inset 0 0 0 1px rgba(255,239,0,.28);}
+.mini-c .i{font-size:13px;line-height:1;}
+.mini-c .v{font-size:11px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums;}
+.mini-c .l{font-size:8px;color:var(--muted);margin-top:1px;line-height:1.2;}
+.pnone{font-size:11px;color:var(--muted);font-style:italic;padding:6px 0;}
+
+
+/* gráficos no popup */
+.pc-sec{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);margin:12px 0 6px;padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.08);}
+.pc-sec:first-of-type{border-top:none;padding-top:0;margin-top:8px;}
+.bars{display:flex;flex-direction:column;gap:7px;}
+.brow{display:flex;flex-direction:column;gap:3px;}
+.bhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.blbl{font-size:11px;color:var(--text);line-height:1.2;}
+.bval{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0;}
+.btrack{height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
+.bfill{height:100%;border-radius:4px;transition:width .3s;}
+.bsub{font-size:9.5px;color:var(--muted);margin-top:1px;}
+.pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;margin:8px 0 2px;}
+.pc-f{display:flex;flex-direction:column;}
+.pc-k{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.pc-v{font-size:13px;font-weight:700;color:var(--accent);font-family:'Syne',sans-serif;}
+.pc-note{font-size:10px;color:var(--muted);line-height:1.5;margin-top:9px;padding-top:8px;
+  border-top:1px solid rgba(255,255,255,.08);font-style:italic;}
+.leaflet-popup-content-wrapper{width:352px!important;max-width:352px!important;}
+#md{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  z-index:99000;align-items:center;justify-content:center;}
+#md.open{display:flex;}
+#mb{background:var(--bg-panel2);border:1px solid var(--border);border-radius:14px;padding:26px 30px;width:340px;}
+#mt{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;}
+#mdesc{font-size:12px;color:var(--muted);margin:0 0 18px;}
+#mbtn{display:flex;gap:10px;margin-bottom:14px;}
+#mst{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:10px;text-align:center;}
+#mcl{width:100%;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);
+  font-size:12px;padding:8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.eb{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);
+  font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.eb:hover{border-color:var(--accent);color:var(--accent);}
+
+#ob{position:fixed;inset:0;z-index:99999;background:rgba(1,48,90,.93);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;}
+#ob.visible{display:flex;}
+#obb{background:var(--bg-panel2);border:1px solid var(--border);border-radius:16px;padding:30px;max-width:470px;width:92%;}
+#obi{font-size:32px;margin-bottom:10px;}
+#obt{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:10px;}
+#obd{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:14px;}
+#obd b{color:var(--text);}
+#obl{background:rgba(255,255,255,.04);border-radius:8px;padding:11px 13px;margin-bottom:18px;font-size:12px;line-height:1.7;}
+#obl .k{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;}
+#obbt{width:100%;background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:14px;
+  font-weight:700;padding:12px;border:none;border-radius:8px;cursor:pointer;}
+
+/* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
+#hd h1, #header h1, #pd-header h1 {
+  font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:#fff;
+  text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
+}
+#hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
+#hd .sub, #header .sub, #pd-header .sub,
+#hd .subtitle, #header .subtitle, #pd-header .subtitle {
+  font-size:11px; color:rgba(255,255,255,.65); font-weight:300;
+  white-space:nowrap; margin:0; line-height:1.3;
+}
+#hd .badge, #header .badge, #pd-header .badge,
+#hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
+  border:1px solid rgba(255,239,0,.4); background:transparent;
+  padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
+}
+</style>
+</head>
+<body>
+
+<div id="hd">
+  <div class="dot"></div>
+  <div>
+    <h1>Estrutura Regional e <span>Fluxos Intermunicipais</span></h1>
+    <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
+  </div>
+  <div class="sep"></div>
+  <span class="badge">LEITURA TÉCNICA</span>
+  <a id="back" href="../portal.html">&#8592; Portal</a>
+  <button class="hbtn" onclick="abrirExport()">&#8595; Exportar</button>
+  <button class="hbtn" onclick="togglePainel()">&#9776; Painel</button>
+</div>
+
+<div id="map"></div>
+
+<div id="sb">
+  <div class="sec">
+    <span class="lbl">O que você quer ver</span>
+    <div class="mode">
+      <button id="m-destino" class="on" onclick="setModo('destino')">Quem procura Bragança<small>Bragança como destino</small></button>
+      <button id="m-origem" onclick="setModo('origem')">Onde Bragança busca<small>Bragança como origem</small></button>
+    </div>
+    <p class="hint" id="modo-hint">Municípios que enviam moradores a Bragança. Mostra o alcance da cidade como polo regional.</p>
+  </div>
+
+  <div class="sec">
+    <span class="lbl">Tema</span>
+    <div class="themes">
+      <button id="t-saude" class="on" onclick="setTema('saude')"><i>&#127973;</i>Saúde</button>
+      <button id="t-educacao" onclick="setTema('educacao')"><i>&#127979;</i>Educação</button>
+      <button id="t-turismo" onclick="setTema('turismo')"><i>&#127963;</i>Turismo e cultura</button>
+      <button id="t-servicos" onclick="setTema('servicos')"><i>&#128717;</i>Comércio e serviços</button>
+    </div>
+    <div class="sub-t"><select id="subtema" onchange="setSub(this.value)"></select></div>
+    <span class="lbl" style="padding-top:12px">Espessura da linha</span>
+    <div class="scale">
+      <button id="e-peso" class="on" onclick="setEsc('peso')">Peso populacional<small>quanta gente representa</small></button>
+      <button id="e-pct" onclick="setEsc('pct')">Dependência<small>% do município</small></button>
+    </div>
+    <p class="hint" id="esc-hint">Linha proporcional à população equivalente — percentual aplicado à população do município de origem.</p>
+  </div>
+
+  <div class="sec">
+    <span class="lbl">Camadas de base</span>
+    <div class="ltr"><label for="k-sedes">Centralidade (círculos)</label>
+      <label class="tg"><input type="checkbox" id="k-sedes" checked onchange="cam('sedes',this.checked)"><span class="trk"></span></label></div>
+    <div class="ltr"><label for="k-mun">Limites municipais</label>
+      <label class="tg"><input type="checkbox" id="k-mun" checked onchange="cam('mun',this.checked)"><span class="trk"></span></label></div>
+    <div class="ltr"><label for="k-rod">Rodovias</label>
+      <label class="tg"><input type="checkbox" id="k-rod" checked onchange="cam('rod',this.checked)"><span class="trk"></span></label></div>
+    <div class="ltr"><label for="k-rgi">Região Imediata (limite)</label>
+      <label class="tg"><input type="checkbox" id="k-rgi" checked onchange="cam('rgi',this.checked)"><span class="trk"></span></label></div>
+  </div>
+
+  <div class="sec">
+    <span class="lbl">Mapa base</span>
+    <div class="bmr">
+      <button class="bmb on" onclick="bm('dark',this)">Escuro</button>
+      <button class="bmb" onclick="bm('osm',this)">Mapa</button>
+      <button class="bmb" onclick="bm('sat',this)">Satélite</button>
+    </div>
+  </div>
+
+  <div id="lg"></div>
+</div>
+
+<div id="md"><div id="mb">
+  <div id="mt">&#8595; Exportar mapa</div>
+  <p id="mdesc">O mapa é capturado como está na tela, com a legenda do tema selecionado.</p>
+  <div id="mbtn"><button class="eb" onclick="exportar('jpeg')">Imagem JPEG</button>
+    <button class="eb" onclick="exportar('pdf')">PDF</button></div>
+  <div id="mst"></div><button id="mcl" onclick="fecharExport()">Cancelar</button>
+</div></div>
+
+<div id="ob"><div id="obb">
+  <div id="obi">&#127760;</div>
+  <div id="obt">Estrutura Regional e Fluxos</div>
+  <div id="obd">Este mapa mostra <b>como Bragança Paulista se relaciona com os municípios vizinhos</b> — para onde seus moradores vão e de onde vêm as pessoas que a procuram.</div>
+  <div id="obl">
+    <span class="k" style="background:#4ade80"></span><b>Quem procura Bragança</b> — a cidade como polo<br>
+    <span class="k" style="background:#fb923c"></span><b>Onde Bragança busca</b> — o que falta no município
+  </div>
+  <div id="obd" style="margin-bottom:18px">Escolha o tema — saúde, educação, turismo ou comércio — e veja as linhas de ligação. Quanto mais grossa a linha, maior a participação daquele destino.<br><br><i style="font-size:11.5px">Os percentuais são estimativas do REGIC 2018 e indicam participação, não quantidade de pessoas.</i></div>
+  <button id="obbt" onclick="fecharOb()">Explorar o mapa</button>
+</div></div>
+
+<script src="data/json_rgi.js"></script>
+<script src="data/json_mun.js"></script>
+<script src="data/json_rod.js"></script>
+<script src="data/json_fluxos.js"></script>
+<script src="data/json_sedes.js"></script>
+
+<script>
+(function(){
+var BP='Bragança Paulista';
+var map=L.map('map',{zoomControl:false,maxZoom:18,minZoom:6})
+  .fitBounds([[-23.60,-47.20],[-22.20,-45.60]]);
+L.control.zoom({position:'topright'}).addTo(map);
+
+var bms={
+  dark:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{
+        referrerPolicy: 'strict-origin-when-cross-origin',attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:20,maxNativeZoom:16,crossOrigin:'anonymous'}),
+  osm:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:19,maxNativeZoom:17,crossOrigin:'anonymous',referrerPolicy:'strict-origin-when-cross-origin'}),
+  sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri, Maxar, Earthstar Geographics',maxZoom:19,maxNativeZoom:17,crossOrigin:'anonymous'})};
+bms.dark.addTo(map);
+// ordem de desenho, da base para o topo
+['mun','rgi','rod','fluxo','sedes'].forEach(function(p,i){
+  map.createPane('p_'+p); map.getPane('p_'+p).style.zIndex=400+i;});
+
+// ── config ────────────────────────────────────────────────────────────────
+var TEMAS={
+ saude:{lbl:'Saúde',subs:{'Baixa e média complexidade':'Consultas, exames e internações de rotina',
+   'Alta complexidade':'Cirurgias, oncologia e tratamentos especializados'}},
+ educacao:{lbl:'Educação',subs:{'Ensino superior':'Faculdades e universidades'}},
+ turismo:{lbl:'Turismo e cultura',subs:{'Atividades culturais':'Teatro, cinema, shows e museus',
+   'Atividades esportivas':'Estádios, ginásios e eventos esportivos'}},
+ servicos:{lbl:'Comércio e serviços',subs:{'Calçados e vestuário':'Compra de roupas e calçados',
+   'Móveis e eletrodomésticos':'Compra de móveis e eletroeletrônicos',
+   'Uso de aeroporto':'Aeroporto mais utilizado','Jornais':'Origem dos jornais que circulam'}}};
+var TXT={
+ destino:{hint:'Municípios que enviam moradores a Bragança. Mostra o alcance da cidade como polo regional.',
+   ti:'Quem procura Bragança',cor:'#4ade80'},
+ origem:{hint:'Para onde os bragantinos se deslocam. Revela o que o município ainda não oferece localmente.',
+   ti:'Onde Bragança busca',cor:'#fb923c'}};
+var modo='destino', tema='saude', sub=null, escala='peso';
+var TXT_ESC={
+ peso:{h:'Linha proporcional à população equivalente — o percentual aplicado à população do município de origem. Mostra quais ligações trazem mais gente a Bragança.',lbl:'Peso populacional'},
+ pct:{h:'Linha proporcional ao percentual de deslocamentos que tem Bragança como destino. Mostra quais municípios mais dependem da cidade.',lbl:'Dependência'}};
+
+// ── utilidades ────────────────────────────────────────────────────────────
+function nf(v,d){return v==null||isNaN(v)?'—':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+function corIAPC(v){if(v==null)return '#2a3f52';
+  return v>.6?'#7d0025':v>.4?'#c9184a':v>.25?'#ff758f':v>.12?'#ffb3c1':'#ffe5ec';}
+// percentual do município no tema e direção ativos (máximo entre subtemas)
+function pctTema(cd){
+  var fs=json_fluxos.features.filter(function(f){var q=f.properties;
+    return q.cd_par===cd && q.direcao===modo && q.tema===tema && (!sub||q.subtema===sub);});
+  if(!fs.length) return null;
+  return Math.max.apply(null,fs.map(function(f){return f.properties.percentual;}));}
+// raio: Bragança fixa; demais crescem com o percentual no tema ativo
+function raio(p){
+  if(p.municipio===BP) return 17;
+  var v=pctTema(p.cd_mun);
+  if(v==null) return 5;
+  return Math.max(6,Math.min(20,6+Math.sqrt(v)*1.9));}
+// cor: mesma escala das linhas, respondendo ao tema
+function corTema(p){
+  if(p.municipio===BP) return '#FFEF00';
+  var v=pctTema(p.cd_mun);
+  if(v==null) return 'rgba(120,140,160,.30)';
+  var c=TXT[modo].cor;
+  return v>50?c: v>30?c: v>15?c: c;}
+function opacTema(p){
+  if(p.municipio===BP) return .95;
+  var v=pctTema(p.cd_mun);
+  if(v==null) return .25;
+  return Math.max(.35,Math.min(.92,.3+v/100));}
+function usaPeso(p){return escala==='peso'&&modo==='destino'&&p.populacao_equivalente!=null;}
+function esp(p){
+  if(!usaPeso(p))return Math.max(1,Math.min(9,Math.sqrt(p.percentual)*1.35));
+  return Math.max(1,Math.min(10,Math.sqrt(p.populacao_equivalente/1000)*1.5));}
+function valOrd(f){var p=f.properties;return usaPeso(p)?p.populacao_equivalente:p.percentual;}
+// valor exibido conforme o critério ativo
+function valorEscala(p){return usaPeso(p)?nf(p.populacao_equivalente):nf(p.percentual,1)+'%';}
+
+// ── camadas base ──────────────────────────────────────────────────────────
+var Lrgi=L.geoJson(json_rgi,{pane:'p_rgi',interactive:false,
+  style:{color:'#FFEF00',weight:2.2,opacity:.85,fill:false,dashArray:'7,5'}});
+
+
+var Lmun=L.geoJson(json_mun,{pane:'p_mun',
+    style:function(f){var bp=f.properties.municipio===BP;
+      return{color:bp?'#FFEF00':'#7a93a8',weight:bp?2.4:.8,opacity:bp?.95:.45,fill:true,
+        fillColor:'#ffffff',fillOpacity:0.02};},
+    onEachFeature:function(f,l){l.bindPopup(popMun(f.properties));}});
+
+
+var Lrod=L.geoJson(json_rod,{pane:'p_rod',
+  style:function(f){var t=(f.properties.TipoRodovi||'').toLowerCase(),m=t.indexOf('eixo')>=0;
+    return{color:m?'#ffffff':'#8ba3b8',weight:m?1.6:.9,opacity:m?.6:.38};},
+  onEachFeature:function(f,l){var p=f.properties;
+    l.bindPopup('<div class="ph">'+(p.Rodovia||p.Nome||'Rodovia')+'</div><div class="ps">Malha rodoviária</div>'+
+      '<table class="pt">'+['TipoRodovi','Jurisdicao','Situacao'].map(function(k){
+        return p[k]?'<tr><th>'+k+'</th><td>'+p[k]+'</td></tr>':'';}).join('')+'</table>');}});
+
+
+var Lfluxo=L.layerGroup([],{pane:'p_fluxo'});
+var Lsedes=L.geoJson(json_sedes,{pane:'p_sedes',
+    pointToLayer:function(f,ll){var p=f.properties;
+      return L.circleMarker(ll,{radius:raio(p),fillColor:corTema(p),fillOpacity:opacTema(p),
+        color:p.municipio===BP?'#fff':'rgba(255,255,255,.85)',
+        weight:p.municipio===BP?2.6:1.4,opacity:.95});},
+    onEachFeature:function(f,l){l.bindPopup(popSede(f.properties));}});
+
+var CAM={sedes:null,mun:null,rod:null,rgi:null};  // preenchido abaixo
+CAM.sedes=Lsedes; CAM.mun=Lmun; CAM.rod=Lrod; CAM.rgi=Lrgi;
+  [Lmun,Lrgi,Lrod,Lfluxo,Lsedes].forEach(function(l){l.addTo(map);});
+
+// ── popups ────────────────────────────────────────────────────────────────
+function popMun(p){
+  var isBP=p.municipio===BP, cd=p.cd_mun;
+  var t='<div class="ph">'+p.municipio+'</div><div class="ps">'+p.uf+' · '+(p.hierarquia_regic||'—')+'</div>';
+  if(!isBP){
+    var ic={saude:'\u{1F3E5}',educacao:'\u{1F393}',turismo:'\u{1F3DB}',servicos:'\u{1F6CD}'};
+    ['destino','origem'].forEach(function(dir){
+      var fs=json_fluxos.features.filter(function(f){
+        return f.properties.cd_par===cd && f.properties.direcao===dir;});
+      if(!fs.length) return;
+      var cor=TXT[dir].cor;
+      t+='<div class="chart"><div class="chart-t">'+
+         (dir==='destino'?'Procura Bragança em':'Recebe bragantinos em')+'</div><div class="mini">';
+      ['saude','educacao','turismo','servicos'].forEach(function(tm){
+        var g=fs.filter(function(f){return f.properties.tema===tm;});
+        var mx=g.length?Math.max.apply(null,g.map(function(f){return f.properties.percentual;})):null;
+        t+='<div class="mini-c"><div class="i">'+ic[tm]+'</div>'+
+           '<div class="v" style="color:'+(mx==null?'var(--muted)':cor)+'">'+(mx==null?'—':nf(mx,0)+'%')+'</div>'+
+           '<div class="l">'+TEMAS[tm].lbl.split(' ')[0]+'</div></div>';});
+      t+='</div></div>';});
+  }
+  // distribuição urbano × rural
+  if(p.populacao_urbana!=null && p.pct_populacao_urbana!=null){
+    var pu=p.pct_populacao_urbana;
+    t+='<div class="chart"><div class="chart-t">Onde vive a população</div>'+
+       '<div class="bar-row"><div class="bar-lb"><span class="n">Área urbana</span>'+
+       '<span class="v" style="color:#4ade80">'+nf(pu,1)+'%</span></div>'+
+       '<div class="bar-bg"><div class="bar-fl" style="width:'+pu+'%;background:#4ade80"></div></div>'+
+       '<div class="bar-sub">'+nf(p.populacao_urbana)+' habitantes</div></div>'+
+       '<div class="bar-row"><div class="bar-lb"><span class="n">Área rural</span>'+
+       '<span class="v" style="color:#a3a380">'+nf(100-pu,1)+'%</span></div>'+
+       '<div class="bar-bg"><div class="bar-fl" style="width:'+(100-pu)+'%;background:#a3a380"></div></div>'+
+       '<div class="bar-sub">'+nf(p.populacao_rural)+' habitantes</div></div></div>';
+  }
+  t+='<table class="pt" style="margin-top:10px">'+
+     '<tr><th>População 2022</th><td>'+nf(p.populacao_2022)+'</td></tr>';
+  if(p.densidade_urbana_hab_km2!=null)
+    t+='<tr><th>Densidade urbana</th><td>'+nf(p.densidade_urbana_hab_km2)+' hab/km²</td></tr>'+
+       '<tr><th>Densidade no município</th><td>'+nf(p.densidade_municipal_hab_km2,1)+' hab/km²</td></tr>';
+  if(p.concentracao_urbana)
+    t+='<tr><th>Concentração urbana</th><td style="font-size:11px">'+p.concentracao_urbana+'</td></tr>';
+  if(p.intensidade_polarizacao!=null)
+    t+='<tr><th>Intensidade de polarização</th><td>'+nf(p.intensidade_polarizacao,2)+'</td></tr>'+
+       '<tr><th>Peso de atração acumulado</th><td>'+nf(p.peso_atracao_regic)+'</td></tr>';
+  else
+    t+='<tr><th>Atração regional</th><td style="font-size:11px">Não exerce</td></tr>';
+  t+='</table>';
+  if(p.intensidade_polarizacao==null)
+    t+='<div class="pexp">Este município não é declarado como destino por nenhum outro no REGIC 2018. Aparece apenas como origem de deslocamentos.</div>';
+  else
+    t+='<div class="pexp"><b>Intensidade de polarização</b> mede o quanto o município atrai em relação ao próprio porte. <b>Peso de atração</b> é o índice do IBGE, grandeza comparativa sem unidade.</div>';
+  var c=p.papel_em_relacao_bp==='Bragança Paulista'?'#FFEF00':
+        p.papel_em_relacao_bp==='Envia demanda a Bragança'?'#4ade80':
+        p.papel_em_relacao_bp==='Recebe demanda de Bragança'?'#fb923c':'#a78bfa';
+  return t+'<span class="tag" style="background:'+c+'22;color:'+c+'">'+p.papel_em_relacao_bp+'</span>';}
+
+function popSede(p){
+  var isBP=p.municipio===BP, cd=p.cd_mun;
+  var t='<div class="ph">'+p.municipio+'</div><div class="ps">Sede municipal · '+p.uf+'</div>';
+  if(!isBP){
+    var ic={saude:'\u{1F3E5}',educacao:'\u{1F393}',turismo:'\u{1F3DB}',servicos:'\u{1F6CD}'};
+    var fs=json_fluxos.features.filter(function(f){
+      return f.properties.cd_par===cd && f.properties.direcao===modo;});
+    if(fs.length){var cor=TXT[modo].cor;
+      t+='<div class="chart"><div class="chart-t">'+
+         (modo==='destino'?'Procura Bragança em':'Recebe bragantinos em')+'</div><div class="mini">';
+      ['saude','educacao','turismo','servicos'].forEach(function(tm){
+        var g=fs.filter(function(f){return f.properties.tema===tm;});
+        var mx=g.length?Math.max.apply(null,g.map(function(f){return f.properties.percentual;})):null;
+        t+='<div class="mini-c'+(tm===tema?' on':'')+'"><div class="i">'+ic[tm]+'</div>'+
+           '<div class="v" style="color:'+(mx==null?'var(--muted)':cor)+'">'+(mx==null?'—':nf(mx,0)+'%')+'</div>'+
+           '<div class="l">'+TEMAS[tm].lbl.split(' ')[0]+'</div></div>';});
+      t+='</div></div>';}
+    else t+='<div class="pnone">Sem fluxo com Bragança nesta direção.</div>';
+  }
+  t+='<table class="pt" style="margin-top:10px">'+
+     '<tr><th>Hierarquia urbana</th><td>'+(p.hierarquia_regic||'—')+'</td></tr>'+
+     '<tr><th>População 2022</th><td>'+nf(p.populacao_2022)+'</td></tr>';
+  if(p.intensidade_polarizacao!=null)
+    t+='<tr><th>Intensidade de polarização</th><td>'+nf(p.intensidade_polarizacao,2)+'</td></tr>'+
+       '<tr><th>Peso de atração acumulado</th><td>'+nf(p.peso_atracao_regic)+'</td></tr>';
+  else t+='<tr><th>Atração regional</th><td style="font-size:11px">Não exerce</td></tr>';
+  return t+'</table>';}
+
+
+// ── fluxos ────────────────────────────────────────────────────────────────
+function fluxosAtuais(){
+  return json_fluxos.features.filter(function(f){var p=f.properties;
+    return p.direcao===modo && p.tema===tema && (!sub || p.subtema===sub);});}
+
+function desenharFluxos(){
+  Lfluxo.clearLayers();
+  var fs=fluxosAtuais(), cor=TXT[modo].cor;
+  fs.sort(function(a,b){return valOrd(a)-valOrd(b);});
+  fs.forEach(function(f){
+    var p=f.properties, cs=f.geometry.coordinates.map(function(c){return [c[1],c[0]];});
+    L.polyline(cs,{pane:'p_fluxo',color:cor,weight:esp(p),opacity:.75,lineCap:'round'})
+      .bindPopup(popFluxo(p)).addTo(Lfluxo);
+  });
+  // círculos respondem ao tema e à direção ativos
+  if(map.hasLayer(Lsedes)) Lsedes.eachLayer(function(l){
+    var p=l.feature.properties;
+    l.setStyle({radius:raio(p),fillColor:corTema(p),fillOpacity:opacTema(p),
+      color:p.municipio===BP?'#fff':'rgba(255,255,255,.85)',
+      weight:p.municipio===BP?2.6:1.4,opacity:.95});});
+  atualizarLegenda(fs);
+}
+function popFluxo(p){
+  var dir=p.direcao||modo, d=dir==='destino', cor=TXT[dir].cor, cd=p.cd_par;
+  // todos os fluxos deste município nesta direção
+  var todos=json_fluxos.features.filter(function(f){
+    return f.properties.cd_par===cd && f.properties.direcao===dir;});
+  var doTema=todos.filter(function(f){return f.properties.tema===p.tema;})
+    .sort(function(a,b){return b.properties.percentual-a.properties.percentual;});
+
+  var t='<div class="ph">'+p.municipio_par+'</div>'+
+    '<div class="ps">'+(d?'Procura Bragança':'Destino dos bragantinos')+' · '+TEMAS[p.tema].lbl+'</div>';
+
+  // gráfico do tema selecionado
+  t+='<div class="chart"><div class="chart-t">'+(d?'Dependência de Bragança':'Participação no destino')+'</div>';
+  if(!doTema.length){t+='<div class="pnone">Sem registro neste tema.</div>';}
+  doTema.forEach(function(f){
+    var q=f.properties, w=Math.max(2,Math.min(100,q.percentual));
+    t+='<div class="bar-row"><div class="bar-lb"><span class="n">'+q.subtema+'</span>'+
+       '<span class="v" style="color:'+cor+'">'+nf(q.percentual,1)+'%</span></div>'+
+       '<div class="bar-bg"><div class="bar-fl" style="width:'+w+'%;background:'+cor+'"></div></div>';
+    if(d&&q.populacao_equivalente!=null)
+      t+='<div class="bar-sub">peso populacional '+nf(q.populacao_equivalente)+'</div>';
+    t+='</div>';
+  });
+  t+='</div>';
+
+  // comparativo entre os quatro temas
+  var ic={saude:'\u{1F3E5}',educacao:'\u{1F393}',turismo:'\u{1F3DB}',servicos:'\u{1F6CD}'};
+  var resumo=['saude','educacao','turismo','servicos'].map(function(tm){
+    var fs=todos.filter(function(f){return f.properties.tema===tm;});
+    var mx=fs.length?Math.max.apply(null,fs.map(function(f){return f.properties.percentual;})):null;
+    return {tm:tm,v:mx};});
+  if(resumo.some(function(r){return r.v!=null;})){
+    t+='<div class="chart"><div class="chart-t">Nos demais temas</div><div class="mini">';
+    resumo.forEach(function(r){
+      t+='<div class="mini-c'+(r.tm===p.tema?' on':'')+'"><div class="i">'+ic[r.tm]+'</div>'+
+         '<div class="v" style="color:'+(r.v==null?'var(--muted)':cor)+'">'+(r.v==null?'—':nf(r.v,0)+'%')+'</div>'+
+         '<div class="l">'+TEMAS[r.tm].lbl.split(' ')[0]+'</div></div>';});
+    t+='</div><div class="bar-sub" style="margin-top:6px">Maior percentual registrado em cada tema.</div></div>';
+  }
+
+  // ficha
+  t+='<table class="pt" style="margin-top:10px">'+
+     '<tr><th>População do município</th><td>'+nf(p.populacao_par)+'</td></tr>';
+  if(d&&p.populacao_equivalente!=null)
+    t+='<tr><th>Peso populacional</th><td>'+nf(p.populacao_equivalente)+'</td></tr>';
+  t+='<tr><th>UF</th><td>'+p.uf_par+'</td></tr></table>';
+
+  t+='<div class="pexp">'+(d?
+    'Os percentuais indicam a fração dos deslocamentos de '+p.municipio_par+' que tem Bragança Paulista como destino, em cada subtema.':
+    'Os percentuais indicam a fração dos deslocamentos dos moradores de Bragança que vai para '+p.municipio_par+', em cada subtema.');
+  if(d&&p.populacao_equivalente!=null)
+    t+=' O peso populacional é esse percentual aplicado à população do município — estimativa de magnitude, não contagem de pessoas.';
+  return t+'</div>';}
+
+
+// ── legenda ───────────────────────────────────────────────────────────────
+function atualizarLegenda(fs){
+  var cor=TXT[modo].cor, d=modo==='destino';
+  var top=fs.slice().sort(function(a,b){return valOrd(b)-valOrd(a);}).slice(0,12);
+  var h='';
+  h+='<div class="g"><div class="gt">'+(d?'Principais origens':'Principais destinos')+'</div>';
+  if(!top.length){h+='<div class="note">Sem dados para esta combinação.</div>';}
+  else{h+='<div id="rank">'+top.map(function(f,i){var p=f.properties;
+    return '<div class="rk" onclick="irPara('+p.cd_par+')"><span class="n">'+(i+1)+'</span>'+
+      '<span class="m">'+p.municipio_par+(p.uf_par==='MG'?' <span style="color:var(--muted);font-size:9px">MG</span>':'')+'</span>'+
+      '<span class="p" style="color:'+cor+'">'+valorEscala(p)+'</span></div>';}).join('')+'</div>';
+    h+='<div class="note">'+(!d?'Percentual dos deslocamentos dos bragantinos que vão para cada destino.':
+      escala==='peso'?'População equivalente: o percentual do município aplicado à sua população. Estima o peso da ligação, não conta pessoas.':
+      'Percentual dos deslocamentos daquele município que vêm para Bragança.')+'</div>';}
+  h+='</div>';
+
+  var epeso=(escala==='peso'&&d);
+  h+='<div class="g"><div class="gt">Espessura da linha — '+(epeso?'peso populacional':'dependência')+'</div>'+
+    '<div class="li"><div class="swl" style="background:'+cor+';height:8px"></div><span>'+(epeso?'Acima de 30 mil':'Acima de 60%')+'</span></div>'+
+    '<div class="li"><div class="swl" style="background:'+cor+';height:4px"></div><span>'+(epeso?'5 mil a 30 mil':'20% a 60%')+'</span></div>'+
+    '<div class="li"><div class="swl" style="background:'+cor+';height:1.5px"></div><span>'+(epeso?'Até 5 mil':'Até 20%')+'</span></div>'+
+    '<div class="note">'+(epeso?
+      'População equivalente. Favorece municípios grandes, ainda que o vínculo seja fraco.':
+      'Percentual de dependência. Favorece municípios pequenos, que concentram suas escolhas.')+'</div></div>';
+
+  if(map.hasLayer(Lsedes)){var cS=TXT[modo].cor;
+    h+='<div class="g"><div class="gt">Círculos — '+(d?'dependência de Bragança':'participação no destino')+'</div>'+
+      '<div class="li"><div class="swc" style="width:20px;height:20px;background:#FFEF00"></div><span>Bragança Paulista</span></div>'+
+      '<div class="li"><div class="swc" style="width:18px;height:18px;background:'+cS+';opacity:.9"></div><span>Acima de 60%</span></div>'+
+      '<div class="li"><div class="swc" style="width:14px;height:14px;background:'+cS+';opacity:.68"></div><span>30% a 60%</span></div>'+
+      '<div class="li"><div class="swc" style="width:11px;height:11px;background:'+cS+';opacity:.5"></div><span>10% a 30%</span></div>'+
+      '<div class="li"><div class="swc" style="width:8px;height:8px;background:'+cS+';opacity:.38"></div><span>Até 10%</span></div>'+
+      '<div class="li"><div class="swc" style="width:7px;height:7px;background:rgba(120,140,160,.3);border-style:dashed"></div><span>Sem fluxo neste tema</span></div>'+
+      '<div class="note">Tamanho e intensidade da cor acompanham o percentual no tema selecionado — mesma leitura das linhas. A intensidade de polarização geral está no popup.</div></div>';}
+
+  if(map.hasLayer(Lmun)) h+='<div class="g"><div class="gt">Limites municipais</div>'+
+    '<div class="li"><div class="swl" style="background:#7a93a8"></div><span>Contorno — referência territorial</span></div>'+
+    '<div class="li"><div class="swl" style="background:#FFEF00;height:4px"></div><span>Bragança Paulista</span></div></div>';
+
+
+  if(map.hasLayer(Lrgi)) h+='<div class="g"><div class="gt">Recorte</div>'+
+    '<div class="li"><div class="swl" style="background:#FFEF00"></div><span>Região Imediata</span></div>'+
+    '<div class="note">Recorte oficial do IBGE, com 11 municípios. Nem todos mantêm fluxo direto com Bragança, e há municípios de Minas Gerais que mantêm, mas ficam fora dele.</div></div>';
+
+  if(tema==='saude') h+='<div class="g"><div class="note" style="font-style:normal;background:rgba(255,239,0,.07);'+
+    'border-left:2px solid var(--accent);padding:9px 10px;border-radius:0 5px 5px 0">'+
+    '<b style="color:var(--accent)">Barretos não aparece no mapa</b><br>Fica a cerca de 400 km, fora do enquadramento, '+
+    'mas recebe <b>25%</b> dos casos de alta complexidade de Bragança — referência oncológica, não vizinhança.</div></div>';
+
+  h+='<div class="g"><div class="note" style="font-style:normal;background:rgba(255,255,255,.04);'+
+    'padding:9px 10px;border-radius:5px;line-height:1.55">'+
+    '<b style="color:var(--text)">Sobre os percentuais</b><br>São estimativas do REGIC 2018 (IBGE), '+
+    'obtidas por questionário a informantes municipais. Indicam a <i>participação</i> de cada destino '+
+    'no conjunto dos deslocamentos, não a quantidade de pessoas.</div></div>';
+  document.getElementById('lg').innerHTML=h;
+}
+window.irPara=function(cd){
+  Lsedes.eachLayer(function(l){ if(l.feature.properties.cd_mun===cd){
+    map.setView(l.getLatLng(),10,{animate:true}); l.openPopup(); }});};
+
+// ── controles ─────────────────────────────────────────────────────────────
+window.setModo=function(m){modo=m;
+  document.getElementById('m-destino').classList.toggle('on',m==='destino');
+  document.getElementById('m-origem').classList.toggle('on',m==='origem');
+  document.getElementById('modo-hint').textContent=TXT[m].hint;
+  ajustaEscala(); desenharFluxos();};
+window.setTema=function(t){tema=t;sub=null;
+  ['saude','educacao','turismo','servicos'].forEach(function(k){
+    document.getElementById('t-'+k).classList.toggle('on',k===t);});
+  var s=document.getElementById('subtema'),o='<option value="">Todos os subtemas</option>';
+  Object.keys(TEMAS[t].subs).forEach(function(k){o+='<option value="'+k+'">'+k+'</option>';});
+  s.innerHTML=o; desenharFluxos();};
+window.setSub=function(v){sub=v||null;desenharFluxos();};
+window.setEsc=function(e){escala=e;
+  document.getElementById('e-peso').classList.toggle('on',e==='peso');
+  document.getElementById('e-pct').classList.toggle('on',e==='pct');
+  document.getElementById('esc-hint').textContent=TXT_ESC[e].h;
+  desenharFluxos();};
+function ajustaEscala(){
+  var org=modo==='origem', bp=document.getElementById('e-peso');
+  bp.disabled=org; bp.title=org?'Indisponível neste modo: a origem é sempre Bragança':'';
+  if(org){document.getElementById('esc-hint').textContent=
+    'Neste modo a origem é sempre Bragança, então o peso populacional seria idêntico para todas as linhas. A espessura segue o percentual de deslocamentos.';}
+  else{document.getElementById('esc-hint').textContent=TXT_ESC[escala].h;}}
+window.setEsc=function(e){escala=e;
+  document.getElementById('e-peso').classList.toggle('on',e==='peso');
+  document.getElementById('e-pct').classList.toggle('on',e==='pct');
+  document.getElementById('esc-hint').textContent = e==='peso'
+    ? 'Linha proporcional à população equivalente — percentual aplicado à população do município de origem.'
+    : 'Linha proporcional ao percentual de deslocamentos que aquele município direciona a Bragança.';
+  desenharFluxos();};
+function ajustaEscala(){
+  var org=(modo==='origem'), bp=document.getElementById('e-peso'), bc=document.getElementById('e-pct');
+  bp.disabled=org;
+  if(org){ escala='pct'; bp.classList.remove('on'); bc.classList.add('on');
+    document.getElementById('esc-hint').textContent=
+      'Neste modo a origem é sempre Bragança, então o peso populacional não diferencia as ligações. A espessura segue o percentual.';
+  } else { bc.classList.toggle('on',escala==='pct'); bp.classList.toggle('on',escala==='peso');
+    document.getElementById('esc-hint').textContent = escala==='peso'
+      ? 'Linha proporcional à população equivalente — percentual aplicado à população do município de origem.'
+      : 'Linha proporcional ao percentual de deslocamentos que aquele município direciona a Bragança.'; }}
+window.cam=function(k,on){var l=CAM[k];
+  if(!l)return;
+  if(on){l.addTo(map);}else{map.removeLayer(l);}
+  desenharFluxos();};
+window.bm=function(n,b){Object.values(bms).forEach(function(l){map.removeLayer(l);});
+  bms[n].addTo(map);bms[n].bringToBack();
+  document.querySelectorAll('.bmb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');};
+window.togglePainel=function(){document.getElementById('sb').classList.toggle('hidden');};
+
+// ── exportação ────────────────────────────────────────────────────────────
+window.abrirExport=function(){document.getElementById('mst').textContent='';
+  document.getElementById('md').classList.add('open');};
+window.fecharExport=function(){document.getElementById('md').classList.remove('open');};
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);
+  c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
+function nrt(c,cx,cy,s){c.save();c.fillStyle='#fff';c.strokeStyle='#000';c.lineWidth=.5;
+  c.beginPath();c.moveTo(cx,cy-s);c.lineTo(cx+s*.4,cy+s*.2);c.lineTo(cx,cy+s*.05);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#666';c.beginPath();c.moveTo(cx,cy-s);c.lineTo(cx-s*.4,cy+s*.2);c.lineTo(cx,cy+s*.05);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#fff';c.font='bold 10px Arial';c.textAlign='center';c.fillText('N',cx,cy-s-6);c.restore();}
+function dl(d,n){var a=document.createElement('a');a.href=d;a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a);}
+
+window.exportar=function(fmt){
+  var st=document.getElementById('mst');st.textContent='Capturando…';
+  var el=document.getElementById('map'),W=el.offsetWidth,H=el.offsetHeight,mr=el.getBoundingClientRect();
+  var cv=document.createElement('canvas');cv.width=W;cv.height=H;var c=cv.getContext('2d');
+  c.fillStyle='#0d1b2a';c.fillRect(0,0,W,H);
+  map.eachLayer(function(l){if(!l._tiles)return;
+    Object.keys(l._tiles).forEach(function(k){var t=l._tiles[k],im=t.el;
+      if(!im||im.tagName!=='IMG'||!im.complete)return;var r=im.getBoundingClientRect();
+      try{c.drawImage(im,Math.round(r.left-mr.left),Math.round(r.top-mr.top),Math.round(r.width)||256,Math.round(r.height)||256);}catch(e){}});});
+  st.textContent='Renderizando…';
+  setTimeout(function(){
+    function pt(lng,lat){var p=map.latLngToContainerPoint(L.latLng(lat,lng));return[p.x,p.y];}
+    function pol(gl,sf){if(!map.hasLayer(gl))return;
+      gl.eachLayer(function(l){if(!l.feature)return;var s=sf(l.feature),g=l.feature.geometry,t=g.type;
+        if(t!=='Polygon'&&t!=='MultiPolygon')return;
+        (t==='Polygon'?[g.coordinates]:g.coordinates).forEach(function(p){c.beginPath();
+          p.forEach(function(r){r.forEach(function(co,i){var q=pt(co[0],co[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});c.closePath();});
+          if(s.fillColor&&s.fillOpacity>0){c.globalAlpha=s.fillOpacity;c.fillStyle=s.fillColor;c.fill('evenodd');}
+          if(s.color&&s.weight>0){c.globalAlpha=s.opacity||1;c.strokeStyle=s.color;c.lineWidth=s.weight;c.stroke();}});
+        c.globalAlpha=1;});}
+    function lin(gl,sf){if(!map.hasLayer(gl))return;
+      gl.eachLayer(function(l){if(!l.feature)return;var s=sf(l.feature),g=l.feature.geometry,t=g.type;
+        if(t!=='LineString'&&t!=='MultiLineString')return;
+        (t==='LineString'?[g.coordinates]:g.coordinates).forEach(function(cs){c.beginPath();
+          cs.forEach(function(co,i){var q=pt(co[0],co[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});
+          c.globalAlpha=s.opacity||1;c.strokeStyle=s.color;c.lineWidth=s.weight;c.stroke();});c.globalAlpha=1;});}
+
+    // mesma ordem de desenho da tela: municípios > densidade > concentrações >
+    // RGI > mancha > rodovias > fluxos > sedes
+    if(map.hasLayer(Lmun))pol(Lmun,function(f){var bp=f.properties.municipio===BP;
+      return{color:bp?'#FFEF00':'#7a93a8',weight:bp?2.4:.8,opacity:bp?.95:.45,fillOpacity:0};});
+    if(map.hasLayer(Lrgi))pol(Lrgi,function(){return{color:'#FFEF00',weight:2.2,opacity:.85,fillOpacity:0};});
+    if(map.hasLayer(Lrod))lin(Lrod,function(f){var t=(f.properties.TipoRodovi||'').toLowerCase(),m=t.indexOf('eixo')>=0;
+      return{color:m?'#ffffff':'#8ba3b8',weight:m?1.6:.9,opacity:m?.6:.38};});
+
+    var cor=TXT[modo].cor, fs=fluxosAtuais();
+    fs.sort(function(a,b){return valOrd(a)-valOrd(b);});
+    fs.forEach(function(f){var p=f.properties;
+      c.beginPath();f.geometry.coordinates.forEach(function(co,i){var q=pt(co[0],co[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});
+      c.globalAlpha=.75;c.strokeStyle=cor;c.lineWidth=esp(p);c.lineCap='round';c.stroke();c.globalAlpha=1;});
+
+    if(map.hasLayer(Lsedes))Lsedes.eachLayer(function(l){var p=l.feature.properties;
+      var q=pt(l.feature.geometry.coordinates[0],l.feature.geometry.coordinates[1]),r=raio(p);
+      c.globalAlpha=opacTema(p);c.fillStyle=corTema(p);
+      c.beginPath();c.arc(q[0],q[1],r,0,Math.PI*2);c.fill();
+      c.globalAlpha=.95;c.strokeStyle='#fff';c.lineWidth=p.municipio===BP?2.6:1.4;c.stroke();c.globalAlpha=1;});
+
+    var P=14,t1='Estrutura Regional e Fluxos Intermunicipais',
+        t2=TXT[modo].ti+' — '+TEMAS[tema].lbl+(sub?' · '+sub:'')+
+           (modo==='destino'?(escala==='peso'?'  (espessura: peso populacional)':'  (espessura: dependência)'):'');
+    c.font='bold 13px Arial';var w1=c.measureText(t1).width;
+    c.font='10px Arial';var w2=c.measureText(t2).width;
+    var tW=Math.max(w1,w2)+P*2+4,tH=44;
+    c.fillStyle='rgba(1,117,188,.96)';rr(c,P,P,tW,tH,8);c.fill();
+    c.fillStyle='#FFEF00';c.fillRect(P,P+tH-3,tW,3);
+    c.fillStyle='#fff';c.font='bold 13px Arial';c.textAlign='left';c.fillText(t1,P*2,P+19);
+    c.fillStyle='#FFEF00';c.font='10px Arial';c.fillText(t2,P*2,P+34);
+    nrt(c,W-44,56,18);
+
+    var top=fs.slice().sort(function(a,b){return valOrd(b)-valOrd(a);}).slice(0,10);
+    if(top.length){
+      var rh=15,gp=9,LP=11,mw=0;c.font='9px Arial';
+      top.forEach(function(f){mw=Math.max(mw,c.measureText(f.properties.municipio_par).width);});
+      var lw=Math.min(mw+62+LP*2,240),lh=rh+top.length*rh+gp*2+8;
+      var lx=P,ly=H-lh-30;
+      c.globalAlpha=.95;c.fillStyle='rgba(1,48,90,.95)';rr(c,lx,ly,lw,lh,8);c.fill();
+      c.strokeStyle='rgba(255,239,0,.35)';c.lineWidth=1;rr(c,lx,ly,lw,lh,8);c.stroke();c.globalAlpha=1;
+      var cy=ly+gp;
+      c.fillStyle='#a8cce8';c.font='bold 8px Arial';
+      c.fillText((modo==='destino'?'PRINCIPAIS ORIGENS':'PRINCIPAIS DESTINOS')+
+        (modo==='destino'?(escala==='peso'?' — PESO':' — DEPENDÊNCIA'):''),lx+LP,cy+9);cy+=rh+3;
+      top.forEach(function(f){var p=f.properties;
+        c.fillStyle=cor;c.fillRect(lx+LP,cy+3,10,Math.max(1.5,Math.min(6,esp(p))));
+        c.fillStyle='#e8eaf0';c.font='9px Arial';
+        var nm=p.municipio_par;while(c.measureText(nm).width>lw-LP*2-58&&nm.length>4)nm=nm.slice(0,-2)+'…';
+        c.fillText(nm,lx+LP+16,cy+9);
+        c.fillStyle=cor;c.font='bold 9px Arial';c.textAlign='right';
+        c.fillText(valorEscala(p),lx+lw-LP,cy+9);c.textAlign='left';cy+=rh;});
+    }
+    c.fillStyle='rgba(255,255,255,.55)';c.font='8px Arial';c.textAlign='right';
+    c.fillText('Fontes: IBGE REGIC 2018 · IBGE Censo 2022 (setores censitários) · MapBiomas 2024 · DER-SP',W-12,H-10);
+
+    try{var img=cv.toDataURL('image/jpeg',.93);
+      var fn='mapa01_'+modo+'_'+tema;
+      if(fmt==='jpeg'){dl(img,fn+'.jpg');}
+      else{var o=W>H?'landscape':'portrait',mW=W*.2646,mH=H*.2646;
+        var pdf=new jspdf.jsPDF({orientation:o,unit:'mm',format:[mW,mH]});
+        pdf.addImage(img,'JPEG',0,0,mW,mH);pdf.save(fn+'.pdf');}
+      st.textContent='✓ Download iniciado!';setTimeout(fecharExport,1500);
+    }catch(e){st.textContent='✗ Erro: '+e.message;}
+  },40);};
+
+// ── onboarding ────────────────────────────────────────────────────────────
+var OB='bp_mapa01_fluxos_v1';
+window.fecharOb=function(){document.getElementById('ob').classList.remove('visible');localStorage.setItem(OB,'1');};
+if(!localStorage.getItem(OB))document.getElementById('ob').classList.add('visible');
+
+setTema('saude');
+ajustaEscala();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+ESTRUTURA DE PASTAS — WebGIS Infraestrutura & Vias
+=====================================================
+
+infraestrutura/
+│
+├── index.html              ← este arquivo (não modificar)
+│
+├── css/
+│   ├── leaflet.css         ← copiar de outro mapa do projeto (ex: censo2022/css/)
+│   ├── leaflet-measure.css ← copiar de outro mapa do projeto
+│   └── fontawesome-all.min.css  ← copiar de outro mapa do projeto
+│
+├── js/
+│   ├── leaflet.js          ← copiar de outro mapa do projeto (ex: censo2022/js/)
+│   ├── leaflet-hash.js     ← copiar de outro mapa do projeto
+│   └── leaflet-measure.js  ← copiar de outro mapa do projeto
+│
+└── layers/                 ← APENAS estes arquivos de dados (do zip original)
+    ├── 04082025_EIXO_LOGRADOUROmodificadoSMP_1.js
+    ├── EQUIPAMENTOS_SEMADS_2.js
+    ├── EQUIPAMENTOS_EDUCACAO_3.js
+    ├── EQUIPAMENTOS_ESPORTE_4.js
+    ├── EQUIPAMENTOS_SAUDE_5.js
+    └── EQUIPAMENTOS_CULTURA_6.js
+
+ATENÇÃO: NÃO copiar o layers.js do zip para esta pasta.
+Ele é o arquivo de configuração do OpenLayers e não é usado aqui.
+
+Os arquivos css/ e js/ do Leaflet são os MESMOS usados nos outros
+mapas do portal (censo2022, ipvs, renda). Basta copiar as pastas.

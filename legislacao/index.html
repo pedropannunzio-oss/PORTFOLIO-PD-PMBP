@@ -1,0 +1,2165 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet.photon.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        .li{display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer;border-radius:4px;padding:2px 4px;transition:opacity .15s;}.li:hover{background:rgba(255,255,255,.06);}.li.off{opacity:.3;text-decoration:line-through;}.li.off .sw,.li.off .swl{filter:grayscale(1);}
+    
+    /* Layer toggle — same pattern as other maps */
+    .layer-toggle { position: relative; width: 32px; height: 18px; flex-shrink: 0; }
+    .layer-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+        position: absolute; inset: 0; background: var(--bg-card);
+        border-radius: 9px; cursor: pointer; transition: background 0.2s;
+        border: 1px solid var(--border);
+    }
+    .toggle-track::after {
+        content: ''; position: absolute; left: 2px; top: 2px;
+        width: 12px; height: 12px; background: var(--text-muted);
+        border-radius: 50%; transition: all 0.2s;
+    }
+    .layer-toggle input:checked + .toggle-track { background: rgba(255,239,0,0.15); border-color: var(--accent); }
+    .layer-toggle input:checked + .toggle-track::after { background: var(--accent); left: 16px; }
+
+    /* Legend item toggle */
+    .li-toggle { position: relative; width: 28px; height: 16px; flex-shrink: 0; }
+    .li-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .li-toggle .toggle-track { border-radius: 8px; }
+    .li-toggle .toggle-track::after { width: 10px; height: 10px; }
+    .li-toggle input:checked + .toggle-track { background: rgba(255,239,0,0.15); border-color: var(--accent); }
+    .li-toggle input:checked + .toggle-track::after { background: var(--accent); left: 14px; }
+
+    .li.off { opacity: .35; }
+    .li.off .sw, .li.off .swl { filter: grayscale(1); }
+
+    
+        .badge {
+            font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+            color: var(--accent); border: 1px solid rgba(255,239,0,.4);
+            padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+        }
+        .hdr-sep { flex: 1; }
+        </style>
+        <title></title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+    *,*::before,*::after{box-sizing:border-box;}
+    :root{
+      --blue:#0175bc;--accent:#FFEF00;
+      --bg:#0d1b2a;--bg-panel:#0f2236;--bg-panel2:#132b42;--bg-card:#1a3550;
+      --border:rgba(255,255,255,0.10);--text:#e8eaf0;--text-muted:#7a9ab5;
+      --header-h:52px;--sidebar-w:300px;
+    }
+    html,body{margin:0;padding:0;height:100%;overflow:hidden;
+      font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);}
+    /* map fills below header */
+    #map{position:fixed!important;top:var(--header-h)!important;left:0;right:0;bottom:0;
+      width:auto!important;height:auto!important;}
+    /* hide ALL qgis controls */
+    .leaflet-top,.leaflet-bottom,.leaflet-control{display:none!important;}
+    /* HEADER */
+    #pd-header{position:fixed;top:0;left:0;right:0;height:var(--header-h);
+      background:var(--blue);border-bottom:3px solid var(--accent);
+      display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+    #pd-header .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;
+      box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+    #pd-header h1{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:#fff;
+      text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+    #pd-header h1 span{color:var(--accent);}
+    #pd-header .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;}
+    #pd-header .sep{flex:1;}
+    .hbadge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
+      border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+    #pd-back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);
+      color:rgba(255,255,255,.8);font-family:'DM Sans',sans-serif;font-size:12px;
+      padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .15s;
+      text-decoration:none;display:flex;align-items:center;gap:6px;}
+    #pd-back:hover{color:var(--accent);border-color:rgba(255,239,0,.6);}
+    #pd-export,#pd-panel{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);
+      color:var(--accent);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
+      padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;
+      white-space:nowrap;display:flex;align-items:center;gap:6px;}
+    #pd-export:hover,#pd-panel:hover{background:rgba(255,239,0,.18);}
+    /* SIDEBAR */
+    #pd-sidebar{position:fixed;top:var(--header-h);left:0;width:var(--sidebar-w);
+      height:calc(100vh - var(--header-h));background:var(--bg-panel);
+      border-right:1px solid var(--border);z-index:8000;
+      display:flex;flex-direction:column;transition:transform .25s ease;overflow:hidden;}
+    #pd-sidebar.hidden{transform:translateX(-100%);}
+    .sb-section{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+    .sb-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+      color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
+    .ltr{display:flex;align-items:center;gap:10px;padding:7px 0;
+      border-bottom:1px solid rgba(255,255,255,.04);}
+    .ltr:last-of-type{border-bottom:none;}
+    .lsw{width:14px;height:14px;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.2);}
+    .lsw.ln{height:3px;border-radius:2px;border:none;margin-top:5px;}
+    .ltr label:not(.layer-toggle){flex:1;font-size:12px;color:var(--text);cursor:pointer;}
+    .ltr .layer-toggle{flex:0 0 32px;width:32px;}
+
+    .opr{display:flex;align-items:center;gap:10px;padding:4px 0 4px 24px;}
+    .opr label{font-size:10px;color:var(--text-muted);width:70px;flex-shrink:0;}
+    .opr input[type=range]{flex:1;height:3px;accent-color:var(--accent);cursor:pointer;}
+    .opr span{font-size:10px;color:var(--text-muted);width:30px;text-align:right;}
+    /* LEGEND */
+    #pd-legend{flex:1;overflow-y:auto;padding:12px 14px;}
+    #pd-legend::-webkit-scrollbar{width:4px;}
+    #pd-legend::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
+    .lg{margin-bottom:14px;}
+    .lg-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+      color:var(--text-muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px;}
+    .li{display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer;border-radius:4px;padding:2px 4px;transition:background .1s;}
+    .li:hover{background:rgba(255,255,255,.06);}
+    .li.off{opacity:.35;}
+    .li .sw,.li .swl{flex-shrink:0;}
+    .sw{width:16px;height:12px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
+    .swl{width:22px;height:4px;border-radius:2px;flex-shrink:0;}
+    .li span{font-size:11px;color:var(--text);line-height:1.3;}
+    /* BASEMAP */
+    .bmr{display:flex;gap:8px;margin-top:6px;}
+    .bmb{flex:1;background:var(--bg-card);border:1px solid var(--border);
+      color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:11px;
+      padding:6px 4px;border-radius:6px;cursor:pointer;text-align:center;}
+    .bmb.on{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,.08);}
+    /* POPUP */
+    .leaflet-popup-content-wrapper{background:var(--bg-panel2)!important;
+      border:1px solid var(--border)!important;border-radius:10px!important;
+      box-shadow:0 8px 32px rgba(0,0,0,.5)!important;}
+    .leaflet-popup-tip{background:var(--bg-panel2)!important;}
+    .leaflet-popup-content{color:var(--text)!important;font-family:'DM Sans',sans-serif!important;font-size:12px!important;}
+    .leaflet-popup-content table{width:100%;border-collapse:collapse;}
+    .leaflet-popup-content td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.06);
+      vertical-align:top;font-size:11px;color:var(--text-muted);}
+    .leaflet-popup-content tr:last-child td{border-bottom:none;}
+    /* EXPORT MODAL */
+    #pd-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+      backdrop-filter:blur(4px);z-index:99000;align-items:center;justify-content:center;}
+    #pd-modal.open{display:flex;}
+    #pd-mbox{background:var(--bg-panel2);border:1px solid var(--border);border-radius:14px;
+      padding:28px 32px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+    #pd-mtitle{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+      color:var(--text);margin-bottom:8px;}
+    #pd-mdesc{font-size:12px;color:var(--text-muted);margin:0 0 20px;}
+    #pd-mbtns{display:flex;gap:10px;margin-bottom:16px;}
+    #pd-mstatus{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:12px;text-align:center;}
+    #pd-mclose{width:100%;background:none;border:1px solid var(--border);border-radius:6px;
+      color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;cursor:pointer;}
+    .eb{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
+      color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:12px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .eb:hover{border-color:var(--accent);color:var(--accent);}
+    /* ONBOARDING */
+    #pd-ob{position:fixed;inset:0;z-index:99999;background:rgba(1,48,90,.92);
+      backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;}
+    #pd-ob.visible{display:flex;}
+    #pd-obbox{background:var(--bg-panel2);border:1px solid var(--border);border-radius:16px;
+      padding:32px;max-width:420px;width:90%;}
+    #pd-obicon{font-size:32px;margin-bottom:12px;}
+    #pd-obtitle{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
+      color:#fff;margin-bottom:8px;}
+    #pd-obdesc{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;}
+    #pd-obbtn{width:100%;background:var(--accent);color:#000;font-family:'Syne',sans-serif;
+      font-size:14px;font-weight:700;padding:12px;border:none;border-radius:8px;cursor:pointer;}
+    .leaflet-tooltip{background:transparent!important;border:none!important;
+      box-shadow:none!important;font-weight:700;font-size:10px;color:#fff;
+      text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;}
+    .leaflet-tooltip::before{display:none!important;}
+    
+/* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
+#hd h1, #header h1, #pd-header h1 {
+  font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:#fff;
+  text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
+}
+#hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
+#hd .sub, #header .sub, #pd-header .sub,
+#hd .subtitle, #header .subtitle, #pd-header .subtitle {
+  font-size:11px; color:rgba(255,255,255,.65); font-weight:300;
+  white-space:nowrap; margin:0; line-height:1.3;
+}
+#hd .badge, #header .badge, #pd-header .badge,
+#hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
+  font-family:'Syne',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
+  border:1px solid rgba(255,239,0,.4); background:transparent;
+  padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
+}
+</style>
+</head>
+    <body>
+
+    <!-- HEADER -->
+    <div id="pd-header">
+      <div class="logo-dot"></div>
+      <div>
+        <h1>Legislação <span>Urbanística</span></h1>
+        <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
+      </div>
+      <div class="sep"></div>
+      <span class="hbadge">ZONEAMENTO</span>
+      <a id="pd-back" href="../portal.html">&#8592; Portal</a>
+      <button id="pd-export" onclick="pdExport()">&#8595; Exportar</button>
+      <button id="pd-panel" onclick="pdToggleSidebar()">&#9776; Painel</button>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div id="pd-sidebar">
+      <div class="sb-section">
+        <div class="sb-label">Camadas</div>
+
+        <div class="ltr">
+          <label for="t-zona">Zoneamento (Plano Diretor)</label>
+          <label class="layer-toggle"><input data-pd-layer="zona" type="checkbox" id="t-zona" checked onchange="pdToggle('zona',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+        <div class="opr">
+          <label>Opacidade</label>
+          <input type="range" min="0" max="1" step="0.05" value="0.65"
+            oninput="pdOpacity('zona',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+          <span>65%</span>
+        </div>
+
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-cod">Código de Urbanismo</label>
+          <label class="layer-toggle"><input data-pd-layer="cod" type="checkbox" id="t-cod" onchange="pdToggle('cod',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+        <div class="opr">
+          <label>Opacidade</label>
+          <input type="range" min="0" max="1" step="0.05" value="0.65"
+            oninput="pdOpacity('cod',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+          <span>65%</span>
+        </div>
+
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-macro">Macrozoneamento (Plano Diretor)</label>
+          <label class="layer-toggle"><input data-pd-layer="macro" type="checkbox" id="t-macro" onchange="pdToggle('macro',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+        <div class="opr">
+          <label>Opacidade</label>
+          <input type="range" min="0" max="1" step="0.05" value="0.65"
+            oninput="pdOpacity('macro',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+          <span>65%</span>
+        </div>
+
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-zepam">ZEPAM (Plano Diretor)</label>
+          <label class="layer-toggle"><input data-pd-layer="zepam" type="checkbox" id="t-zepam" onchange="pdToggle('zepam',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+        <div class="opr">
+          <label>Opacidade</label>
+          <input type="range" min="0" max="1" step="0.05" value="0.65"
+            oninput="pdOpacity('zepam',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+          <span>65%</span>
+        </div>
+
+        <div class="ltr">
+          <label for="t-zepec">ZEPEC (Plano Diretor)</label>
+          <label class="layer-toggle"><input data-pd-layer="zepec" type="checkbox" id="t-zepec" onchange="pdToggle('zepec',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+        <div class="opr">
+          <label>Opacidade</label>
+          <input type="range" min="0" max="1" step="0.05" value="0.65"
+            oninput="pdOpacity('zepec',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+          <span>65%</span>
+        </div>
+
+        <div class="ltr">
+          <label for="t-bacias">Bacias Hidrográficas (Plano Diretor)</label>
+          <label class="layer-toggle"><input data-pd-layer="bacias" type="checkbox" id="t-bacias" onchange="pdToggle('bacias',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+        <div class="opr">
+          <label>Opacidade</label>
+          <input type="range" min="0" max="1" step="0.05" value="0.65"
+            oninput="pdOpacity('bacias',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+          <span>65%</span>
+        </div>
+
+        <div class="ltr">
+          <label for="t-viarias">Diretrizes Viárias (Plano Diretor)</label>
+          <label class="layer-toggle"><input data-pd-layer="viarias" type="checkbox" id="t-viarias" onchange="pdToggle('viarias',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-label">Mapa base</div>
+        <div class="bmr">
+          <button class="bmb on" onclick="pdBasemap('satellite',this)">Satélite</button>
+          <button class="bmb" onclick="pdBasemap('osm',this)">Mapa</button>
+          <button class="bmb" onclick="pdBasemap('dark',this)">Dark</button>
+        </div>
+      </div>
+
+      <div id="pd-legend">
+        <div class="lg" id="lg-zona" style="display:">
+          <div class="lg-title">Zoneamento (Plano Diretor)</div>
+          <div class="li" data-layer="zona" data-val="ZDU 1"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDU 1')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(186,186,186)"></div><span>ZDU 1 — Densificação Urbana 1</span></div>
+          <div class="li" data-layer="zona" data-val="ZDU 2"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDU 2')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,127,0)"></div><span>ZDU 2 — Densificação Urbana 2</span></div>
+          <div class="li" data-layer="zona" data-val="ZDU 3"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDU 3')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,255,0)"></div><span>ZDU 3 — Densificação Urbana 3</span></div>
+          <div class="li" data-layer="zona" data-val="ZDE 1"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDE 1')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(112,0,149)"></div><span>ZDE 1 — Desenv. Econômico 1</span></div>
+          <div class="li" data-layer="zona" data-val="ZDE 2"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDE 2')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(243,204,255)"></div><span>ZDE 2 — Desenv. Econômico 2</span></div>
+          <div class="li" data-layer="zona" data-val="ZEU"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZEU')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,0,255)"></div><span>ZEU — Expansão Urbana</span></div>
+          <div class="li" data-layer="zona" data-val="MZR"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','MZR')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(145,207,156)"></div><span>MZR — Macrozona Rural</span></div>
+        </div>
+        <div class="lg" id="lg-cod" style="display:none">
+          <div class="lg-title">Código de Urbanismo</div>
+          <div class="li" data-layer="cod" data-val="Z"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','Z')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(186,186,186)"></div><span>Z</span></div>
+          <div class="li" data-layer="cod" data-val="ZC"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZC')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(0,255,0)"></div><span>ZC</span></div>
+          <div class="li" data-layer="cod" data-val="ZE"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZE')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,191,0)"></div><span>ZE</span></div>
+          <div class="li" data-layer="cod" data-val="ZE4"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZE4')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,126,0)"></div><span>ZE4</span></div>
+          <div class="li" data-layer="cod" data-val="ZE5"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZE5')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(230,255,154)"></div><span>ZE5</span></div>
+          <div class="li" data-layer="cod" data-val="ZE6"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZE6')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,255,0)"></div><span>ZE6</span></div>
+          <div class="li" data-layer="cod" data-val="ZEIS"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZEIS')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(221,110,0)"></div><span>ZEIS</span></div>
+          <div class="li" data-layer="cod" data-val="ZI"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZI')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,0,255)"></div><span>ZI</span></div>
+          <div class="li" data-layer="cod" data-val="ZM"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZM')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(0,0,255)"></div><span>ZM</span></div>
+          <div class="li" data-layer="cod" data-val="ZR"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZR')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,0,0)"></div><span>ZR</span></div>
+        </div>
+        <div class="lg" id="lg-macro" style="display:none">
+          <div class="lg-title">Macrozoneamento (Plano Diretor)</div>
+          <div class="li" data-layer="macro" data-val="Macrozona Rural (MZR)"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'macro','Macrozona Rural (MZR)')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(92,183,80)"></div><span>Macrozona Rural (MZR)</span></div>
+          <div class="li" data-layer="macro" data-val="Macrozona Urbana (MZU)"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'macro','Macrozona Urbana (MZU)')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(251,132,29)"></div><span>Macrozona Urbana (MZU)</span></div>
+        </div>
+        <div class="lg" id="lg-zepam" style="display:none">
+          <div class="lg-title">ZEPAM (Plano Diretor)</div>
+          <div class="li"><div class="sw" style="background:rgb(0,255,0)"></div><span>Zona Esp. Proteção Ambiental</span></div>
+        </div>
+        <div class="lg" id="lg-zepec" style="display:none">
+          <div class="lg-title">ZEPEC (Plano Diretor)</div>
+          <div class="li" data-layer="zepec" data-val="ZEPEC 1 - Região Central"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zepec','ZEPEC 1 - Região Central')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(193,110,221)"></div><span>ZEPEC 1 — Região Central</span></div>
+          <div class="li" data-layer="zepec" data-val="ZEPEC 2 - Guaripocaba"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zepec','ZEPEC 2 - Guaripocaba')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,191,0)"></div><span>ZEPEC 2 — Guaripocaba</span></div>
+          <div class="li" data-layer="zepec" data-val="ZEPEC 3 - Região da Serrinha"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zepec','ZEPEC 3 - Região da Serrinha')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,127,127)"></div><span>ZEPEC 3 — Região da Serrinha</span></div>
+        </div>
+        <div class="lg" id="lg-bacias" style="display:none">
+          <div class="lg-title">Bacias Hidrográficas (Plano Diretor)</div>
+          <div class="li"><div class="sw" style="background:rgb(255,158,23)"></div><span>Bacias (11 unidades)</span></div>
+        </div>
+        <div class="lg" id="lg-viarias" style="display:none">
+          <div class="lg-title">Diretrizes Viárias (Plano Diretor)</div>
+          <div class="li" data-layer="viarias" data-val="Via Arterial"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'viarias','Via Arterial')"><span class="toggle-track"></span></label><div class="swl" style="background:rgb(0,255,255)"></div><span>Via Arterial</span></div>
+          <div class="li" data-layer="viarias" data-val="Via Arterial Secundária"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'viarias','Via Arterial Secundária')"><span class="toggle-track"></span></label><div class="swl" style="background:rgb(138,184,0)"></div><span>Via Arterial Secundária</span></div>
+          <div class="li" data-layer="viarias" data-val="Via Regional"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'viarias','Via Regional')"><span class="toggle-track"></span></label><div class="swl" style="background:rgb(221,0,221)"></div><span>Via Regional</span></div>
+          <div class="li" data-layer="viarias" data-val="Via Rural Coletora"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'viarias','Via Rural Coletora')"><span class="toggle-track"></span></label><div class="swl" style="background:rgb(255,191,0)"></div><span>Via Rural Coletora</span></div>
+        </div>
+        <div id="lg-empty" style="padding:20px 0;text-align:center;font-size:11px;color:var(--text-muted)">
+          Nenhuma camada ativa.<br>Ative uma camada acima para ver a legenda.
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT MODAL -->
+    <div id="pd-modal" style="display:none">
+      <div id="pd-mbox">
+        <div id="pd-mtitle">&#8595; Exportar mapa</div>
+        <p id="pd-mdesc">Escolha o formato. O mapa será capturado na visualização atual.</p>
+        <div id="pd-mbtns">
+          <button class="eb" onclick="pdDoExport('jpeg')">Imagem JPEG</button>
+          <button class="eb" onclick="pdDoExport('pdf')">PDF</button>
+        </div>
+        <div id="pd-mstatus"></div>
+        <button id="pd-mclose" onclick="pdCloseModal()">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- ONBOARDING -->
+    <div id="pd-ob">
+      <div id="pd-obbox">
+        <div id="pd-obicon">&#128506;</div>
+        <div id="pd-obtitle">Legislação Urbanística</div>
+        <div id="pd-obdesc">Mapa interativo com as camadas do Plano Diretor e do Código de Urbanismo de Bragança Paulista. Clique em qualquer zona para ver os parâmetros. Use o painel à esquerda para ativar camadas adicionais.</div>
+        <button id="pd-obbtn" onclick="pdCloseOb()">Explorar o mapa</button>
+      </div>
+    </div>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.photon.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/BACIASHIDROGRAFICAS_2.js"></script>
+        <script src="data/COD_URB_5.js"></script>
+        <script src="data/DIRETRIZESVIARIAS_1.js"></script>
+        <script src="data/ZEPAM_3.js"></script>
+        <script src="data/ZEPEC_4.js"></script>
+        <script src="data/ZONEAMENTO_6.js"></script>
+        <script src="data/MACROZONEAMENTO_7.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            if (window._pdPopupLocked) return;
+            // Don't highlight filtered-out features
+            if (window._pdIsFiltered && window._pdIsFiltered(e.target)) return;
+            var _op = window._pdGetOpacity ? window._pdGetOpacity(e.target) : 0.65;
+            if (_op === 0) return;
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: 'rgba(255, 255, 0, 1.00)',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: 'rgba(255, 255, 0, 1.00)',
+                fillOpacity: Math.min(_op + 0.2, 1)
+              });
+            }
+            // popup on click only
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[-22.98380518613056,-46.54982083946273],[-22.961347906605393,-46.50234763204534]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // modify popup if contains media
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
+                    var audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = src;
+                    imgTd.parentNode.replaceChild(audio, imgTd);
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
+                    var video = document.createElement('video');
+                    video.controls = true;
+                    video.src = src;
+                    video.style.width = "400px";
+                    video.style.height = "300px";
+                    video.style.maxHeight = "60vh";
+                    video.style.maxWidth = "60vw";
+                    imgTd.parentNode.replaceChild(video, imgTd);
+                    popup._contentNode.classList.add('media');
+                    // Aggiorna il popup quando il video carica i metadati
+                    video.addEventListener('loadedmetadata', function() {
+                        popup.update();
+                    });
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else {
+                    popup._contentNode.classList.remove('media');
+                }
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        try{document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML='';}catch(e){}
+        try{document.getElementsByClassName('leaflet-control-measure-toggle')[0].className+=' fas fa-ruler';}catch(e){}
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+
+        function pop_DIRETRIZESVIARIAS_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (window._pdPopupLocked && e.target === window._pdLockedLayer) return;
+                    if (window._pdIsFiltered && window._pdIsFiltered(e.target)) return;
+                    var _op = window._pdGetOpacity ? window._pdGetOpacity(e.target) : 0.65;
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                            // After resetStyle, re-apply correct state
+                            if (e.target._pdFiltered) {
+                                // Was filtered — re-hide it
+                                e.target.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+                                if (e.target._path) {
+                                    e.target._path.style.pointerEvents = 'none';
+                                    e.target._path.style.fillOpacity = '0';
+                                    e.target._path.style.strokeOpacity = '0';
+                                }
+                            } else {
+                                e.target.setStyle({ fillOpacity: _op });
+                            }
+                        }
+                    }
+                    // Never close popup on mouseout
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">HIERARQUIA</th>\
+                        <td class="visible-with-data" id="HIERARQUIA">' + (feature.properties['HIERARQUIA'] !== null ? autolinker.link(String(feature.properties['HIERARQUIA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ANEXO MAPA</th>\
+                        <td class="visible-with-data" id="ANX MAPA">' + (feature.properties['ANX MAPA'] !== null ? autolinker.link(String(feature.properties['ANX MAPA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">IMPORTANTE</th>\
+                        <td class="visible-with-data" id="IMPORT">' + (feature.properties['IMPORT'] !== null ? autolinker.link(String(feature.properties['IMPORT']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_DIRETRIZESVIARIAS_1_0(feature) {
+            switch(String(feature.properties['HIERARQUIA'])) {
+                case 'Via Arterial':
+                    return {
+                pane: 'pane_DIRETRIZESVIARIAS_1',
+                opacity: 1,
+                color: 'rgba(0,255,255,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Via Arterial Secundária':
+                    return {
+                pane: 'pane_DIRETRIZESVIARIAS_1',
+                opacity: 1,
+                color: 'rgba(138,184,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Via Regional':
+                    return {
+                pane: 'pane_DIRETRIZESVIARIAS_1',
+                opacity: 1,
+                color: 'rgba(221,0,221,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Via Rural Coletora':
+                    return {
+                pane: 'pane_DIRETRIZESVIARIAS_1',
+                opacity: 1,
+                color: 'rgba(255,191,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 4.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_DIRETRIZESVIARIAS_1');
+        map.getPane('pane_DIRETRIZESVIARIAS_1').style.zIndex = 401;
+        map.getPane('pane_DIRETRIZESVIARIAS_1').style['mix-blend-mode'] = 'normal';
+        var layer_DIRETRIZESVIARIAS_1 = new L.geoJson(json_DIRETRIZESVIARIAS_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_DIRETRIZESVIARIAS_1',
+            layerName: 'layer_DIRETRIZESVIARIAS_1',
+            pane: 'pane_DIRETRIZESVIARIAS_1',
+            onEachFeature: pop_DIRETRIZESVIARIAS_1,
+            style: style_DIRETRIZESVIARIAS_1_0,
+        });
+        bounds_group.addLayer(layer_DIRETRIZESVIARIAS_1);
+        function pop_BACIASHIDROGRAFICAS_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (window._pdPopupLocked && e.target === window._pdLockedLayer) return;
+                    if (window._pdIsFiltered && window._pdIsFiltered(e.target)) return;
+                    var _op = window._pdGetOpacity ? window._pdGetOpacity(e.target) : 0.65;
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                            // After resetStyle, re-apply correct state
+                            if (e.target._pdFiltered) {
+                                // Was filtered — re-hide it
+                                e.target.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+                                if (e.target._path) {
+                                    e.target._path.style.pointerEvents = 'none';
+                                    e.target._path.style.fillOpacity = '0';
+                                    e.target._path.style.strokeOpacity = '0';
+                                }
+                            } else {
+                                e.target.setStyle({ fillOpacity: _op });
+                            }
+                        }
+                    }
+                    // Never close popup on mouseout
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">NOME</th>\
+                        <td class="visible-with-data" id="NOME">' + (feature.properties['NOME'] !== null ? autolinker.link(String(feature.properties['NOME']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_BACIASHIDROGRAFICAS_2_0() {
+            return {
+                pane: 'pane_BACIASHIDROGRAFICAS_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,158,23,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_BACIASHIDROGRAFICAS_2');
+        map.getPane('pane_BACIASHIDROGRAFICAS_2').style.zIndex = 402;
+        map.getPane('pane_BACIASHIDROGRAFICAS_2').style['mix-blend-mode'] = 'normal';
+        var layer_BACIASHIDROGRAFICAS_2 = new L.geoJson(json_BACIASHIDROGRAFICAS_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_BACIASHIDROGRAFICAS_2',
+            layerName: 'layer_BACIASHIDROGRAFICAS_2',
+            pane: 'pane_BACIASHIDROGRAFICAS_2',
+            onEachFeature: pop_BACIASHIDROGRAFICAS_2,
+            style: style_BACIASHIDROGRAFICAS_2_0,
+        });
+        bounds_group.addLayer(layer_BACIASHIDROGRAFICAS_2);
+        function pop_ZEPAM_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (window._pdPopupLocked && e.target === window._pdLockedLayer) return;
+                    if (window._pdIsFiltered && window._pdIsFiltered(e.target)) return;
+                    var _op = window._pdGetOpacity ? window._pdGetOpacity(e.target) : 0.65;
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                            // After resetStyle, re-apply correct state
+                            if (e.target._pdFiltered) {
+                                // Was filtered — re-hide it
+                                e.target.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+                                if (e.target._path) {
+                                    e.target._path.style.pointerEvents = 'none';
+                                    e.target._path.style.fillOpacity = '0';
+                                    e.target._path.style.strokeOpacity = '0';
+                                }
+                            } else {
+                                e.target.setStyle({ fillOpacity: _op });
+                            }
+                        }
+                    }
+                    // Never close popup on mouseout
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">NOME</th>\
+                        <td class="visible-with-data" id="NOME">' + (feature.properties['NOME'] !== null ? autolinker.link(String(feature.properties['NOME']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DESCRIÇÃO</th>\
+                        <td class="visible-with-data" id="DESC">' + (feature.properties['DESC'] !== null ? autolinker.link(String(feature.properties['DESC']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_ZEPAM_3_0() {
+            return {
+                pane: 'pane_ZEPAM_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.7)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,255,0,1)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_ZEPAM_3');
+        map.getPane('pane_ZEPAM_3').style.zIndex = 403;
+        map.getPane('pane_ZEPAM_3').style['mix-blend-mode'] = 'normal';
+        var layer_ZEPAM_3 = new L.geoJson(json_ZEPAM_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ZEPAM_3',
+            layerName: 'layer_ZEPAM_3',
+            pane: 'pane_ZEPAM_3',
+            onEachFeature: pop_ZEPAM_3,
+            style: style_ZEPAM_3_0,
+        });
+        bounds_group.addLayer(layer_ZEPAM_3);
+        function pop_ZEPEC_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (window._pdPopupLocked && e.target === window._pdLockedLayer) return;
+                    if (window._pdIsFiltered && window._pdIsFiltered(e.target)) return;
+                    var _op = window._pdGetOpacity ? window._pdGetOpacity(e.target) : 0.65;
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                            // After resetStyle, re-apply correct state
+                            if (e.target._pdFiltered) {
+                                // Was filtered — re-hide it
+                                e.target.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+                                if (e.target._path) {
+                                    e.target._path.style.pointerEvents = 'none';
+                                    e.target._path.style.fillOpacity = '0';
+                                    e.target._path.style.strokeOpacity = '0';
+                                }
+                            } else {
+                                e.target.setStyle({ fillOpacity: _op });
+                            }
+                        }
+                    }
+                    // Never close popup on mouseout
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">NOME</th>\
+                        <td class="visible-with-data" id="NOME">' + (feature.properties['NOME'] !== null ? autolinker.link(String(feature.properties['NOME']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DESCRIÇÃO</th>\
+                        <td class="visible-with-data" id="DESC">' + (feature.properties['DESC'] !== null ? autolinker.link(String(feature.properties['DESC']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_ZEPEC_4_0(feature) {
+            switch(String(feature.properties['NOME'])) {
+                case 'ZEPEC 1 - Região Central':
+                    return {
+                pane: 'pane_ZEPEC_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(193,110,221,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'ZEPEC 2 - Guaripocaba':
+                    return {
+                pane: 'pane_ZEPEC_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,191,0,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'ZEPEC 3 - Região da Serrinha':
+                    return {
+                pane: 'pane_ZEPEC_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,127,127,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_ZEPEC_4');
+        map.getPane('pane_ZEPEC_4').style.zIndex = 404;
+        map.getPane('pane_ZEPEC_4').style['mix-blend-mode'] = 'normal';
+        var layer_ZEPEC_4 = new L.geoJson(json_ZEPEC_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ZEPEC_4',
+            layerName: 'layer_ZEPEC_4',
+            pane: 'pane_ZEPEC_4',
+            onEachFeature: pop_ZEPEC_4,
+            style: style_ZEPEC_4_0,
+        });
+        bounds_group.addLayer(layer_ZEPEC_4);
+        function pop_COD_URB_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (window._pdPopupLocked && e.target === window._pdLockedLayer) return;
+                    if (window._pdIsFiltered && window._pdIsFiltered(e.target)) return;
+                    var _op = window._pdGetOpacity ? window._pdGetOpacity(e.target) : 0.65;
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                            // After resetStyle, re-apply correct state
+                            if (e.target._pdFiltered) {
+                                // Was filtered — re-hide it
+                                e.target.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+                                if (e.target._path) {
+                                    e.target._path.style.pointerEvents = 'none';
+                                    e.target._path.style.fillOpacity = '0';
+                                    e.target._path.style.strokeOpacity = '0';
+                                }
+                            } else {
+                                e.target.setStyle({ fillOpacity: _op });
+                            }
+                        }
+                    }
+                    // Never close popup on mouseout
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">ZONEAMENTO</th>\
+                        <td class="visible-with-data" id="ZONEAMENTO">' + (feature.properties['ZONEAMENTO'] !== null ? autolinker.link(String(feature.properties['ZONEAMENTO']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OBSERVAÇÕES</th>\
+                        <td class="visible-with-data" id="OBS">' + (feature.properties['OBS'] !== null ? autolinker.link(String(feature.properties['OBS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ÁREA MÍNIMA DO LOTE (m²)</th>\
+                        <td class="visible-with-data" id="MIN LOTE">' + (feature.properties['MIN LOTE'] !== null ? autolinker.link(String(feature.properties['MIN LOTE']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TAXA DE OCUPAÇÃO BÁSICA TOTAL (%)</th>\
+                        <td class="visible-with-data" id="TO BAS TT">' + (feature.properties['TO BAS TT'] !== null ? autolinker.link(String(feature.properties['TO BAS TT']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">COEFICIENTE DE APROVEITAMENTO</th>\
+                        <td class="visible-with-data" id="CA">' + (feature.properties['CA'] !== null ? autolinker.link(String(feature.properties['CA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TAXA DE IMPERMEABILIZAÇÃO MÁXIMA TOTAL (%)</th>\
+                        <td class="visible-with-data" id="TX IMPER">' + (feature.properties['TX IMPER'] !== null ? autolinker.link(String(feature.properties['TX IMPER']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">GABARITO DE ALTURA</th>\
+                        <td class="visible-with-data" id="GABARITO">' + (feature.properties['GABARITO'] !== null ? autolinker.link(String(feature.properties['GABARITO']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TESTADA MÍNIMA (m)</th>\
+                        <td class="visible-with-data" id="TEST MIN">' + (feature.properties['TEST MIN'] !== null ? autolinker.link(String(feature.properties['TEST MIN']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">RECUO DE FRENTE MÍNIMO (m)</th>\
+                        <td class="visible-with-data" id="RC FRENTE">' + (feature.properties['RC FRENTE'] !== null ? autolinker.link(String(feature.properties['RC FRENTE']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">RECUO LATERAL DIREITO MÍNIMO (m)</th>\
+                        <td class="visible-with-data" id="RC DIREITO">' + (feature.properties['RC DIREITO'] !== null ? autolinker.link(String(feature.properties['RC DIREITO']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">RECUO LATERAL ESQUERDO MÍNIMO (m)</th>\
+                        <td class="visible-with-data" id="RC ESQUERD">' + (feature.properties['RC ESQUERD'] !== null ? autolinker.link(String(feature.properties['RC ESQUERD']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ATENÇÃO A MATRICULA DO IMÓVEL</th>\
+                        <td class="visible-with-data" id="ATENCAO">' + (feature.properties['ATENCAO'] !== null ? autolinker.link(String(feature.properties['ATENCAO']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PERMISSÕES DE USO</th>\
+                        <td class="visible-with-data" id="PERM USO_2">' + (feature.properties['PERM USO_2'] !== null ? autolinker.link(String(feature.properties['PERM USO_2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ANEXO CLASSIFICAÇÃO DAS ATIVIDADES INDUSTRIAIS</th>\
+                        <td class="visible-with-data" id="ANX INDUST">' + (feature.properties['ANX INDUST'] !== null ? autolinker.link(String(feature.properties['ANX INDUST']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ANEXO CLASSIFICAÇÃO DAS PERMISSÕES DE USO</th>\
+                        <td class="visible-with-data" id="ANX PERM">' + (feature.properties['ANX PERM'] !== null ? autolinker.link(String(feature.properties['ANX PERM']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ATENÇÃO</th>\
+                        <td class="visible-with-data" id="ATENCAO_2">' + (feature.properties['ATENCAO_2'] !== null ? autolinker.link(String(feature.properties['ATENCAO_2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_COD_URB_5_0(feature) {
+            switch(String(feature.properties['para legen'])) {
+                case 'Z':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(186,186,186,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(186,186,186,1)',
+                interactive: true,
+            }
+                    break;
+                case 'ZC':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(0,255,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,255,0,1)',
+                interactive: true,
+            }
+                    break;
+                case 'ZE':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(255,191,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,191,0,1)',
+                interactive: true,
+            }
+                    break;
+                case 'ZE4':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(255,126,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,126,0,1)',
+                interactive: true,
+            }
+                    break;
+                case 'ZE5':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(230,255,154,0.5019607843137255)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,255,154,1)',
+                interactive: true,
+            }
+                    break;
+                case 'ZE6':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(255,255,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,0,1)',
+                interactive: true,
+            }
+                    break;
+                case 'ZEIS':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(221,110,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(221,110,0,1)',
+                interactive: true,
+            }
+                    break;
+                case 'ZI':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(255,0,255,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,0,255,1)',
+                interactive: true,
+            }
+                    break;
+                case 'ZM':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(0,0,255,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,0,255,1)',
+                interactive: true,
+            }
+                    break;
+                case 'ZR':
+                    return {
+                pane: 'pane_COD_URB_5',
+                opacity: 1,
+                color: 'rgba(255,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,0,0,1)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_COD_URB_5');
+        map.getPane('pane_COD_URB_5').style.zIndex = 405;
+        map.getPane('pane_COD_URB_5').style['mix-blend-mode'] = 'normal';
+        var layer_COD_URB_5 = new L.geoJson(json_COD_URB_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_COD_URB_5',
+            layerName: 'layer_COD_URB_5',
+            pane: 'pane_COD_URB_5',
+            onEachFeature: pop_COD_URB_5,
+            style: style_COD_URB_5_0,
+        });
+        bounds_group.addLayer(layer_COD_URB_5);
+        function pop_ZONEAMENTO_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (window._pdPopupLocked && e.target === window._pdLockedLayer) return;
+                    if (window._pdIsFiltered && window._pdIsFiltered(e.target)) return;
+                    var _op = window._pdGetOpacity ? window._pdGetOpacity(e.target) : 0.65;
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                            // After resetStyle, re-apply correct state
+                            if (e.target._pdFiltered) {
+                                // Was filtered — re-hide it
+                                e.target.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+                                if (e.target._path) {
+                                    e.target._path.style.pointerEvents = 'none';
+                                    e.target._path.style.fillOpacity = '0';
+                                    e.target._path.style.strokeOpacity = '0';
+                                }
+                            } else {
+                                e.target.setStyle({ fillOpacity: _op });
+                            }
+                        }
+                    }
+                    // Never close popup on mouseout
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">ZONEAMENTO</th>\
+                        <td class="visible-with-data" id="ZONEAMENTO">' + (feature.properties['ZONEAMENTO'] !== null ? autolinker.link(String(feature.properties['ZONEAMENTO']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ÁREA MÍN. LOTE (m²)</th>\
+                        <td class="visible-with-data" id="AREA MIN">' + (feature.properties['AREA MIN'] !== null ? autolinker.link(String(feature.properties['AREA MIN']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ÁREA MÁX. LOTE (m²)</th>\
+                        <td class="visible-with-data" id="AREA MAX">' + (feature.properties['AREA MAX'] !== null ? autolinker.link(String(feature.properties['AREA MAX']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">T.O. (%)</th>\
+                        <td class="visible-with-data" id="TO">' + (feature.properties['TO'] !== null ? autolinker.link(String(feature.properties['TO']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">COEFICIENTE APROVEITAMENTO MÍNIMO</th>\
+                        <td class="visible-with-data" id="COEF MIN">' + (feature.properties['COEF MIN'] !== null ? autolinker.link(String(feature.properties['COEF MIN']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">COEFICIENTE APROVEITAMENTO BÁSICO</th>\
+                        <td class="visible-with-data" id="COEF BAS">' + (feature.properties['COEF BAS'] !== null ? autolinker.link(String(feature.properties['COEF BAS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">COEFICIENTE APROVEITAMENTO MÁXIMO</th>\
+                        <td class="visible-with-data" id="COEF MAX">' + (feature.properties['COEF MAX'] !== null ? autolinker.link(String(feature.properties['COEF MAX']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TAXA DE PERMEABILIDADE (%)</th>\
+                        <td class="visible-with-data" id="TX PERMEA">' + (feature.properties['TX PERMEA'] !== null ? autolinker.link(String(feature.properties['TX PERMEA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">GABARITO DE ALTURA EM VIA LOCAL SEM SAÍDA</th>\
+                        <td class="visible-with-data" id="GBRT VLSS">' + (feature.properties['GBRT VLSS'] !== null ? autolinker.link(String(feature.properties['GBRT VLSS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">GABARITO DE ALTURA EM VIA LOCAL (URBANA/RURAL)</th>\
+                        <td class="visible-with-data" id="GBRT VL">' + (feature.properties['GBRT VL'] !== null ? autolinker.link(String(feature.properties['GBRT VL']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">GABARITO DE ALTURA EM VIA COLETORA (URBANA/RURAL)</th>\
+                        <td class="visible-with-data" id="GBRT VC">' + (feature.properties['GBRT VC'] !== null ? autolinker.link(String(feature.properties['GBRT VC']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">GABARITO DE ALTURA EM VIA ARTERIAL</th>\
+                        <td class="visible-with-data" id="GBRT VA">' + (feature.properties['GBRT VA'] !== null ? autolinker.link(String(feature.properties['GBRT VA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">GABARITO DE ALTURA EM VIA REGIONAL</th>\
+                        <td class="visible-with-data" id="GBRT VR">' + (feature.properties['GBRT VR'] !== null ? autolinker.link(String(feature.properties['GBRT VR']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TESTADA MÍNIMA (m)</th>\
+                        <td class="visible-with-data" id="TESTADA MI">' + (feature.properties['TESTADA MI'] !== null ? autolinker.link(String(feature.properties['TESTADA MI']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">RECUO FRONTAL (m)</th>\
+                        <td class="visible-with-data" id="RC FRONTAL">' + (feature.properties['RC FRONTAL'] !== null ? autolinker.link(String(feature.properties['RC FRONTAL']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">RECUO LATERAL DIREITO (m)</th>\
+                        <td class="visible-with-data" id="RC DIREITO">' + (feature.properties['RC DIREITO'] !== null ? autolinker.link(String(feature.properties['RC DIREITO']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">RECUO LATERAL ESQUERDO (m)</th>\
+                        <td class="visible-with-data" id="RC ESQUERD">' + (feature.properties['RC ESQUERD'] !== null ? autolinker.link(String(feature.properties['RC ESQUERD']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">RECUO FUNDOS (m)</th>\
+                        <td class="visible-with-data" id="RC FUNDOS">' + (feature.properties['RC FUNDOS'] !== null ? autolinker.link(String(feature.properties['RC FUNDOS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PERMISSÕES DE USO EM VIAS LOCAIS SEM SAÍDA</th>\
+                        <td class="visible-with-data" id="USO VLSS">' + (feature.properties['USO VLSS'] !== null ? autolinker.link(String(feature.properties['USO VLSS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PERMISSÕES DE USO EM VIAS LOCAIS (URBANA/RURAL)</th>\
+                        <td class="visible-with-data" id="USO VL">' + (feature.properties['USO VL'] !== null ? autolinker.link(String(feature.properties['USO VL']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PERMISSÕES DE USO EM VIAS COLETORAS (URBANA/RURAL)</th>\
+                        <td class="visible-with-data" id="USO VC">' + (feature.properties['USO VC'] !== null ? autolinker.link(String(feature.properties['USO VC']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PERMISSÕES DE USO EM VIAS ARTERIAIS</th>\
+                        <td class="visible-with-data" id="USO VA">' + (feature.properties['USO VA'] !== null ? autolinker.link(String(feature.properties['USO VA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PERMISSÕES DE USO EM VIAS REGIONAIS</th>\
+                        <td class="visible-with-data" id="USO VR">' + (feature.properties['USO VR'] !== null ? autolinker.link(String(feature.properties['USO VR']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OBSERVAÇÕES</th>\
+                        <td class="visible-with-data" id="OBS">' + (feature.properties['OBS'] !== null ? autolinker.link(String(feature.properties['OBS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ANEXO CLASSIFICAÇÃO DAS ATIVIDADES INDUSTRIAIS</th>\
+                        <td class="visible-with-data" id="ANX ATV IN">' + (feature.properties['ANX ATV IN'] !== null ? autolinker.link(String(feature.properties['ANX ATV IN']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_ZONEAMENTO_6_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_ZONEAMENTO_6rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_ZONEAMENTO_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(186,186,186,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_ZONEAMENTO_6rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_ZONEAMENTO_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,127,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_ZONEAMENTO_6rule2_eval_expression(context)) {
+                  return {
+                pane: 'pane_ZONEAMENTO_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_ZONEAMENTO_6rule3_eval_expression(context)) {
+                  return {
+                pane: 'pane_ZONEAMENTO_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(112,0,149,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_ZONEAMENTO_6rule4_eval_expression(context)) {
+                  return {
+                pane: 'pane_ZONEAMENTO_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,204,255,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_ZONEAMENTO_6rule5_eval_expression(context)) {
+                  return {
+                pane: 'pane_ZONEAMENTO_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,0,255,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_ZONEAMENTO_6rule6_eval_expression(context)) {
+                  return {
+                pane: 'pane_ZONEAMENTO_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(145,207,156,1.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_ZONEAMENTO_6');
+        map.getPane('pane_ZONEAMENTO_6').style.zIndex = 406;
+        map.getPane('pane_ZONEAMENTO_6').style['mix-blend-mode'] = 'normal';
+        var layer_ZONEAMENTO_6 = new L.geoJson(json_ZONEAMENTO_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ZONEAMENTO_6',
+            layerName: 'layer_ZONEAMENTO_6',
+            pane: 'pane_ZONEAMENTO_6',
+            onEachFeature: pop_ZONEAMENTO_6,
+            style: style_ZONEAMENTO_6_0,
+        });
+        bounds_group.addLayer(layer_ZONEAMENTO_6);
+        map.addLayer(layer_ZONEAMENTO_6);
+        function pop_MACROZONEAMENTO_7(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (window._pdPopupLocked && e.target === window._pdLockedLayer) return;
+                    if (window._pdIsFiltered && window._pdIsFiltered(e.target)) return;
+                    var _op = window._pdGetOpacity ? window._pdGetOpacity(e.target) : 0.65;
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                            // After resetStyle, re-apply correct state
+                            if (e.target._pdFiltered) {
+                                // Was filtered — re-hide it
+                                e.target.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+                                if (e.target._path) {
+                                    e.target._path.style.pointerEvents = 'none';
+                                    e.target._path.style.fillOpacity = '0';
+                                    e.target._path.style.strokeOpacity = '0';
+                                }
+                            } else {
+                                e.target.setStyle({ fillOpacity: _op });
+                            }
+                        }
+                    }
+                    // Never close popup on mouseout
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">MACROZONA</th>\
+                        <td class="visible-with-data" id="MACROZONA">' + (feature.properties['MACROZONA'] !== null ? autolinker.link(String(feature.properties['MACROZONA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DESCRIÇÃO</th>\
+                        <td class="visible-with-data" id="DESCR">' + (feature.properties['DESCR'] !== null ? autolinker.link(String(feature.properties['DESCR']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_MACROZONEAMENTO_7_0(feature) {
+            switch(String(feature.properties['MACROZONA'])) {
+                case 'Macrozona Rural (MZR)':
+                    return {
+                pane: 'pane_MACROZONEAMENTO_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(92,183,80,1)',
+                interactive: true,
+            }
+                    break;
+                case 'Macrozona Urbana (MZU)':
+                    return {
+                pane: 'pane_MACROZONEAMENTO_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.6)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(251,132,29,1)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_MACROZONEAMENTO_7');
+        map.getPane('pane_MACROZONEAMENTO_7').style.zIndex = 407;
+        map.getPane('pane_MACROZONEAMENTO_7').style['mix-blend-mode'] = 'normal';
+        var layer_MACROZONEAMENTO_7 = new L.geoJson(json_MACROZONEAMENTO_7, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_MACROZONEAMENTO_7',
+            layerName: 'layer_MACROZONEAMENTO_7',
+            pane: 'pane_MACROZONEAMENTO_7',
+            onEachFeature: pop_MACROZONEAMENTO_7,
+            style: style_MACROZONEAMENTO_7_0,
+        });
+        bounds_group.addLayer(layer_MACROZONEAMENTO_7);
+        const url = {"Nominatim OSM": "https://nominatim.openstreetmap.org/search?format=geojson&addressdetails=1&",
+        "France BAN": "https://api-adresse.data.gouv.fr/search/?"}
+        // photon removed
+        setBounds();
+        resetLabels([]);
+        map.on("zoomend", function(){
+            resetLabels([]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([]);
+        });
+        </script>        
+    
+<script>
+// ── Wait for Leaflet layers to be ready, then hook our UI ─────────────────────
+(function() {
+    // Basemaps — our versions with crossOrigin
+    var pdBasemaps = {
+        satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            {attribution:'Esri, Maxar, Earthstar Geographics',minZoom:1,maxZoom:20,maxNativeZoom:17,crossOrigin:'anonymous',zIndex:0}),
+        osm: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+            {attribution:'Esri, HERE, Garmin, © OpenStreetMap',minZoom:1,maxZoom:20,maxNativeZoom:17,crossOrigin:'anonymous',zIndex:0}),
+        dark: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+            {
+        referrerPolicy: 'strict-origin-when-cross-origin',attribution:'Esri, HERE, Garmin, © OpenStreetMap',minZoom:1,maxZoom:20,maxNativeZoom:16,crossOrigin:'anonymous',zIndex:0}),
+    };
+    // Remove QGIS tile layer and replace with ours
+    map.eachLayer(function(l) {
+        if (l._url && l._url.indexOf('google') > -1) { map.removeLayer(l); }
+    });
+    pdBasemaps.satellite.addTo(map);
+    pdBasemaps.satellite.bringToBack();
+
+    // Layer map
+    var PD_LAYERS = {
+        zona:    layer_ZONEAMENTO_6,
+        cod:     layer_COD_URB_5,
+        macro:   layer_MACROZONEAMENTO_7,
+        zepam:   layer_ZEPAM_3,
+        zepec:   layer_ZEPEC_4,
+        bacias:  layer_BACIASHIDROGRAFICAS_2,
+        viarias: layer_DIRETRIZESVIARIAS_1,
+    };
+
+    // Per-layer opacity store (user-set values)
+    var PD_OPACITY = {
+        zona: 0.65, cod: 0.65, macro: 0.65,
+        zepam: 0.65, zepec: 0.65, bacias: 0.65, viarias: 0.65,
+    };
+
+    // Per-layer item filter (null = all visible; Set = only these values shown)
+    var PD_FILTER = {
+        zona: null, cod: null, macro: null,
+        zepam: null, zepec: null, bacias: null, viarias: null,
+    };
+    // Field name used by each layer's style function
+    var PD_FILTER_FIELD = {
+        zona:    'ZONEAMENTO',
+        cod:     'para legen',
+        macro:   'MACROZONA',
+        zepec:   'NOME',
+        viarias: 'HIERARQUIA',
+    };
+
+    // Toggle a legend item on/off
+
+    // ── Check if a Leaflet layer is currently filtered out ───────────────────
+    function _pdIsFiltered(leafletLayer) {
+        // O(1): we store filter state directly on the layer object
+        return leafletLayer && leafletLayer._pdFiltered === true;
+    }
+
+    // ── After filter change: set pointer-events on SVG paths ─────────────────
+    function _pdRefreshPointerEvents(key) {
+        var gl = PD_LAYERS[key];
+        if (!gl) return;
+        gl.eachLayer(function(layer) {
+            var filtered = false;
+            if (PD_FILTER[key] && PD_FILTER_FIELD[key]) {
+                var v = layer.feature && layer.feature.properties[PD_FILTER_FIELD[key]];
+                filtered = !!(v !== undefined && !PD_FILTER[key].has(String(v)));
+            }
+            // Store on layer object for O(1) lookup
+            layer._pdFiltered = filtered;
+            // SVG path: disable mouse events entirely
+            if (layer._path) {
+                layer._path.style.pointerEvents = filtered ? 'none' : '';
+                // Also ensure style is correct
+                if (filtered) {
+                    layer._path.style.fillOpacity = '0';
+                    layer._path.style.strokeOpacity = '0';
+                }
+            }
+        });
+    }
+
+    window.pdFilterItem = function(liEl, key, val) {
+        // liEl is the .li div containing the toggle checkbox
+        var on = liEl.querySelector('input[type=checkbox]').checked;
+        if (!PD_FILTER[key]) {
+            // Init: all values active
+            var allVals = [];
+            document.querySelectorAll('.li[data-layer="' + key + '"]').forEach(function(li) {
+                allVals.push(li.getAttribute('data-val'));
+            });
+            PD_FILTER[key] = new Set(allVals);
+        }
+        if (on) {
+            PD_FILTER[key].add(val);
+            liEl.classList.remove('off');
+        } else {
+            PD_FILTER[key].delete(val);
+            liEl.classList.add('off');
+        }
+        // If all items re-enabled, reset to null (all visible)
+        var total = document.querySelectorAll('.li[data-layer="' + key + '"]').length;
+        if (PD_FILTER[key] && PD_FILTER[key].size === total) PD_FILTER[key] = null;
+        // Redraw the layer
+        if (PD_LAYERS[key]) {
+            PD_LAYERS[key].setStyle(function(feature) {
+                return _pdStyleWithFilter(key, feature);
+            });
+            _pdRefreshPointerEvents(key);
+        }
+    };
+
+    // Style wrapper that applies filter
+    function _pdStyleWithFilter(key, feature) {
+        // Get the original QGIS style function result
+        var styleFns = {
+            zona:    style_ZONEAMENTO_6_0,
+            cod:     style_COD_URB_5_0,
+            macro:   style_MACROZONEAMENTO_7_0,
+            zepam:   style_ZEPAM_3_0,
+            zepec:   style_ZEPEC_4_0,
+            bacias:  style_BACIASHIDROGRAFICAS_2_0,
+            viarias: style_DIRETRIZESVIARIAS_1_0,
+        };
+        var s = styleFns[key] ? styleFns[key](feature) : {};
+        if (!s) return s;
+        // Apply filter
+        if (PD_FILTER[key] && PD_FILTER_FIELD[key]) {
+            var featureVal = feature.properties[PD_FILTER_FIELD[key]];
+            if (!PD_FILTER[key].has(String(featureVal))) {
+                return { fillOpacity: 0, opacity: 0, weight: 0 };
+            }
+        }
+        // Apply user opacity
+        var op = (PD_OPACITY[key] !== undefined) ? PD_OPACITY[key] : 0.65;
+        return Object.assign({}, s, { fillOpacity: op });
+    }
+
+    // ── Sincroniza o estado dos checkboxes com as camadas ────────────────────
+    // O export do QGIS adiciona apenas uma camada ao mapa, mas o painel marca
+    // todas como ligadas. Sem esta sincronizacao o mapa abre praticamente vazio.
+    Object.keys(PD_LAYERS).forEach(function(key) {
+        var gl = PD_LAYERS[key];
+        if (!gl) return;
+        var cb = document.querySelector('input[type=checkbox][data-pd-layer="' + key + '"]');
+        var ligada = cb ? cb.checked : true;
+        if (ligada && !map.hasLayer(gl)) gl.addTo(map);
+        if (!ligada && map.hasLayer(gl)) map.removeLayer(gl);
+        if (map.hasLayer(gl)) {
+            gl.setStyle(function(feature) { return _pdStyleWithFilter(key, feature); });
+        }
+    });
+    // mantem os mapas base atras das camadas tematicas
+    Object.values(pdBasemaps).forEach(function(b) {
+        if (map.hasLayer(b)) b.bringToBack();
+    });
+
+    // Expose opacity getter for QGIS script patches
+        window._pdIsFiltered = _pdIsFiltered;
+    window._pdGetOpacity = function(leafletLayer) {
+        for (var key in PD_LAYERS) {
+            var found = false;
+            PD_LAYERS[key].eachLayer(function(l) { if (l === leafletLayer) found = true; });
+            if (found) return (PD_OPACITY[key] !== undefined) ? PD_OPACITY[key] : 0.65;
+        }
+        return 0.65;
+    };
+
+    // Expose locked state for QGIS script patches
+    Object.defineProperty(window, '_pdPopupLocked', {
+        get: function() { return _pdPopupLocked; },
+        set: function(v) { _pdPopupLocked = v; },
+        configurable: true
+    });
+    Object.defineProperty(window, '_pdLockedLayer', {
+        get: function() { return _pdLockedLayer; },
+        set: function(v) { _pdLockedLayer = v; },
+        configurable: true
+    });
+
+    // ── Popup on CLICK — fixed, scrollable, closeable only by X or map click ──
+    var _pdPopupLocked = false;   // true = popup is pinned by user click
+    var _pdLockedLayer = null;    // which layer is currently pinned
+
+    // Override highlightFeature: highlight on hover but NEVER open popup
+    // Find the PD_OPACITY key for a given layer object
+    function _pdKeyOf(layer) {
+        return Object.keys(PD_LAYERS).find(function(k) {
+            var found = false;
+            PD_LAYERS[k].eachLayer(function(l) { if (l === layer) found = true; });
+            return found;
+        });
+    }
+    window.highlightFeature = function(e) {
+        if (_pdPopupLocked) return; // don't disturb locked state
+        window.highlightLayer = e.target;
+        var t = e.target;
+        if (t.feature.geometry.type === 'LineString' ||
+            t.feature.geometry.type === 'MultiLineString') {
+            t.setStyle({ color: 'rgba(255,255,0,1)', opacity: 0.9 });
+        } else {
+            // Highlight: yellow fill, keep user opacity
+            var key = _pdKeyOf(t);
+            var op = key ? PD_OPACITY[key] : 0.65;
+            t.setStyle({ fillColor: 'rgba(255,255,0,1)', fillOpacity: Math.min(op + 0.2, 1) });
+        }
+    };
+
+    // Intercept every layer's closePopup so mouseout cannot close a locked popup
+    Object.values(PD_LAYERS).forEach(function(geoLayer) {
+        geoLayer.eachLayer(function(layer) {
+            // Wrap closePopup
+            var _orig = layer.closePopup.bind(layer);
+            layer.closePopup = function() {
+                if (_pdPopupLocked && layer === _pdLockedLayer) return; // ignore
+                return _orig();
+            };
+
+            // Click: pin the popup
+            layer.on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                if (_pdIsFiltered(layer)) return; // filtered — let click pass through
+
+                // If clicking the already-locked layer → unlock and close
+                if (_pdPopupLocked && _pdLockedLayer === layer) {
+                    _pdPopupLocked = false;
+                    _pdLockedLayer = null;
+                    _pdResetStyles();
+                    map.closePopup();
+                    return;
+                }
+
+                // Reset previously locked layer
+                if (_pdLockedLayer) {
+                    _pdResetStyles();
+                    map.closePopup();
+                }
+
+                // Lock this layer
+                _pdPopupLocked = true;
+                _pdLockedLayer = layer;
+
+                // Yellow highlight — preserve user opacity
+                var key2 = _pdKeyOf(layer);
+                var op2  = key2 ? PD_OPACITY[key2] : 0.65;
+                var geo  = layer.feature.geometry.type;
+                if (geo === 'LineString' || geo === 'MultiLineString') {
+                    layer.setStyle({ color: 'rgba(255,255,0,1)', opacity: 0.95 });
+                } else {
+                    layer.setStyle({ fillColor: 'rgba(255,255,0,1)', fillOpacity: Math.min(op2 + 0.25, 1) });
+                }
+
+                // Open popup at click location (works from anywhere inside the polygon)
+                layer.openPopup(e.latlng);
+            });
+        });
+    });
+
+    // Override QGIS resetHighlight to restore our opacity after mouseout
+    window.resetHighlight = function(e) {
+        if (_pdPopupLocked && e.target === _pdLockedLayer) return;
+        // Find which key this layer belongs to
+        var key3 = _pdKeyOf(e.target);
+        if (!key3) return;
+        PD_LAYERS[key3].resetStyle(e.target); // restore QGIS colors
+        e.target.setStyle({ fillOpacity: PD_OPACITY[key3] || 0.65 }); // restore our opacity
+    };
+
+    // Helper: reset all layers to original style + tracked opacity
+    function _pdResetStyles() {
+        Object.keys(PD_LAYERS).forEach(function(key) {
+            var gl = PD_LAYERS[key];
+            if (!map.hasLayer(gl)) return;
+            if (gl.resetStyle) gl.resetStyle(); // restore QGIS original colors
+            // Re-apply user opacity over the reset style
+            var op = (PD_OPACITY[key] !== undefined ? PD_OPACITY[key] : 0.65);
+            gl.setStyle({ fillOpacity: op });
+        });
+    }
+
+    // Click on MAP (outside any polygon) → close locked popup
+    map.on('click', function() {
+        if (!_pdPopupLocked) return;
+        _pdPopupLocked = false;
+        var prev = _pdLockedLayer;
+        _pdLockedLayer = null;
+        if (prev) {
+            _pdResetStyles();
+            map.closePopup();
+        }
+    });
+
+    // Popup CSS: scrollable vertically, no horizontal scroll
+    var popupStyle = document.createElement('style');
+    popupStyle.textContent =
+        '.leaflet-popup-content-wrapper {' +
+        '  max-width: 380px !important; width: 380px !important;' +
+        '  pointer-events: auto !important;' +
+        '}' +
+        '.leaflet-popup-content {' +
+        '  width: auto !important; margin: 0 !important; padding: 12px 14px !important;' +
+        '  max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important;' +
+        '  overscroll-behavior: contain; pointer-events: auto !important;' +
+        '}' +
+        '.leaflet-popup-content::-webkit-scrollbar { width: 5px; }' +
+        '.leaflet-popup-content::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }' +
+        '.leaflet-popup-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 3px; }' +
+        '.leaflet-popup-content table { width: 100%; border-collapse: collapse; table-layout: fixed; }' +
+        '.leaflet-popup-content th {' +
+        '  text-align: left; padding: 6px 8px 6px 0; width: 50%;' +
+        '  font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;' +
+        '  color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,.06);' +
+        '  word-break: break-word; white-space: normal;' +
+        '}' +
+        '.leaflet-popup-content td {' +
+        '  padding: 6px 0 6px 8px; width: 50%;' +
+        '  border-bottom: 1px solid rgba(255,255,255,.06);' +
+        '  vertical-align: top; font-size: 12px; color: var(--text);' +
+        '  word-break: break-word; white-space: normal;' +
+        '}' +
+        '.leaflet-popup-content tr:last-child th,' +
+        '.leaflet-popup-content tr:last-child td { border-bottom: none; }' +
+        '.leaflet-popup-scrolled { border-top: none !important; border-bottom: none !important; }' +
+        '.leaflet-popup-pane { pointer-events: auto !important; }' +
+        '.leaflet-popup { pointer-events: auto !important; }';
+    document.head.appendChild(popupStyle);
+    var PD_LEGENDS = {
+        zona:'lg-zona', cod:'lg-cod', macro:'lg-macro',
+        zepam:'lg-zepam', zepec:'lg-zepec', bacias:'lg-bacias', viarias:'lg-viarias',
+    };
+
+    function pdUpdateLegendEmpty() {
+        var any = Object.keys(PD_LEGENDS).some(function(k) {
+            return document.getElementById(PD_LEGENDS[k]).style.display !== 'none';
+        });
+        document.getElementById('lg-empty').style.display = any ? 'none' : '';
+    }
+
+    function _pdApplyToggle(key, on) {
+        var layer = PD_LAYERS[key];
+        if (!layer) return;
+        if (on) {
+            layer.addTo(map);
+            _pdRefreshPointerEvents(key); // restore filter state on re-add
+            layer.setStyle(function(f){ return _pdStyleWithFilter(key,f); });
+            pdBasemaps.satellite.bringToBack();
+            pdBasemaps.osm.bringToBack();
+            pdBasemaps.dark.bringToBack();
+        } else {
+            map.removeLayer(layer);
+        }
+        var lgId = PD_LEGENDS[key];
+        if (lgId) document.getElementById(lgId).style.display = on ? '' : 'none';
+        pdUpdateLegendEmpty();
+    }
+    window.pdToggle = function(key, on) { _pdApplyToggle(key, on); };
+
+    window.pdOpacity = function(key, val) {
+        val = parseFloat(val);
+        PD_OPACITY[key] = val;  // persist for hover/reset
+        var layer = PD_LAYERS[key];
+        if (!layer) return;
+        // Don't change opacity of the currently locked (yellow) layer
+        if (_pdPopupLocked && _pdLockedLayer) {
+            var isLocked = false;
+            PD_LAYERS[key].eachLayer(function(l) { if (l === _pdLockedLayer) isLocked = true; });
+            if (isLocked) return;
+        }
+        layer.setStyle(function(feature) { return _pdStyleWithFilter(key, feature); });
+    };
+
+    window.pdBasemap = function(name, btn) {
+        Object.values(pdBasemaps).forEach(function(l) { map.removeLayer(l); });
+        pdBasemaps[name].addTo(map);
+        pdBasemaps[name].bringToBack();
+        document.querySelectorAll('.bmb').forEach(function(b) { b.classList.remove('on'); });
+        btn.classList.add('on');
+    };
+
+    window.pdToggleSidebar = function() {
+        document.getElementById('pd-sidebar').classList.toggle('hidden');
+    };
+
+    // Zoneamento is already on map — show its legend and hide empty msg
+    document.getElementById('lg-zona').style.display = '';
+    pdUpdateLegendEmpty();
+
+    // Export
+    window.pdExport = function() {
+        document.getElementById('pd-mstatus').textContent = '';
+        var m = document.getElementById('pd-modal');
+        m.style.display = 'flex'; m.classList.add('open');
+    };
+    window.pdCloseModal = function() {
+        var m = document.getElementById('pd-modal');
+        m.style.display = 'none'; m.classList.remove('open');
+    };
+
+    function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+    function drawN(ctx,cx,cy,sz){ctx.save();ctx.fillStyle='#fff';ctx.strokeStyle='#000';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(cx,cy-sz);ctx.lineTo(cx+sz*.4,cy+sz*.2);ctx.lineTo(cx,cy+sz*.05);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#666';ctx.beginPath();ctx.moveTo(cx,cy-sz);ctx.lineTo(cx-sz*.4,cy+sz*.2);ctx.lineTo(cx,cy+sz*.05);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 10px Arial';ctx.textAlign='center';ctx.fillText('N',cx,cy-sz-6);ctx.restore();}
+    function dlFile(data,name){var a=document.createElement('a');a.href=data;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);}
+
+    window.pdDoExport = function(fmt) {
+        var st = document.getElementById('pd-mstatus');
+        st.textContent = 'Capturando mapa…';
+        var mel = document.getElementById('map');
+        var W = mel.offsetWidth, H = mel.offsetHeight;
+        var mr = mel.getBoundingClientRect();
+        var cv = document.createElement('canvas'); cv.width=W; cv.height=H;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle='#01305a'; ctx.fillRect(0,0,W,H);
+
+        // Draw basemap tiles
+        map.eachLayer(function(layer) {
+            if (!layer._tiles) return;
+            Object.keys(layer._tiles).forEach(function(k) {
+                var t=layer._tiles[k],img=t.el;
+                if (!img||img.tagName!=='IMG'||!img.complete) return;
+                var r=img.getBoundingClientRect();
+                try{ctx.drawImage(img,Math.round(r.left-mr.left),Math.round(r.top-mr.top),Math.round(r.width)||256,Math.round(r.height)||256);}catch(e){}
+            });
+        });
+        st.textContent='Renderizando camadas…';
+        setTimeout(function(){
+            function lp(lng,lat){var pt=map.latLngToContainerPoint(L.latLng(lat,lng));return[pt.x,pt.y];}
+
+            // Render a geoJSON layer respecting user opacity from PD_OPACITY
+            function rl(key, gl, sf){
+                if(!map.hasLayer(gl)) return;
+                var userOp = (PD_OPACITY[key] !== undefined) ? PD_OPACITY[key] : 0.65;
+                if(userOp === 0) return; // invisible — skip
+                gl.eachLayer(function(l){
+                    if(!l.feature) return;
+                    var s=sf(l.feature);
+                    if(!s) return;
+                    var fi=s.fillColor||'transparent';
+                    var fo=s.fill===false ? 0 : userOp; // user opacity controls fill
+                    var st2=s.color||'transparent', sw=+s.weight||1;
+                    var lineOp = s.fill===false ? userOp : Math.min(userOp+0.2,1);
+                    var geo=l.feature.geometry, tp=geo.type;
+                    if(tp==='Polygon'||tp==='MultiPolygon'){
+                        var rg=tp==='Polygon'?[geo.coordinates]:geo.coordinates;
+                        rg.forEach(function(p){
+                            ctx.beginPath();
+                            p.forEach(function(ring){
+                                ring.forEach(function(c,i){
+                                    var px=lp(c[0],c[1]);
+                                    i?ctx.lineTo(px[0],px[1]):ctx.moveTo(px[0],px[1]);
+                                });
+                                ctx.closePath();
+                            });
+                            if(fi!=='transparent'&&fo>0){ctx.globalAlpha=fo;ctx.fillStyle=fi;ctx.fill('evenodd');}
+                            if(st2!=='transparent'&&sw>0){ctx.globalAlpha=lineOp;ctx.strokeStyle=st2;ctx.lineWidth=sw;ctx.stroke();}
+                        });
+                    } else if(tp==='LineString'||tp==='MultiLineString'){
+                        var ls=tp==='LineString'?[geo.coordinates]:geo.coordinates;
+                        ls.forEach(function(coords){
+                            ctx.beginPath();
+                            coords.forEach(function(co,i){
+                                var px=lp(co[0],co[1]);
+                                i?ctx.lineTo(px[0],px[1]):ctx.moveTo(px[0],px[1]);
+                            });
+                            if(st2!=='transparent'&&sw>0){ctx.globalAlpha=userOp;ctx.strokeStyle=st2;ctx.lineWidth=sw;ctx.stroke();}
+                        });
+                    }
+                    ctx.globalAlpha=1;
+                });
+            }
+
+            // Render in Z-order using filter-aware style
+            rl('macro',  layer_MACROZONEAMENTO_7,   function(f){return _pdStyleWithFilter('macro',f);});
+            rl('bacias', layer_BACIASHIDROGRAFICAS_2,function(f){return _pdStyleWithFilter('bacias',f);});
+            rl('zona',   layer_ZONEAMENTO_6,         function(f){return _pdStyleWithFilter('zona',f);});
+            rl('cod',    layer_COD_URB_5,             function(f){return _pdStyleWithFilter('cod',f);});
+            rl('zepam',  layer_ZEPAM_3,               function(f){return _pdStyleWithFilter('zepam',f);});
+            rl('zepec',  layer_ZEPEC_4,               function(f){return _pdStyleWithFilter('zepec',f);});
+            rl('viarias',layer_DIRETRIZESVIARIAS_1,   function(f){return _pdStyleWithFilter('viarias',f);});
+
+            ctx.globalAlpha = 1;
+
+            // ── Title block ───────────────────────────────────────────────────
+            var LPAD=14;
+            var t1='WebGIS — Legislação Urbanística · Bragança Paulista';
+            var t2='Plano Diretor e Código de Urbanismo';
+            ctx.font='bold 13px Arial'; var w1=ctx.measureText(t1).width;
+            ctx.font='10px Arial';      var w2=ctx.measureText(t2).width;
+            var tW=Math.max(w1,w2)+LPAD*2+4, tH=44, tX=LPAD, tY=LPAD;
+            ctx.fillStyle='rgba(1,117,188,.96)';
+            roundRect(ctx,tX,tY,tW,tH,8); ctx.fill();
+            ctx.fillStyle='#FFEF00'; ctx.fillRect(tX,tY+tH-3,tW,3);
+            ctx.fillStyle='#fff'; ctx.font='bold 13px Arial'; ctx.textAlign='left';
+            ctx.fillText(t1,tX+LPAD,tY+19);
+            ctx.fillStyle='#FFEF00'; ctx.font='10px Arial';
+            ctx.fillText(t2,tX+LPAD,tY+34);
+
+            // ── North arrow ───────────────────────────────────────────────────
+            drawN(ctx,W-44,56,18);
+
+            // ── Legend panel (active layers only) ─────────────────────────────
+            var LEGEND_DEFS = {
+                zona:    {title:'Zoneamento (Plano Diretor)', items:[
+                    {color:'rgb(186,186,186)',label:'ZDU 1 — Densificação Urbana 1',fv:'ZDU 1'},
+                    {color:'rgb(255,127,0)',  label:'ZDU 2 — Densificação Urbana 2',fv:'ZDU 2'},
+                    {color:'rgb(255,255,0)',  label:'ZDU 3 — Densificação Urbana 3',fv:'ZDU 3'},
+                    {color:'rgb(112,0,149)',  label:'ZDE 1 — Desenv. Econômico 1',fv:'ZDE 1'},
+                    {color:'rgb(243,204,255)',label:'ZDE 2 — Desenv. Econômico 2',fv:'ZDE 2'},
+                    {color:'rgb(255,0,255)',  label:'ZEU — Expansão Urbana',fv:'ZEU'},
+                    {color:'rgb(145,207,156)',label:'MZR — Macrozona Rural',fv:'MZR'},
+                ]},
+                cod:     {title:'Código de Urbanismo', items:[
+                    {color:'rgb(186,186,186)',label:'Z',fv:'Z'},
+                    {color:'rgb(0,255,0)',    label:'ZC',fv:'ZC'},
+                    {color:'rgb(255,191,0)',  label:'ZE',fv:'ZE'},
+                    {color:'rgb(255,126,0)',  label:'ZE4',fv:'ZE4'},
+                    {color:'rgb(230,255,154)',label:'ZE5',fv:'ZE5'},
+                    {color:'rgb(255,255,0)',  label:'ZE6',fv:'ZE6'},
+                    {color:'rgb(221,110,0)',  label:'ZEIS',fv:'ZEIS'},
+                    {color:'rgb(255,0,255)',  label:'ZI',fv:'ZI'},
+                    {color:'rgb(0,0,255)',    label:'ZM',fv:'ZM'},
+                    {color:'rgb(255,0,0)',    label:'ZR',fv:'ZR'},
+                ]},
+                macro:   {title:'Macrozoneamento (Plano Diretor)', items:[
+                    {color:'rgb(92,183,80)',  label:'Macrozona Rural (MZR)',fv:'Macrozona Rural (MZR)'},
+                    {color:'rgb(251,132,29)', label:'Macrozona Urbana (MZU)',fv:'Macrozona Urbana (MZU)'},
+                ]},
+                zepam:   {title:'ZEPAM (Plano Diretor)', items:[
+                    {color:'rgb(0,255,0)',    label:'Zona Esp. Proteção Ambiental'},
+                ]},
+                zepec:   {title:'ZEPEC (Plano Diretor)', items:[
+                    {color:'rgb(193,110,221)',label:'ZEPEC 1 — Região Central',fv:'ZEPEC 1 - Região Central'},
+                    {color:'rgb(255,191,0)',  label:'ZEPEC 2 — Guaripocaba',fv:'ZEPEC 2 - Guaripocaba'},
+                    {color:'rgb(255,127,127)',label:'ZEPEC 3 — Região da Serrinha',fv:'ZEPEC 3 - Região da Serrinha'},
+                ]},
+                bacias:  {title:'Bacias Hidrográficas (Plano Diretor)', items:[
+                    {color:'rgb(255,158,23)', label:'Bacias (11 unidades)'},
+                ]},
+                viarias: {title:'Diretrizes Viárias (Plano Diretor)', items:[
+                    {color:'rgb(0,255,255)',  label:'Via Arterial', line:true, fv:'Via Arterial'},
+                    {color:'rgb(138,184,0)',  label:'Via Arterial Secundária', line:true, fv:'Via Arterial Secundária'},
+                    {color:'rgb(221,0,221)',  label:'Via Regional', line:true, fv:'Via Regional'},
+                    {color:'rgb(255,191,0)',  label:'Via Rural Coletora', line:true, fv:'Via Rural Coletora'},
+                ]},
+            };
+
+            // Collect active layers in order
+            var activeKeys = ['macro','bacias','zona','cod','zepam','zepec','viarias'].filter(function(k){
+                return map.hasLayer(PD_LAYERS[k]) && (PD_OPACITY[k] !== undefined ? PD_OPACITY[k] : 0.65) > 0;
+            });
+
+            if(activeKeys.length > 0) {
+                var SW=14, SH=10, rowH=16, PAD=10, TPAD=8;
+                var maxLabelWidth = 0;
+                ctx.font='bold 9px Arial';
+                activeKeys.forEach(function(k){
+                    LEGEND_DEFS[k].items.forEach(function(it){
+                        var w=ctx.measureText(it.label).width;
+                        if(w>maxLabelWidth) maxLabelWidth=w;
+                    });
+                });
+                var legW = SW + 8 + maxLabelWidth + PAD*2 + 4;
+                legW = Math.min(legW, 220); // cap width
+
+                // Calculate total height
+                var totalRows = 0;
+                activeKeys.forEach(function(k){
+                    totalRows += 1 + LEGEND_DEFS[k].items.length; // title + items
+                });
+                var legH = totalRows * rowH + PAD * 2 + TPAD * activeKeys.length;
+
+                var legX = LPAD, legY = H - legH - 36;
+                // Make sure it doesn't overlap title
+                if(legY < tY + tH + 10) legY = tY + tH + 10;
+
+                ctx.globalAlpha = 0.92;
+                ctx.fillStyle='rgba(1,48,90,0.95)';
+                roundRect(ctx,legX,legY,legW,legH,8); ctx.fill();
+                ctx.strokeStyle='rgba(255,239,0,0.35)'; ctx.lineWidth=1;
+                roundRect(ctx,legX,legY,legW,legH,8); ctx.stroke();
+                ctx.globalAlpha=1;
+
+                var cy = legY + PAD;
+                activeKeys.forEach(function(k){
+                    var def = LEGEND_DEFS[k];
+                    // Group title
+                    ctx.fillStyle='rgba(168,204,232,1)';
+                    ctx.font='bold 8px Arial'; ctx.textAlign='left';
+                    ctx.fillText(def.title.toUpperCase(), legX+PAD, cy+8);
+                    cy += rowH;
+
+                    def.items.forEach(function(it,ii){
+                        // Skip items filtered off
+                        if(it.fv && PD_FILTER[k] && !PD_FILTER[k].has(it.fv)) return;
+                        var sx=legX+PAD, sy=cy+1;
+                        if(it.line) {
+                            // Line symbol
+                            ctx.strokeStyle=it.color; ctx.lineWidth=2.5;
+                            ctx.beginPath(); ctx.moveTo(sx,sy+SH/2); ctx.lineTo(sx+SW,sy+SH/2); ctx.stroke();
+                        } else {
+                            // Fill symbol
+                            ctx.fillStyle=it.color;
+                            ctx.fillRect(sx,sy,SW,SH);
+                            ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=0.5;
+                            ctx.strokeRect(sx,sy,SW,SH);
+                        }
+                        // Label — truncate if needed
+                        ctx.fillStyle='#e8eaf0'; ctx.font='9px Arial';
+                        var label=it.label;
+                        var maxW=legW-PAD*2-SW-8;
+                        while(ctx.measureText(label).width>maxW && label.length>4) label=label.slice(0,-2)+'…';
+                        ctx.fillText(label, sx+SW+6, sy+SH-1);
+                        cy += rowH;
+                    });
+                    cy += TPAD; // space between groups
+                });
+            }
+
+            // ── Download ──────────────────────────────────────────────────────
+            try{
+                var id=cv.toDataURL('image/jpeg',.93);
+                if(fmt==='jpeg'){dlFile(id,'legislacao_bp.jpg');}
+                else{
+                    var or=W>H?'landscape':'portrait',mW=W*.2646,mH=H*.2646;
+                    var pdf=new jspdf.jsPDF({orientation:or,unit:'mm',format:[mW,mH]});
+                    pdf.addImage(id,'JPEG',0,0,mW,mH);
+                    pdf.save('legislacao_bp.pdf');
+                }
+                st.textContent='✓ Download iniciado!';
+                setTimeout(pdCloseModal,1500);
+            }catch(e){st.textContent='✗ Erro: '+e.message;}
+        },30);
+    };
+
+    // Onboarding
+    var OB_KEY='bp_legislacao_v7';
+    window.pdCloseOb = function(){
+        document.getElementById('pd-ob').classList.remove('visible');
+        localStorage.setItem(OB_KEY,'1');
+    };
+    // Show onboarding only if not seen before
+    if(!localStorage.getItem(OB_KEY)){
+        document.getElementById('pd-ob').classList.add('visible');
+    }
+})();
+</script>
+</body>
+</html>
