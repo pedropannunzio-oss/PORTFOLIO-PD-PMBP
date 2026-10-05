@@ -8,35 +8,36 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/leaflet.css">
-    <link rel="stylesheet" href="css/fontawesome-all.min.css">
     <link rel="stylesheet" href="css/leaflet-measure.css">
     <title>WebGIS — Infraestrutura & Vias</title>
     <style>
-    :root {
-        --bg-panel:#01305a; --bg-panel2:#012d54; --bg-card:#014a8a;
-        --accent:#FFEF00; --accent2:#ffe44d; --text:#ffffff;
-        --text-muted:#a8cce8; --border:rgba(255,255,255,0.12);
-        --blue:#0175bc; --sidebar-w:310px; --header-h:52px;
+    :root{
+        --blue:#0175bc;
+        --accent:#FFEF00;
+        --accent2:#ffe44d;
+        --bg:#0d1b2a;
+        --bg-panel:#0f2236;
+        --bg-panel2:#132b42;
+        --bg-card:#1a3550;
+        --border:rgba(255,255,255,.10);
+        --text:#e8eaf0;
+        --text-muted:#7a9ab5;
+        --muted:#7a9ab5;
+        --header-h:52px;
+        --sidebar-w:318px;
+        --rw:286px;
     }
     *,*::before,*::after{box-sizing:border-box;}
-    html,body{width:100%;height:100%;padding:0;margin:0;font-family:'DM Sans',sans-serif;background:var(--bg-panel);overflow:hidden;}
+    html,body{width:100%;height:100%;padding:0;margin:0;font-family:'Raleway',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;}
 
     /* HEADER */
     #header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--blue);border-bottom:3px solid var(--accent);display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
-    #portal-back-btn{background:rgba(255,239,0,0.08);border:1px solid rgba(255,239,0,0.25);border-radius:6px;color:var(--text-muted);cursor:pointer;padding:4px 8px;transition:all .2s;display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;font-size:11px;text-decoration:none;}
-    #portal-back-btn:hover{color:var(--accent);border-color:rgba(255,239,0,0.5);background:rgba(255,239,0,0.14);}
-    #header .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);flex-shrink:0;}
-    #header h1{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);letter-spacing:.04em;margin:0;text-transform:uppercase;}
+    #header #header h1{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--text);letter-spacing:.04em;margin:0;text-transform:uppercase;}
     #header h1 span{color:var(--accent);}
-    #header .subtitle{font-size:11px;color:var(--text-muted);margin:0;font-weight:300;letter-spacing:.02em;}
-    #header .sep{flex:1;}
-    #header .header-badge{font-size:10px;font-family:'Syne',sans-serif;font-weight:600;color:var(--accent);border:1px solid rgba(255,239,0,0.4);border-radius:4px;padding:2px 8px;letter-spacing:.08em;text-transform:uppercase;}
-    #sidebar-toggle{background:rgba(255,239,0,0.1);border:1px solid rgba(255,239,0,0.4);border-radius:6px;color:var(--accent);cursor:pointer;padding:4px 8px;transition:all .2s;display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;font-size:12px;}
-    #sidebar-toggle:hover{background:rgba(255,239,0,0.2);border-color:var(--accent);}
-
-    /* LAYOUT */
+    #header #header .sep{flex:1;}
+    #header /* LAYOUT */
     #app{display:flex;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;}
 
     /* SIDEBAR */
@@ -47,11 +48,12 @@
     #sidebar-scroll::-webkit-scrollbar-thumb{background:var(--bg-card);border-radius:2px;}
     .panel-section{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
     .panel-section:last-child{border-bottom:none;}
-    .section-label{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin:0 0 10px;}
+    .section-label{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;}
 
     /* BASEMAP */
     .basemap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-    .basemap-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 4px;cursor:pointer;text-align:center;transition:all .15s;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:10px;}
+    .basemap-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 4px;cursor:pointer;text-align:center;transition:all .15s;color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:10px;}
     .basemap-btn .bm-icon{font-size:18px;display:block;margin-bottom:3px;}
     .basemap-btn:hover{border-color:rgba(255,239,0,0.5);color:var(--text);}
     .basemap-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,0.08);box-shadow:0 0 12px rgba(255,239,0,0.1);}
@@ -74,7 +76,7 @@
     .layer-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0;}
     .layer-info-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:0 2px;opacity:.6;transition:opacity .15s,color .15s;flex-shrink:0;}
     .layer-info-btn:hover{opacity:1;color:var(--accent2);}
-    .layer-tooltip{position:absolute;left:16px;right:16px;background:rgba(1,48,90,0.97);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text-muted);line-height:1.6;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;}
+    .layer-tooltip{position:absolute;left:16px;right:16px;background:rgba(15,34,54,0.97);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text-muted);line-height:1.6;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;}
     .layer-tooltip.visible{display:block;}
     .layer-tooltip strong{color:var(--text);display:block;margin-bottom:4px;font-size:12px;}
 
@@ -85,7 +87,7 @@
     .lg-group:last-child{border-bottom:none;}
     .lg-title{
         display:flex;align-items:center;justify-content:space-between;
-        font-family:'Syne',sans-serif;font-size:9px;font-weight:700;
+        font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;
         letter-spacing:.1em;text-transform:uppercase;
         color:var(--text-muted);
         padding:7px 0 5px;
@@ -120,8 +122,8 @@
     .info-field{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;border-bottom:1px solid var(--border);gap:8px;}
     .info-field:last-child{border-bottom:none;}
     .info-key{font-size:10px;color:var(--text-muted);flex:1;padding-top:1px;}
-    .info-val{font-size:11px;color:var(--accent);font-weight:500;font-family:'Syne',sans-serif;text-align:right;max-width:170px;word-break:break-word;}
-    .info-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+    .info-val{font-size:11px;color:var(--accent);font-weight:500;font-family:'Outfit',sans-serif;text-align:right;max-width:170px;word-break:break-word;}
+    .info-title{font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;}
     .info-title .tag{font-size:9px;background:rgba(255,239,0,0.12);color:var(--accent);border-radius:3px;padding:1px 5px;font-weight:600;letter-spacing:.06em;}
     .chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;}
     .chip-green{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);}
@@ -133,7 +135,7 @@
     #map{width:100%;height:100%;}
 
     /* BOTTOM BAR */
-    #bottom-bar{position:absolute;bottom:0;left:0;right:0;height:28px;background:rgba(1,48,90,0.92);backdrop-filter:blur(6px);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:16px;z-index:1000;font-size:10px;color:var(--text-muted);font-family:'DM Sans',sans-serif;}
+    #bottom-bar{position:absolute;bottom:0;left:0;right:0;height:28px;background:rgba(15,34,54,0.92);backdrop-filter:blur(6px);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:16px;z-index:1000;font-size:10px;color:var(--text-muted);font-family:'Raleway',sans-serif;}
     #coords-display{font-variant-numeric:tabular-nums;}
     #zoom-display{margin-left:auto;}
 
@@ -141,7 +143,7 @@
     #map-search{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:2000;background:var(--bg-panel);border:1px solid var(--border);border-radius:24px;display:flex;align-items:center;gap:8px;padding:8px 14px;width:min(420px,calc(100% - 32px));box-shadow:0 4px 20px rgba(0,0,0,0.4);transition:border-color .15s;}
     #map-search:focus-within{border-color:var(--accent);box-shadow:0 4px 24px rgba(255,239,0,0.15);}
     #map-search-icon{color:var(--text-muted);font-size:13px;flex-shrink:0;}
-    #addr-input{flex:1;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;min-width:0;}
+    #addr-input{flex:1;background:transparent;border:none;color:var(--text);font-family:'Raleway',sans-serif;font-size:13px;outline:none;min-width:0;}
     #addr-input::placeholder{color:var(--text-muted);}
     #addr-clear-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;transition:color .15s;flex-shrink:0;}
     #addr-clear-btn:hover{color:var(--accent);}
@@ -160,9 +162,9 @@
     .leaflet-control-measure-toggle:hover{color:var(--accent)!important;border-color:var(--accent)!important;}
     .leaflet-control-geolocate{background:var(--bg-panel)!important;border:1px solid var(--border)!important;border-radius:6px!important;cursor:pointer;width:30px;height:30px;display:flex!important;align-items:center;justify-content:center;color:var(--text-muted)!important;font-size:13px;transition:all .15s;}
     .leaflet-control-geolocate:hover{color:var(--accent)!important;border-color:var(--accent)!important;}
-    .leaflet-control-attribution{background:rgba(1,48,90,0.85)!important;color:var(--text-muted)!important;font-size:9px!important;backdrop-filter:blur(4px);}
+    .leaflet-control-attribution{background:rgba(15,34,54,0.85)!important;color:var(--text-muted)!important;font-size:9px!important;backdrop-filter:blur(4px);}
     .leaflet-control-attribution a{color:var(--accent2)!important;}
-    .leaflet-control-scale-line{background:rgba(1,48,90,0.85)!important;border-color:var(--text-muted)!important;color:var(--text-muted)!important;font-size:9px!important;font-family:'DM Sans',sans-serif!important;}
+    .leaflet-control-scale-line{background:rgba(15,34,54,0.85)!important;border-color:var(--text-muted)!important;color:var(--text-muted)!important;font-size:9px!important;font-family:'Raleway',sans-serif!important;}
     .leaflet-control-scale{margin-bottom:34px!important;}
     .leaflet-popup-content-wrapper{background:var(--bg-panel2)!important;border:1px solid var(--border)!important;border-radius:10px!important;color:var(--text)!important;box-shadow:0 8px 32px rgba(0,0,0,0.5)!important;}
     .leaflet-popup-tip{background:var(--bg-panel2)!important;}
@@ -171,19 +173,16 @@
     .leaflet-popup-close-button:hover{color:var(--accent)!important;}
 
     /* EXPORT BTN */
-    #export-btn{background:rgba(255,239,0,0.1);border:1px solid rgba(255,239,0,0.4);border-radius:6px;color:var(--accent);cursor:pointer;padding:4px 10px;transition:all .2s;display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;font-size:12px;}
-    #export-btn:hover{background:rgba(255,239,0,0.22);}
-
     /* EXPORT MODAL */
     #export-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:99000;display:flex;align-items:center;justify-content:center;}
     #export-box{background:var(--bg-panel2);border:1px solid var(--border);border-radius:14px;padding:28px 32px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
-    #export-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;}
+    #export-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;}
     #export-desc{font-size:12px;color:var(--text-muted);margin:0 0 20px;}
     #export-btns{display:flex;gap:10px;margin-bottom:16px;}
-    .exp-btn{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .exp-btn{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Raleway',sans-serif;font-size:13px;padding:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
     .exp-btn:hover{border-color:var(--accent);color:var(--accent);}
     #export-status{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:12px;text-align:center;}
-    #export-close{width:100%;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;cursor:pointer;transition:all .15s;}
+    #export-close{width:100%;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:12px;padding:8px;cursor:pointer;transition:all .15s;}
     #export-close:hover{border-color:var(--text-muted);color:var(--text);}
 
     /* ONBOARDING */
@@ -193,21 +192,21 @@
     #onboarding-box{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 32px));background:var(--bg-panel2);border:1px solid rgba(255,239,0,0.35);border-radius:16px;padding:24px 24px 20px;pointer-events:all;box-shadow:0 24px 64px rgba(0,0,0,0.7);animation:slideUp .4s cubic-bezier(.34,1.4,.64,1) both;}
     @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(32px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
     .ob-step{display:none;} .ob-step.active{display:block;}
-    .ob-eyebrow{font-size:10px;font-weight:600;font-family:'Syne',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
-    .ob-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+    .ob-eyebrow{font-size:10px;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+    .ob-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
     .ob-title .ob-icon{font-size:22px;flex-shrink:0;}
     .ob-desc{font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:16px;}
     .ob-footer{display:flex;align-items:center;gap:10px;}
     .ob-dots{display:flex;gap:5px;flex:1;}
     .ob-dot{width:6px;height:6px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border);transition:all .2s;}
     .ob-dot.active{background:var(--accent);border-color:var(--accent);width:18px;border-radius:3px;}
-    .ob-skip{background:none;border:none;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;padding:4px 0;transition:color .15s;}
+    .ob-skip{background:none;border:none;color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:11px;cursor:pointer;padding:4px 0;transition:color .15s;}
     .ob-skip:hover{color:var(--text);}
-    .ob-next{background:var(--accent);border:none;border-radius:8px;color:var(--bg-panel);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:8px 20px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+    .ob-next{background:var(--accent);border:none;border-radius:8px;color:var(--bg-panel);font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;padding:8px 20px;cursor:pointer;transition:all .15s;white-space:nowrap;}
     .ob-next:hover{background:var(--accent2);}
     
         .badge {
-            font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+            font-family: 'Outfit',sans-serif; font-size: 10px; font-weight: 700;
             color: var(--accent); border: 1px solid rgba(255,239,0,.4);
             padding: 3px 8px; border-radius: 4px; white-space: nowrap;
         }
@@ -219,7 +218,7 @@
         
 /* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
 #hd h1, #header h1, #pd-header h1 {
-  font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:#fff;
+  font-family:'Outfit',sans-serif; font-weight:700; font-size:14px; color:#fff;
   text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
 }
 #hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
@@ -230,26 +229,131 @@
 }
 #hd .badge, #header .badge, #pd-header .badge,
 #hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
-  font-family:'Syne',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
+  font-family:'Outfit',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
   border:1px solid rgba(255,239,0,.4); background:transparent;
   padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
 }
+
+/* ── tipografia e cor: textos longos e valores numéricos ──────────────── */
+/* Prosa explicativa em branco: popups, onboarding e notas de rodapé de
+   painel. Cabeçalhos e apontamentos de legenda mantêm o azul claro. */
+.pexp, #obd, .nota, .sel-vazio, .pc-note, #pnl-hint, .bar-sub-long {
+  color: var(--text) !important;
+}
+/* Valores numéricos em legenda: cor fixa de alta legibilidade.
+   A cor da categoria fica no quadradinho e na barra, nunca no número. */
+.bar-lb .v, .rk .p, .li .cnt, .sel-v, .pt td, .pc-v {
+  color: var(--text) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── painel direito: legenda e informações ────────────────────────────── */
+#rb{width:var(--rw,300px);background:var(--bg-panel,#0f2236);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;transition:width .25s,opacity .2s;flex-shrink:0;}
+#rb.hidden{width:0;opacity:0;border-left:none;}
+.rb-head{padding:12px 15px 9px;border-bottom:1px solid var(--border);flex-shrink:0;
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.07em;}
+.rb-body{flex:1;overflow-y:auto;min-height:0;
+  scrollbar-width:thin;scrollbar-color:var(--bg-card,#1a3550) transparent;}
+#rb #info-panel{padding:14px 16px;flex:none;overflow:visible;border:none;}
+#rb .panel-section{padding:14px 16px 0;border:none;}
+@media(max-width:1100px){#rb{position:absolute;right:0;top:0;bottom:0;z-index:900;
+  box-shadow:-6px 0 20px rgba(0,0,0,.4);}}
+
+/* ── botões do cabeçalho (padrão dos demais mapas) ────────────────────── */
+/* ── botões de mapa base (padrão dos demais mapas) ────────────────────── */
+.basemap-grid{display:flex;gap:6px;}
+.basemap-btn{flex:1;background:var(--bg-card);border:1px solid var(--border);
+  color:var(--muted);font-family:'Raleway',sans-serif;font-size:11px;font-weight:500;
+  padding:6px 4px;border-radius:6px;cursor:pointer;text-align:center;transition:all .15s;}
+.basemap-btn:hover:not(.active){color:var(--text);border-color:rgba(255,255,255,.22);}
+.basemap-btn.active{border-color:var(--accent);color:var(--accent);
+  background:rgba(255,239,0,.08);font-weight:600;}
+.bm-icon{display:none;}
+
+/* ── cabeçalho: regras copiadas do padrão (mapa de habitação) ─────────── */
+#header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--blue); border-bottom:3px solid var(--accent);display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+#header h1{font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin:0;}
+#header h1 span{color:var(--accent);}
+.badge{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--accent); border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+#back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);color:rgba(255,255,255,.8); font-size:12px;padding:6px 10px;border-radius:6px;text-decoration:none;}
+#back:hover{color:var(--accent);}
+.hbtn{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);color:var(--accent); font-family:'Raleway',sans-serif;font-size:12px;font-weight:500;padding:6px 12px;border-radius:6px;cursor:pointer;}
+.hbtn:hover{background:rgba(255,239,0,.18);}
+#header .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+#header .sep{flex:1;}
+#header .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;margin:0;line-height:1.3;}
+
+/* ── painel de escola: infraestrutura e subtítulos ────────────────────── */
+.info-sub{font-family:'Outfit',sans-serif;font-size:9.5px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.07em;margin:11px 0 5px;
+  padding-top:8px;border-top:1px solid var(--border);}
+.infra-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-bottom:4px;}
+.infra-item{font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.infra-item.tem{color:var(--text);}
+.infra-mk{font-size:10px;color:var(--muted);width:10px;flex-shrink:0;}
+.infra-item.tem .infra-mk{color:#4ade80;}
+.info-nota{font-size:9.5px;color:var(--muted);line-height:1.5;margin-top:9px;
+  padding-top:8px;border-top:1px solid var(--border);}
+
+/* ── layout em três colunas: controles | mapa | legenda ───────────────── */
+/* Declarado por último para ter precedência sobre regras anteriores.      */
+#app{display:flex!important;flex-direction:row!important;align-items:stretch;
+  position:fixed;top:var(--header-h);left:0;right:0;bottom:0;overflow:hidden;}
+#sidebar{order:1;flex:0 0 var(--sidebar-w)!important;width:var(--sidebar-w);
+  max-width:var(--sidebar-w);min-width:0;}
+#map-wrap{order:2;flex:1 1 auto!important;min-width:0!important;width:auto!important;
+  position:relative;overflow:hidden;}
+#map{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;}
+#rb{order:3;flex:0 0 var(--rw)!important;width:var(--rw);max-width:var(--rw);min-width:0;}
+#sidebar.hidden,#sidebar.collapsed{flex-basis:0!important;max-width:0;opacity:0;border-right:none;}
+#rb.hidden{flex-basis:0!important;max-width:0;opacity:0;border-left:none;}
+
+/* ── subgrupo de etapas dentro de Educação ────────────────────────────── */
+.sub-etapas{margin:6px 0 2px 26px;padding:7px 9px 8px;
+  border-left:2px solid var(--border);background:rgba(255,255,255,.02);
+  border-radius:0 6px 6px 0;}
+.sub-et-cab{font-family:'Outfit',sans-serif;font-size:8.5px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;
+  padding:2px 0 6px;transition:color .15s;}
+.sub-et-cab:hover{color:var(--text);}
+.sub-et-rot{flex-shrink:0;}
+.sub-et-cab span[id$="-conta"]{flex:1;text-align:right;
+  font-family:'Raleway',sans-serif;font-size:9px;font-weight:500;
+  letter-spacing:0;text-transform:none;color:var(--accent);font-variant-numeric:tabular-nums;}
+.sub-et-arrow{font-size:9px;transition:transform .25s;flex-shrink:0;
+  opacity:.6;margin-left:6px;}
+.sub-et-cab.open .sub-et-arrow{transform:rotate(180deg);}
+.sub-et-body{display:flex;flex-direction:column;overflow:hidden;
+  max-height:0;transition:max-height .3s cubic-bezier(.4,0,.2,1);}
+.sub-et-body.open{max-height:360px;}
+.sub-et-cab span{font-family:'Raleway',sans-serif;font-size:9px;font-weight:500;
+  letter-spacing:0;text-transform:none;color:var(--accent);font-variant-numeric:tabular-nums;}
+.sub-et{display:flex;align-items:center;gap:7px;padding:2.5px 0;cursor:pointer;}
+.sub-et input{width:12px;height:12px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin:0;}
+.sub-et span{flex:1;font-size:11px;color:var(--text);}
+.sub-et em{font-style:normal;font-size:9.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.sub-et input:not(:checked)~span{color:var(--muted);}
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <div id="header">
-    <div class="logo-dot"></div>
-    <div>
-        <h1>Infraestrutura <span>e Vias</span></h1>
-        <p class="subtitle">Revisão do Plano Diretor · Bragança Paulista</p>
-    </div>
-    <div class="sep"></div>
-    <span class="header-badge">CADASTRO MUNICIPAL</span>
-                        <a id="portal-back-btn" href="../portal.html"><i class="fas fa-th-large"></i> Portal</a>
-    <button id="export-btn" onclick="openExportModal()"><i class="fas fa-download"></i> Exportar</button>
-    <button id="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-sliders-h"></i> Painel</button>
+  <div class="dot"></div>
+  <div>
+    <h1>Infraestrutura <span>e Vias</span></h1>
+    <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
+  </div>
+  <div class="sep"></div>
+  <span class="badge">EQUIPAMENTOS PÚBLICOS</span>
+  <a id="back" href="../portal.html">&#8592; Portal</a>
+  <button class="hbtn" onclick="openExportModal()">&#8595; Exportar</button>
+  <button class="hbtn" onclick="toggleSidebar()">&#9776; Painel</button>
+  <button class="hbtn" onclick="toggleLegenda()">&#9636; Legenda</button>
 </div>
 
 <!-- APP -->
@@ -257,15 +361,7 @@
 <div id="sidebar">
 <div id="sidebar-scroll">
 
-<!-- Basemap -->
-<div class="panel-section">
-    <p class="section-label">Mapa base</p>
-    <div class="basemap-grid">
-        <button class="basemap-btn active" onclick="setBasemap('satellite')" id="bm-satellite"><span class="bm-icon">🛰</span>Satélite</button>
-        <button class="basemap-btn" onclick="setBasemap('osm')" id="bm-osm"><span class="bm-icon">🗺</span>OSM</button>
-        <button class="basemap-btn" onclick="setBasemap('dark')" id="bm-dark"><span class="bm-icon">🌑</span>Dark</button>
-    </div>
-</div>
+
 
 <!-- Camadas -->
 <div class="panel-section">
@@ -273,8 +369,7 @@
 
     <div class="layer-item" style="position:relative">
         <div class="layer-header">
-            <label class="layer-toggle"><input type="checkbox" id="tog-vias" checked onchange="toggleLayer('vias',this.checked)"><span class="toggle-track"></span></label>
-            <span class="layer-icon">🛣️</span><span class="layer-name">Eixos de Logradouros</span>
+            <span class="layer-icon" style="margin-left:2px">🛣️</span><span class="layer-name">Eixos de Logradouros</span>
             <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-vias')">ⓘ</button>
         </div>
         <div class="layer-tooltip" id="tt-vias"><strong>Eixos de Logradouros — SMP 2025</strong>Eixos centrais das vias públicas classificados por hierarquia viária conforme os decretos PA-16330/25 e D-4691/25: Arterial, Coletora, Local, Regional e Estrada Parque.</div>
@@ -286,29 +381,65 @@
 
     <div class="layer-item" style="position:relative">
         <div class="layer-header">
-            <label class="layer-toggle"><input type="checkbox" id="tog-saude" checked onchange="toggleLayer('saude',this.checked)"><span class="toggle-track"></span></label>
+            <label class="layer-toggle"><input type="checkbox" id="tog-saude" checked onchange="toggleGrupo('saude',this.checked)"><span class="toggle-track"></span></label>
             <span class="layer-icon">🏥</span><span class="layer-name">Saúde</span>
             <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-saude')">ⓘ</button>
         </div>
-        <div class="layer-tooltip" id="tt-saude"><strong>Equipamentos de Saúde</strong>UBS, UPAs, CAPS, SAMU e demais unidades classificadas por finalidade (Primária, Especializada, Urgência/Emergência, Gestão etc.).</div>
+        <div class="layer-tooltip" id="tt-saude"><strong>Equipamentos de Saúde</strong>Rede de saúde do município: 44 estabelecimentos declarados ao CNES pela Secretaria Municipal de Saúde, acrescidos de 11 equipamentos do cadastro municipal sem registro naquele recorte. Cor indica o tipo; tamanho, o total de profissionais.</div>
+        <div class="sub-etapas">
+            <div class="sub-et-cab open" onclick="toggleSub('sub-saude',this)"><span class="sub-et-rot">Tipo</span><span id="saude-conta">55 equipamentos</span><span class="sub-et-arrow">▼</span></div>
+            <div class="sub-et-body open" id="sub-saude">
+            <label class="sub-et"><input type="checkbox" id="cat-saude-Atenobsica" checked onchange="toggleCat('saude','Atenção básica',this.checked)"><span>Atenção básica</span><em>31</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-saude-Urgnciaeemergncia" checked onchange="toggleCat('saude','Urgência e emergência',this.checked)"><span>Urgência e emergência</span><em>2</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-saude-Atenoespecializada" checked onchange="toggleCat('saude','Atenção especializada',this.checked)"><span>Atenção especializada</span><em>8</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-saude-Sademental" checked onchange="toggleCat('saude','Saúde mental',this.checked)"><span>Saúde mental</span><em>3</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-saude-Atendimentomvel" checked onchange="toggleCat('saude','Atendimento móvel',this.checked)"><span>Atendimento móvel</span><em>5</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-saude-Apoiodiagnstico" checked onchange="toggleCat('saude','Apoio diagnóstico',this.checked)"><span>Apoio diagnóstico</span><em>1</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-saude-Vigilncia" checked onchange="toggleCat('saude','Vigilância',this.checked)"><span>Vigilância</span><em>2</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-saude-Gestoeapoio" checked onchange="toggleCat('saude','Gestão e apoio',this.checked)"><span>Gestão e apoio</span><em>3</em></label>
+        </div>
+        </div>
     </div>
 
     <div class="layer-item" style="position:relative">
         <div class="layer-header">
-            <label class="layer-toggle"><input type="checkbox" id="tog-educacao" checked onchange="toggleLayer('educacao',this.checked)"><span class="toggle-track"></span></label>
+            <label class="layer-toggle"><input type="checkbox" id="tog-educacao" checked onchange="toggleGrupoEducacao(this.checked)"><span class="toggle-track"></span></label>
             <span class="layer-icon">🏫</span><span class="layer-name">Educação</span>
             <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-educacao')">ⓘ</button>
         </div>
-        <div class="layer-tooltip" id="tt-educacao"><strong>Equipamentos de Educação</strong>Escolas municipais e estaduais classificadas por nível: Ensino Infantil, Fundamental, EJA, Ensino Superior, CEIs e demais equipamentos educacionais.</div>
+        <div class="layer-tooltip" id="tt-educacao"><strong>Equipamentos de Educação</strong>Escolas públicas declaradas ao Censo Escolar 2025 do INEP: 71 municipais, 23 estaduais e o IFSP. Cor indica a rede; tamanho, a matrícula total.</div>
+        <!-- subgrupo: etapas de ensino -->
+        <div class="sub-etapas">
+            <div class="sub-et-cab open" onclick="toggleSub('sub-educ',this)"><span class="sub-et-rot">Etapas</span><span id="educ-conta">95 escolas</span><span class="sub-et-arrow">▼</span></div>
+            <div class="sub-et-body open" id="sub-educ">
+            <label class="sub-et"><input type="checkbox" id="et-creche" checked onchange="toggleEtapa('creche',this.checked)"><span>Creche</span><em>30</em></label>
+            <label class="sub-et"><input type="checkbox" id="et-pre" checked onchange="toggleEtapa('pre',this.checked)"><span>Pré-escola</span><em>33</em></label>
+            <label class="sub-et"><input type="checkbox" id="et-fund1" checked onchange="toggleEtapa('fund1',this.checked)"><span>Fundamental I</span><em>38</em></label>
+            <label class="sub-et"><input type="checkbox" id="et-fund2" checked onchange="toggleEtapa('fund2',this.checked)"><span>Fundamental II</span><em>19</em></label>
+            <label class="sub-et"><input type="checkbox" id="et-medio" checked onchange="toggleEtapa('medio',this.checked)"><span>Ensino Médio</span><em>16</em></label>
+            <label class="sub-et"><input type="checkbox" id="et-outras" checked onchange="toggleEtapa('outras',this.checked)"><span>Ensino especializado</span><em>2</em></label>
+        </div>
+        </div>
     </div>
 
     <div class="layer-item" style="position:relative">
         <div class="layer-header">
-            <label class="layer-toggle"><input type="checkbox" id="tog-esporte" checked onchange="toggleLayer('esporte',this.checked)"><span class="toggle-track"></span></label>
+            <label class="layer-toggle"><input type="checkbox" id="tog-esporte" checked onchange="toggleGrupo('esporte',this.checked)"><span class="toggle-track"></span></label>
             <span class="layer-icon">⚽</span><span class="layer-name">Esporte e Lazer</span>
             <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-esporte')">ⓘ</button>
         </div>
         <div class="layer-tooltip" id="tt-esporte"><strong>Equipamentos de Esporte e Lazer</strong>Quadras, CILES, ginásios, associações e espaços de atividade física e lazer municipais. Pontos próximos são agrupados automaticamente no mapa.</div>
+        <div class="sub-etapas">
+            <div class="sub-et-cab open" onclick="toggleSub('sub-esporte',this)"><span class="sub-et-rot">Categoria</span><span id="esporte-conta">162 equipamentos</span><span class="sub-et-arrow">▼</span></div>
+            <div class="sub-et-body open" id="sub-esporte">
+            <label class="sub-et"><input type="checkbox" id="cat-esporte-Academiasaoarlivre" checked onchange="toggleCat('esporte','Academias ao ar livre',this.checked)"><span>Academias ao ar livre</span><em>66</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-esporte-CILEseminiCILEs" checked onchange="toggleCat('esporte','CILEs e mini CILEs',this.checked)"><span>CILEs e mini CILEs</span><em>32</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-esporte-Camposeestdios" checked onchange="toggleCat('esporte','Campos e estádios',this.checked)"><span>Campos e estádios</span><em>40</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-esporte-Quadraseginsios" checked onchange="toggleCat('esporte','Quadras e ginásios',this.checked)"><span>Quadras e ginásios</span><em>10</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-esporte-Pistasepiscinas" checked onchange="toggleCat('esporte','Pistas e piscinas',this.checked)"><span>Pistas e piscinas</span><em>7</em></label>
+            <label class="sub-et"><input type="checkbox" id="cat-esporte-Malhaebocha" checked onchange="toggleCat('esporte','Malha e bocha',this.checked)"><span>Malha e bocha</span><em>7</em></label>
+        </div>
+        </div>
     </div>
 
     <div class="layer-item" style="position:relative">
@@ -329,19 +460,45 @@
         <div class="layer-tooltip" id="tt-semads"><strong>Assistência Social — SEMADS</strong>CRAS, CREAS, Casa de Passagem e demais equipamentos da Secretaria Municipal de Assistência e Desenvolvimento Social.</div>
     </div>
 
-    <div class="layer-item">
-        <div class="layer-header">
-            <label class="layer-toggle"><input type="checkbox" id="tog-base" checked onchange="toggleBasemapLayer(this.checked)"><span class="toggle-track"></span></label>
-            <span class="layer-icon">🛰️</span><span class="layer-name">Imagem de fundo</span>
-        </div>
-        <div class="opacity-row">
-            <span class="opacity-label" id="op-base-val">65%</span>
-            <input type="range" min="0" max="100" value="65" oninput="setBasemapOpacity(this.value)">
-        </div>
+</div>
+
+<!-- Basemap -->
+<div class="panel-section">
+    <p class="section-label">Mapa base</p>
+    <div class="basemap-grid">
+        <button class="basemap-btn" onclick="setBasemap('dark')" id="bm-dark">Escuro</button>
+        <button class="basemap-btn" onclick="setBasemap('osm')" id="bm-osm">Mapa</button>
+        <button class="basemap-btn active" onclick="setBasemap('satellite')" id="bm-satellite">Satélite</button>
     </div>
 </div>
 
-<!-- Legenda -->
+<!-- /panel-section legenda -->
+<!-- Info -->
+
+
+</div></div><!-- /sidebar-scroll /sidebar -->
+
+<!-- MAP -->
+<div id="map-wrap">
+    <div id="map"></div>
+    <div id="map-search">
+        <span id="map-search-icon">&#128269;</span>
+        <input type="text" id="addr-input" placeholder="Buscar endereço em Bragança Paulista…" autocomplete="off" oninput="onAddrInput()" onkeydown="if(event.key==='Enter') doAddrSearch()">
+        <button id="addr-clear-btn" onclick="clearAddrSearch()" style="display:none">&#10005;</button>
+        <div id="addr-suggestions"></div>
+    </div>
+    <div id="bottom-bar"><span id="coords-display">—</span><span id="zoom-display">Zoom: —</span></div>
+</div>
+    <!-- ─── PAINEL DE LEGENDA ──────────────────────── -->
+    <div id="rb">
+        <div class="rb-head">Legenda e informações</div>
+        <div class="rb-body">
+<div id="info-panel" class="panel-section">
+    <p class="section-label">Dados do ponto selecionado</p>
+    <div id="info-content">
+        <div class="placeholder"><span class="ph-icon">🗺️</span><p>Clique sobre um equipamento ou via para ver os detalhes</p></div>
+    </div>
+</div>
 <div class="panel-section">
     <p class="section-label">Legenda</p>
     <div class="legend-items">
@@ -359,56 +516,56 @@
         </div>
         <div class="lg-group">
             <div class="lg-title open" onclick="toggleLegendGroup('lg1',this)">
-                <span>Saúde — Finalidade</span>
+                <span>Saúde — Tipo</span>
                 <span class="lg-arrow">▼</span>
             </div>
             <div class="lg-body open" id="lg1">
-                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(20,177,209,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Unidade Primária (UBS/ESF)</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(135,151,231,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Unidade Especializada</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(238,79,106,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Urgência / Emergência</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(196,222,64,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Gestão</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(236,94,210,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Almoxarifado</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(218,153,87,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Fiscalização Zoonoses</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(79,219,149,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Fiscalização Epidemiológica</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(50,231,14,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Transporte de Pacientes</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(20,177,209,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Atenção básica <span style="color:var(--muted);margin-left:4px">31</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(238,79,106,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Urgência e emergência <span style="color:var(--muted);margin-left:4px">2</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(135,151,231,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Atenção especializada <span style="color:var(--muted);margin-left:4px">8</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(186,120,232,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Saúde mental <span style="color:var(--muted);margin-left:4px">3</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(245,158,66,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Atendimento móvel <span style="color:var(--muted);margin-left:4px">5</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(79,219,149,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Apoio diagnóstico <span style="color:var(--muted);margin-left:4px">1</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(218,153,87,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Vigilância <span style="color:var(--muted);margin-left:4px">2</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.5" fill="rgba(150,160,175,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Gestão e apoio <span style="color:var(--muted);margin-left:4px">3</span></div>
+                <div class="legend-row" style="margin-top:7px;padding-top:6px;border-top:1px solid var(--border);color:var(--muted);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em">Tamanho — profissionais</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="2.6" fill="rgba(150,160,175,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Até 50</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="3.4" fill="rgba(150,160,175,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>50 a 80</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="4.2" fill="rgba(150,160,175,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>80 a 140</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><circle cx="6.0" cy="6.0" r="5.0" fill="rgba(150,160,175,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Acima de 140</div>
+                <div class="legend-row" style="margin-top:7px;color:var(--muted);font-size:9.5px;line-height:1.5;display:block">55 equipamentos · 2.818 profissionais · 829 médicos<br>44 do CNES e 11 apenas do cadastro municipal</div>
             </div>
         </div>
         <div class="lg-group">
             <div class="lg-title" onclick="toggleLegendGroup('lg2',this)">
-                <span>Educação — Nível</span>
+                <span>Educação — Rede</span>
                 <span class="lg-arrow">▼</span>
             </div>
             <div class="lg-body" id="lg2">
-                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(12,158,203,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Ensino Infantil</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(36,55,229,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Ensino Fundamental</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(221,74,88,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Infantil + Fundamental</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(157,77,218,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Fundamental + EJA</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(55,215,146,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>EJA / Ensino Superior</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(211,169,115,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Escola de Formação</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(218,30,174,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Núcleo de Apoio</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(196,231,68,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Secretaria de Educação</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(12,158,203,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Rede municipal <span style="color:var(--muted);margin-left:4px">71</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(221,74,88,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Rede estadual <span style="color:var(--muted);margin-left:4px">23</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="9.0" height="9.0" fill="rgba(55,215,146,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Rede federal <span style="color:var(--muted);margin-left:4px">1</span></div>
+                <div class="legend-row" style="margin-top:7px;padding-top:6px;border-top:1px solid var(--border);color:var(--muted);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em">Tamanho — matrículas</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="3.25" y="3.25" width="5.5" height="5.5" fill="rgba(150,160,175,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Até 150 alunos</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="2.5" width="7.0" height="7.0" fill="rgba(150,160,175,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>150 a 400</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.75" y="1.75" width="8.5" height="8.5" fill="rgba(150,160,175,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>400 a 800</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><rect x="1.0" y="1.0" width="10.0" height="10.0" fill="rgba(150,160,175,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Acima de 800</div>
+                <div class="legend-row" style="margin-top:7px;color:var(--muted);font-size:9.5px;line-height:1.5;display:block">95 escolas públicas · 27.450 matrículas · 1.124 turmas · 1.915 docentes<br>Censo Escolar 2025 (INEP)</div>
             </div>
         </div>
         <div class="lg-group">
             <div class="lg-title" onclick="toggleLegendGroup('lg3',this)">
-                <span>Esporte e Lazer — Tipo</span>
+                <span>Esporte e Lazer — Categoria</span>
                 <span class="lg-arrow">▼</span>
             </div>
             <div class="lg-body" id="lg3">
-                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(255,231,70,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>CILES e Mini CILES</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(74,222,128,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Academias ao Ar Livre</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(34,197,94,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Academias ao Ar Livre (PCDs)</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(251,146,60,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Estádios Municipais</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(163,230,53,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Campos Society (Grama Sint.)</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(101,163,13,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Campos de Futebol</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(250,204,21,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Ginásios de Esportes</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(253,186,116,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Vôlei de Areia / Beach Tênis</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(134,239,172,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Quadra de Tênis</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(167,243,208,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Centro de Treinamento de Artes Marciais e Tênis de Mesa</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(196,181,253,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Skate e Pumptrack</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(56,189,248,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Piscinas</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(253,224,71,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Cancha de Malha</div>
-        <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="1.5,10.5 6.0,1.5 10.5,10.5" fill="rgba(252,211,77,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Canchas de Bocha</div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="6,1.6 10.6,10 1.4,10" fill="rgba(74,222,128,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Academias ao ar livre <span style="color:var(--muted);margin-left:4px">66</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="6,1.6 10.6,10 1.4,10" fill="rgba(255,231,70,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>CILEs e mini CILEs <span style="color:var(--muted);margin-left:4px">32</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="6,1.6 10.6,10 1.4,10" fill="rgba(251,146,60,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Campos e estádios <span style="color:var(--muted);margin-left:4px">40</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="6,1.6 10.6,10 1.4,10" fill="rgba(56,189,248,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Quadras e ginásios <span style="color:var(--muted);margin-left:4px">10</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="6,1.6 10.6,10 1.4,10" fill="rgba(196,181,253,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Pistas e piscinas <span style="color:var(--muted);margin-left:4px">7</span></div>
+                <div class="legend-row"><div style="width:12px;height:12px;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg"><polygon points="6,1.6 10.6,10 1.4,10" fill="rgba(244,114,182,1)" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/></svg></div>Malha e bocha <span style="color:var(--muted);margin-left:4px">7</span></div>
+                <div class="legend-row" style="margin-top:7px;color:var(--muted);font-size:9.5px;line-height:1.5;display:block">162 equipamentos · 14 tipos do cadastro agrupados em 6 categorias</div>
             </div>
         </div>
         <div class="lg-group">
@@ -440,38 +597,20 @@
             </div>
         </div>
     </div>
-</div><!-- /panel-section legenda -->
-<!-- Info -->
-<div id="info-panel" class="panel-section">
-    <p class="section-label">Dados do ponto selecionado</p>
-    <div id="info-content">
-        <div class="placeholder"><span class="ph-icon">🗺️</span><p>Clique sobre um equipamento ou via para ver os detalhes</p></div>
-    </div>
 </div>
-
-</div></div><!-- /sidebar-scroll /sidebar -->
-
-<!-- MAP -->
-<div id="map-wrap">
-    <div id="map"></div>
-    <div id="map-search">
-        <i class="fas fa-search" id="map-search-icon"></i>
-        <input type="text" id="addr-input" placeholder="Buscar endereço em Bragança Paulista…" autocomplete="off" oninput="onAddrInput()" onkeydown="if(event.key==='Enter') doAddrSearch()">
-        <button id="addr-clear-btn" onclick="clearAddrSearch()" style="display:none"><i class="fas fa-times"></i></button>
-        <div id="addr-suggestions"></div>
+        </div>
     </div>
-    <div id="bottom-bar"><span id="coords-display">—</span><span id="zoom-display">Zoom: —</span></div>
-</div>
+
 </div><!-- /app -->
 
 <!-- EXPORT MODAL -->
 <div id="export-modal" style="display:none">
     <div id="export-box">
-        <div id="export-title"><i class="fas fa-download"></i> Exportar mapa</div>
+        <div id="export-title">&#8595; Exportar mapa</div>
         <p id="export-desc">Escolha o formato. O mapa será capturado na visualização atual.</p>
         <div id="export-btns">
-            <button class="exp-btn" onclick="doExport('jpeg')"><i class="fas fa-image"></i> JPEG</button>
-            <button class="exp-btn" onclick="doExport('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+            <button class="exp-btn" onclick="doExport('jpeg')">JPEG</button>
+            <button class="exp-btn" onclick="doExport('pdf')">PDF</button>
         </div>
         <div id="export-status"></div>
         <button id="export-close" onclick="closeExportModal()">Cancelar</button>
@@ -513,6 +652,7 @@
 <script src="js/leaflet.js"></script>
 <script src="js/leaflet-hash.js"></script>
 <script src="js/leaflet-measure.js"></script>
+<script src="layers/LIMITE_MUNICIPAL_7.js"></script>
 <script src="layers/04082025_EIXO_LOGRADOUROmodificadoSMP_1.js"></script>
 <script src="layers/EQUIPAMENTOS_SEMADS_2.js"></script>
 <script src="layers/EQUIPAMENTOS_EDUCACAO_3.js"></script>
@@ -523,7 +663,26 @@
 'use strict';
 
 // ── SIDEBAR ─────────────────────────────────────────────
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}
+// limpeza garantida: o mouseout nem sempre dispara ao sair do mapa pela
+// borda, ao arrastar ou ao dar zoom
+if(typeof map!=='undefined' && map.on){
+    ['mouseout','dragstart','zoomstart','movestart'].forEach(function(ev){
+        map.on(ev,function(){
+            if(_travado)return;            // popup aberto: preserva o painel
+            _limpaTrav(); clearInfoPanel();
+        });
+    });
+    map.on('popupclose',function(){ _travado=false; _limpaTrav(); clearInfoPanel(); });
+}
+
+function toggleLegenda(){
+    document.getElementById('rb').classList.toggle('hidden');
+    setTimeout(function(){ if(typeof map!=='undefined'&&map.invalidateSize) map.invalidateSize(); },260);
+}
+function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    setTimeout(function(){ if(typeof map!=='undefined'&&map.invalidateSize) map.invalidateSize(); },260);
+}
 
 // ── DIAGNÓSTICO DE CARREGAMENTO ─────────────────────────────
 window.onerror = function(msg, src, line, col, err) {
@@ -559,9 +718,11 @@ L.control.scale({position:'bottomleft',imperial:false}).addTo(map);
 L.control.zoom({position:'topright'}).addTo(map);
 var mc = new L.Control.Measure({position:'topright',primaryLengthUnit:'meters',secondaryLengthUnit:'kilometers',primaryAreaUnit:'sqmeters',secondaryAreaUnit:'hectares'});
 mc.addTo(map);
-document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML='';
-document.getElementsByClassName('leaflet-control-measure-toggle')[0].className+=' fas fa-ruler';
-var GLC=L.Control.extend({options:{position:'topright'},onAdd:function(){var b=L.DomUtil.create('div','leaflet-control-geolocate');b.innerHTML='<i class="fas fa-location-arrow"></i>';b.title='Minha localização';L.DomEvent.on(b,'click',function(e){L.DomEvent.stopPropagation(e);map.locate({setView:true,maxZoom:17});});return b;}});
+// O controle pode ainda não estar no DOM: sem a guarda, um erro aqui
+// abortaria todo o script e o mapa não chegaria a ser desenhado.
+var _mt=document.getElementsByClassName('leaflet-control-measure-toggle')[0];
+if(_mt) _mt.innerHTML='&#128207;';
+var GLC=L.Control.extend({options:{position:'topright'},onAdd:function(){var b=L.DomUtil.create('div','leaflet-control-geolocate');b.innerHTML='&#10138;';b.title='Minha localização';L.DomEvent.on(b,'click',function(e){L.DomEvent.stopPropagation(e);map.locate({setView:true,maxZoom:17});});return b;}});
 new GLC().addTo(map);
 map.on('locationfound',function(e){L.circleMarker(e.latlng,{radius:8,color:'#FFEF00',fillColor:'#0175bc',fillOpacity:0.8,weight:2}).addTo(map).bindPopup('Você está aqui').openPopup();});
 map.on('mousemove',function(e){document.getElementById('coords-display').textContent='Lat: '+e.latlng.lat.toFixed(5)+'  Lng: '+e.latlng.lng.toFixed(5);});
@@ -605,17 +766,10 @@ function setBasemap(n){
         if(el)el.classList.toggle('active',b===n);
     });
 }
-function setBasemapOpacity(v){
-    if(curBM)curBM.setOpacity(v/100);
-    document.getElementById('op-base-val').textContent=v+'%';
-}
-function toggleBasemapLayer(on){
-    if(!curBM)return;
-    if(on)map.addLayer(curBM);else map.removeLayer(curBM);
-}
 
 // Carrega o satélite inicial
 setBasemap('satellite');
+if(curBM)curBM.setOpacity(1);
 
 // ── ESTILO VIAS (hierarquia) ──────────────────────────────
 var VIA_STYLES={
@@ -628,11 +782,19 @@ var VIA_STYLES={
 };
 var viaOpacity=0.90;
 
+// Limite municipal — camada de referência, não interativa
+map.createPane('pane_limite');map.getPane('pane_limite').style.zIndex=399;
+map.getPane('pane_limite').style.pointerEvents='none';
+var layer_limite=L.geoJSON(typeof json_LIMITE_MUNICIPAL_7!=='undefined'?json_LIMITE_MUNICIPAL_7:{type:'FeatureCollection',features:[]},{
+    pane:'pane_limite', interactive:false,
+    style:{pane:'pane_limite',color:'#FFEF00',weight:2.2,opacity:.9,fill:false,interactive:false}
+}).addTo(map);
+
 map.createPane('pane_vias');map.getPane('pane_vias').style.zIndex=401;
 var layer_vias=L.geoJSON(typeof json_04082025_EIXO_LOGRADOUROmodificadoSMP_1!=='undefined'?json_04082025_EIXO_LOGRADOUROmodificadoSMP_1:{type:'FeatureCollection',features:[]},{
     pane:'pane_vias',
     style:function(f){
-        var h=f.properties['Hierarquia confome PA-16330/25 e D-4691/25']||'Local';
+        var h=f.properties.hierarquia||'Local';
         var s=VIA_STYLES[h]||VIA_STYLES['Local'];
         return {pane:'pane_vias',color:s.color,weight:s.weight,opacity:viaOpacity,fillOpacity:0};
     },
@@ -640,36 +802,47 @@ var layer_vias=L.geoJSON(typeof json_04082025_EIXO_LOGRADOUROmodificadoSMP_1!=='
         var p=f.properties;
         l.on({
             mouseover:function(e){
+                if(_travado)return;
                 e.target.setStyle({color:'#FFEF00',weight:Math.max(e.target.options.weight,2)});
                 showInfoVia(p);
             },
-            mouseout:function(e){layer_vias.resetStyle(e.target);clearInfoPanel();},
-            click:function(e){showInfoVia(p);L.DomEvent.stopPropagation(e);}
+            mouseout:function(e){
+                if(_travado)return;
+                layer_vias.resetStyle(e.target); clearInfoPanel();
+            },
+            click:function(e){showInfoVia(p);L.DomEvent.stopPropagation(e);},
+            popupopen:function(e){
+                _travado=false; _limpaTrav();
+                _travEl=e.target;
+                e.target.setStyle({color:'#FFEF00',weight:Math.max(e.target.options.weight,2)});
+                showInfoVia(p); _travado=true;
+            },
+            popupclose:function(){ _travado=false; _limpaTrav(); clearInfoPanel(); }
         });
         var nm=p['nome_via']||p['NOME_VIA']||'';
-        var hier=p['Hierarquia confome PA-16330/25 e D-4691/25']||'';
+        var hier=p.hierarquia||'';
         if(nm||hier){
             l.bindPopup(
-                '<div style="font-family:\'Syne\',sans-serif;font-weight:700;color:#fff;font-size:12px;margin-bottom:4px">'+(nm||'Via')+'</div>'+
-                (hier?'<div style="font-size:10px;color:#a8cce8">'+hier+'</div>':''),
+                '<div style="font-family:\'Outfit\',sans-serif;font-weight:700;color:#fff;font-size:12px;margin-bottom:4px">'+(nm||'Via')+'</div>'+
+                (hier?'<div style="font-size:10px;color:#7a9ab5">'+hier+'</div>':''),
                 {maxWidth:240}
             );
         }
     }
 }).addTo(map);
 
-function setViasOpacity(v){viaOpacity=parseInt(v)/100;document.getElementById('op-vias-val').textContent=v+'%';layer_vias.setStyle(function(f){var h=f.properties['Hierarquia confome PA-16330/25 e D-4691/25']||'Local';var s=VIA_STYLES[h]||VIA_STYLES['Local'];return{color:s.color,weight:s.weight,opacity:viaOpacity};});}
+function setViasOpacity(v){viaOpacity=parseInt(v)/100;document.getElementById('op-vias-val').textContent=v+'%';layer_vias.setStyle(function(f){var h=f.properties.hierarquia||'Local';var s=VIA_STYLES[h]||VIA_STYLES['Local'];return{color:s.color,weight:s.weight,opacity:viaOpacity};});}
 
 // ── ESTILO SAÚDE (por Finalidade) ─────────────────────────
 var SAUDE_COLORS={
-    'UNIDADE DE SAÚDE PRIMÁRIA':          'rgba(20,177,209,1)',
-    'UNIDADE DE SAÚDE ESPECIALIZADA':     'rgba(135,151,231,1)',
-    'UNIDADE DE SAÚDE - URGÊNCIA E EMERGÊNCIA':'rgba(238,79,106,1)',
-    'GESTÃO':                             'rgba(196,222,64,1)',
-    'ALMOXARIFADO DA SECRETARIA DE SAÚDE':'rgba(236,94,210,1)',
-    'FISCALIZAÇÃO DE ZOONOSES':           'rgba(218,153,87,1)',
-    'FISCALIZAÇÃO EPIDEMIOLÓGICA E SANITARIA':'rgba(79,219,149,1)',
-    'TRANSPORTE PARA PACIENTES':          'rgba(50,231,14,1)',
+    'Atenção básica':        'rgba(20,177,209,1)',
+    'Urgência e emergência': 'rgba(238,79,106,1)',
+    'Atenção especializada': 'rgba(135,151,231,1)',
+    'Saúde mental':          'rgba(186,120,232,1)',
+    'Atendimento móvel':     'rgba(245,158,66,1)',
+    'Apoio diagnóstico':     'rgba(79,219,149,1)',
+    'Vigilância':            'rgba(218,153,87,1)',
+    'Gestão e apoio':        'rgba(150,160,175,1)'
 };
 var SEMADS_COLORS={
     'Atendimento de proteção básica as famílias': {color:'rgba(194,255,25,1)',  label:'Proteção Básica (CRAS)'},
@@ -733,64 +906,188 @@ function makeIcon(shape, fillColor, size){
         html:'<svg width="'+s+'" height="'+s+'" viewBox="0 0 '+s+' '+s+'" xmlns="http://www.w3.org/2000/svg">'+svg+'</svg>'
     });
 }
+
+// ── filtro por subgrupo, comum às camadas de saúde e esporte ───────────
+// Mesma lógica das etapas de ensino: o ponto aparece enquanto a sua
+// categoria estiver ligada; desligar o grupo oculta a camada inteira.
+var _filtros={};
+function criarFiltro(id, fc, cfg){
+  var grupo=L.layerGroup([],{pane:cfg.pane}).addTo(map);
+  var itens=[];
+  (fc.features||[]).forEach(function(f){
+    var c=f.geometry.coordinates;
+    var cat=cfg.categoria(f.properties);
+    var mk=L.marker([c[1],c[0]],{pane:cfg.pane,icon:cfg.icone(f.properties)});
+    mk.feature=f; cfg.handler(f,mk);
+    itens.push({l:mk,cat:cat});
+  });
+  var cats={}; itens.forEach(function(it){cats[it.cat]=true;});
+  _filtros[id]={grupo:grupo,itens:itens,on:cats,ativo:true,cfg:cfg};
+  aplicarFiltro(id);
+  return grupo;
+}
+function aplicarFiltro(id){
+  var F=_filtros[id]; if(!F)return 0;
+  var n=0;
+  F.itens.forEach(function(it){
+    var v=F.ativo && F.on[it.cat]!==false;
+    if(v){ if(!F.grupo.hasLayer(it.l)) F.grupo.addLayer(it.l); n++; }
+    else { if(F.grupo.hasLayer(it.l)) F.grupo.removeLayer(it.l); }
+  });
+  var el=document.getElementById(id+'-conta');
+  if(el) el.textContent=n+' '+(n===1?F.cfg.unidade:F.cfg.unidadePl);
+  return n;
+}
+window.toggleCat=function(id,cat,on){
+  var F=_filtros[id]; if(!F)return;
+  F.on[cat]=on; aplicarFiltro(id);
+  var alguma=Object.keys(F.on).some(function(k){return F.on[k];});
+  var g=document.getElementById('tog-'+id);
+  if(g && F.ativo && !alguma){ g.checked=false; F.ativo=false; aplicarFiltro(id); }
+  else if(g && !F.ativo && alguma){ g.checked=true; F.ativo=true; aplicarFiltro(id); }
+};
+window.toggleGrupo=function(id,on){
+  var F=_filtros[id]; if(!F)return;
+  F.ativo=on;
+  if(on && !Object.keys(F.on).some(function(k){return F.on[k];})){
+    Object.keys(F.on).forEach(function(k){
+      F.on[k]=true;
+      var c=document.getElementById('cat-'+id+'-'+k.replace(/[^A-Za-z0-9]/g,''));
+      if(c)c.checked=true;});
+  }
+  aplicarFiltro(id);
+};
+
 map.createPane('pane_saude');map.getPane('pane_saude').style.zIndex=405;
-var layer_saude=L.geoJSON(typeof json_EQUIPAMENTOS_SAUDE_5!=='undefined'?json_EQUIPAMENTOS_SAUDE_5:{type:'FeatureCollection',features:[]},{
-    pane:'pane_saude',
-    pointToLayer:function(f,ll){
-        var cor=SAUDE_COLORS[f.properties['Finalidade']]||'rgba(200,200,200,1)';
-        return L.marker(ll,{pane:'pane_saude',icon:makeIcon('circle',cor,14)});
-    },
-    onEachFeature:makeEquipHandler('saude','Saúde','Unidade','Finalidade',SAUDE_COLORS,['Unidade','Finalidade','Endereço','Acessibilidade','Zona Rural'])
-}).addTo(map);
+var layer_saude=criarFiltro('saude',
+  (typeof json_EQUIPAMENTOS_SAUDE_5!=='undefined')?json_EQUIPAMENTOS_SAUDE_5:{type:'FeatureCollection',features:[]},
+  {pane:'pane_saude', unidade:'equipamento', unidadePl:'equipamentos',
+   categoria:function(p){return p.tipo;},
+   icone:function(p){
+     var cor=SAUDE_COLORS[p.tipo]||'rgba(200,200,200,1)';
+     // tamanho proporcional ao total de profissionais declarados ao CNES
+     var n=p.profissionais||0;
+     var t = n>=140?20 : n>=80?16 : n>=50?13 : 10;
+     return makeIcon('circle',cor,t);},
+   handler:makeSaudeHandler});
 
 // ── ESTILO EDUCAÇÃO (por Nível/Tipo) ─────────────────────
 var EDUC_COLORS={
-    'EJA/Ensino Superior':              'rgba(55,215,146,1)',
-    'Ensino Fundamental':               'rgba(36,55,229,1)',
-    'Ensino Fundamental/EJA':           'rgba(157,77,218,1)',
-    'Ensino Infantil':                  'rgba(12,158,203,1)',
-    'Ensino Infantil/Ensino Fundamental':'rgba(221,74,88,1)',
-    'Escola de Formação e Aperfeiçoamento':'rgba(211,169,115,1)',
-    'Núcleo de Apoio à Aprendizagem':   'rgba(218,30,174,1)',
-    'Secretaria Municipal de Educação': 'rgba(196,231,68,1)',
+    'Municipal': 'rgba(12,158,203,1)',
+    'Estadual':  'rgba(221,74,88,1)',
+    'Federal':   'rgba(55,215,146,1)'
 };
 map.createPane('pane_educacao');map.getPane('pane_educacao').style.zIndex=404;
-var layer_educacao=L.geoJSON(typeof json_EQUIPAMENTOS_EDUCACAO_3!=='undefined'?json_EQUIPAMENTOS_EDUCACAO_3:{type:'FeatureCollection',features:[]},{
-    pane:'pane_educacao',
-    pointToLayer:function(f,ll){
-        var cor=EDUC_COLORS[f.properties['Nível/Tipo']]||'rgba(150,150,150,1)';
-        return L.marker(ll,{pane:'pane_educacao',icon:makeIcon('square',cor,14)});
-    },
-    onEachFeature:makeEquipHandler('educacao','Educação','Equipamento','Nível/Tipo',EDUC_COLORS,['Equipamento','Endereço','Nível/Tipo','Tipo','Vagas Manhã','Vagas Tarde','Vagas Integral'])
-}).addTo(map);
+// A escola é visível quando PELO MENOS UMA das etapas que ela oferece está
+// ligada na legenda. Só desaparece quando todas as suas etapas estão
+// desligadas — ou quando o grupo Educação inteiro é desligado.
+var ETAPAS=[['creche','Creche','mat_creche'],
+            ['pre','Pré-escola','mat_pre'],
+            ['fund1','Fundamental I','mat_fund1'],
+            ['fund2','Fundamental II','mat_fund2'],
+            ['medio','Ensino Médio','mat_medio']];
+var etapaOn={creche:true,pre:true,fund1:true,fund2:true,medio:true,outras:true};
+var grupoEducacaoOn=true;
+var CHAVES=['creche','pre','fund1','fund2','medio','outras'];
+var _escolas=[];                  // {layer, etapas:[chaves]}
+
+var layer_educacao=L.layerGroup([],{pane:'pane_educacao'}).addTo(map);
+
+(function montarEscolas(){
+    var fc = (typeof json_EQUIPAMENTOS_EDUCACAO_3!=='undefined')
+             ? json_EQUIPAMENTOS_EDUCACAO_3 : {type:'FeatureCollection',features:[]};
+    (fc.features||[]).forEach(function(f){
+        var p=f.properties, c=f.geometry.coordinates;
+        var cor=EDUC_COLORS[p.rede]||'rgba(150,150,150,1)';
+        var m=p.mat_total||0;
+        var t = m>=800?19 : m>=400?16 : m>=150?13 : 10;
+        var mk=L.marker([c[1],c[0]],{pane:'pane_educacao',icon:makeIcon('square',cor,t)});
+        mk.feature=f;
+        makeEscolaHandler(f,mk);
+        var ets=ETAPAS.filter(function(e){return (p[e[2]]||0)>0;}).map(function(e){return e[0];});
+        // sem matrícula nas cinco etapas: ensino especializado (EJA, prisional)
+        if(!ets.length) ets=['outras'];
+        _escolas.push({l:mk,etapas:ets});
+    });
+    aplicarFiltroEscolas();
+})();
+
+function aplicarFiltroEscolas(){
+    var n=0;
+    _escolas.forEach(function(e){
+        // sem etapa declarada: segue o grupo, para não sumir do mapa
+        var visivel = grupoEducacaoOn &&
+                      e.etapas.some(function(k){return etapaOn[k];});
+        if(visivel){ if(!layer_educacao.hasLayer(e.l)) layer_educacao.addLayer(e.l); n++; }
+        else { if(layer_educacao.hasLayer(e.l)) layer_educacao.removeLayer(e.l); }
+    });
+    var el=document.getElementById('educ-conta');
+    if(el) el.textContent=n+(n===1?' escola':' escolas');
+    return n;
+}
+
+window.toggleEtapa=function(k,on){
+    etapaOn[k]=on;
+    aplicarFiltroEscolas();
+    // o grupo acompanha: se nenhuma etapa está ligada, o grupo fica desmarcado
+    var alguma=CHAVES.some(function(k){return etapaOn[k];});
+    var g=document.getElementById('tog-educacao');
+    if(g && grupoEducacaoOn && !alguma){ g.checked=false; grupoEducacaoOn=false; aplicarFiltroEscolas(); }
+    else if(g && !grupoEducacaoOn && alguma){ g.checked=true; grupoEducacaoOn=true; aplicarFiltroEscolas(); }
+};
+
+window.toggleGrupoEducacao=function(on){
+    grupoEducacaoOn=on;
+    // desligar o grupo não apaga a escolha de etapas; religar restaura o que estava
+    if(on){
+        var alguma=CHAVES.some(function(k){return etapaOn[k];});
+        if(!alguma){
+            CHAVES.forEach(function(k){
+                etapaOn[k]=true;
+                var c=document.getElementById('et-'+k); if(c)c.checked=true;});
+        }
+    }
+    aplicarFiltroEscolas();
+};
 
 // ── ESTILO ESPORTE (simples + cluster Leaflet.markercluster emulado) ──
 map.createPane('pane_esporte');map.getPane('pane_esporte').style.zIndex=403;
-var ESPORTE_COLORS={
-    'CILES E MINI CILES': 'rgba(255,231,70,1)',
-    'EQUIPAMENTOS DE ACADEMIAS AO AR LIVRE': 'rgba(74,222,128,1)',
-    'EQUIPAMENTOS ACADEMIAS AO AR LIVRE (PCDs)': 'rgba(34,197,94,1)',
-    'ESTÁDIOS MUNICIPAIS': 'rgba(251,146,60,1)',
-    'CAMPOS SOCIETY - GRAMA SINTÉTICA': 'rgba(163,230,53,1)',
-    'CAMPOS DE FUTEBOL DO MUNICÍPIO': 'rgba(101,163,13,1)',
-    'GINÁSIOS DE ESPORTES MUNICIPAIS': 'rgba(250,204,21,1)',
-    'QUADRAS DE VÔLEI DE AREIA E BEACH TÊNIS': 'rgba(253,186,116,1)',
-    'QUADRA DE TÊNIS CAMPO': 'rgba(134,239,172,1)',
-    'CENTRO DE TREINAMENTO DE ARTES MARCIAIS E TÊNIS DE MESA': 'rgba(167,243,208,1)',
-    'PISTAS SKATE E PUMPTRACK': 'rgba(196,181,253,1)',
-    'PISCINAS': 'rgba(56,189,248,1)',
-    'CANCHA DE MALHA': 'rgba(253,224,71,1)',
-    'CANCHAS DE BOCHA': 'rgba(252,211,77,1)'
+// Os 14 tipos do cadastro foram agrupados em seis categorias legíveis:
+// 14 cores num mapa com 162 pontos não se distinguem a olho nu.
+var ESPORTE_GRUPOS={
+    'EQUIPAMENTOS DE ACADEMIAS AO AR LIVRE':'Academias ao ar livre',
+    'EQUIPAMENTOS ACADEMIAS AO AR LIVRE (PCDs)':'Academias ao ar livre',
+    'CILES E MINI CILES':'CILEs e mini CILEs',
+    'ESTÁDIOS MUNICIPAIS':'Campos e estádios',
+    'CAMPOS SOCIETY - GRAMA SINTÉTICA':'Campos e estádios',
+    'CAMPOS DE FUTEBOL DO MUNICÍPIO':'Campos e estádios',
+    'GINÁSIOS DE ESPORTES MUNICIPAIS':'Quadras e ginásios',
+    'QUADRAS DE VÔLEI DE AREIA E BEACH TÊNIS':'Quadras e ginásios',
+    'QUADRA DE TÊNIS CAMPO':'Quadras e ginásios',
+    'CENTRO DE TREINAMENTO DE ARTES MARCIAIS E TÊNIS DE MESA':'Quadras e ginásios',
+    'PISTAS SKATE E PUMPTRACK':'Pistas e piscinas',
+    'PISCINAS':'Pistas e piscinas',
+    'CANCHA DE MALHA':'Malha e bocha',
+    'CANCHAS DE BOCHA':'Malha e bocha'
 };
-var layer_esporte=L.geoJSON(typeof json_EQUIPAMENTOS_ESPORTE_4!=='undefined'?json_EQUIPAMENTOS_ESPORTE_4:{type:'FeatureCollection',features:[]},{
-    pane:'pane_esporte',
-    pointToLayer:function(f,ll){
-        var tipo=(f.properties['Tipo de equipamento']||'').trim();
-        var cor=ESPORTE_COLORS[tipo]||'rgba(255,231,70,1)';
-        return L.marker(ll,{pane:'pane_esporte',icon:makeIcon('triangle',cor,14)});
-    },
-    onEachFeature:makeEquipHandler('esporte','Esporte e Lazer','Nome','Tipo de equipamento',ESPORTE_COLORS,['Nome','Endereço','Tipo de equipamento'])
-}).addTo(map);
+function grupoEsporte(t){return ESPORTE_GRUPOS[t]||'Outros';}
+var ESPORTE_COLORS={
+    'Academias ao ar livre':'rgba(74,222,128,1)',
+    'CILEs e mini CILEs':   'rgba(255,231,70,1)',
+    'Campos e estádios':    'rgba(251,146,60,1)',
+    'Quadras e ginásios':   'rgba(56,189,248,1)',
+    'Pistas e piscinas':    'rgba(196,181,253,1)',
+    'Malha e bocha':        'rgba(244,114,182,1)',
+    'Outros':               'rgba(150,160,175,1)'
+};
+var layer_esporte=criarFiltro('esporte',
+  (typeof json_EQUIPAMENTOS_ESPORTE_4!=='undefined')?json_EQUIPAMENTOS_ESPORTE_4:{type:'FeatureCollection',features:[]},
+  {pane:'pane_esporte', unidade:'equipamento', unidadePl:'equipamentos',
+   categoria:function(p){return grupoEsporte((p['Tipo de equipamento']||'').trim());},
+   icone:function(p){
+     var cor=ESPORTE_COLORS[grupoEsporte((p['Tipo de equipamento']||'').trim())]||'rgba(150,160,175,1)';
+     return makeIcon('triangle',cor,14);},
+   handler:makeEquipHandler('esporte','Esporte e Lazer','Nome','Tipo de equipamento',null,['Nome','Endereço','Tipo de equipamento'])});
 
 // ── ESTILO CULTURA (losango via DivIcon SVG) ──────────────
 map.createPane('pane_cultura');map.getPane('pane_cultura').style.zIndex=402;
@@ -813,19 +1110,19 @@ var layer_semads=L.geoJSON(typeof json_EQUIPAMENTOS_SEMADS_2!=='undefined'?json_
 }).addTo(map);
 
 // ── TOGGLE / PANE VISIBILITY ─────────────────────────────
-var allPanes={vias:'pane_vias',saude:'pane_saude',educacao:'pane_educacao',esporte:'pane_esporte',cultura:'pane_cultura',semads:'pane_semads'};
+var allPanes={limite:'pane_limite',vias:'pane_vias',saude:'pane_saude',educacao:'pane_educacao',esporte:'pane_esporte',cultura:'pane_cultura',semads:'pane_semads'};
 function toggleLayer(k,on){var p=map.getPane(allPanes[k]);if(p)p.style.display=on?'':'none';}
 
 // ── INFO PANEL ───────────────────────────────────────────
 function showInfoVia(p){
     var ic=document.getElementById('info-content');
     var html='<div class="info-title">Logradouro <span class="tag">SMP 2025</span></div>';
+    // Apenas nome e classificação viária. Código, diretriz e observações são
+    // dados de cadastro interno e permanecem no GeoPackage, fora da leitura
+    // pública do painel.
     var campos=[
         {k:'nome_via',l:'Nome da Via'},
-        {k:'cod_log',l:'Código'},
-        {k:'Hierarquia confome PA-16330/25 e D-4691/25',l:'Hierarquia'},
-        {k:'Diretriz conforme PA-16330/25 e D-4691/25',l:'Diretriz'},
-        {k:'Observações',l:'Observações'},
+        {k:'hierarquia',l:'Hierarquia'},
     ];
     campos.forEach(function(c){
         var v=p[c.k];
@@ -835,19 +1132,198 @@ function showInfoVia(p){
     ic.innerHTML=html;
 }
 
+// Enquanto um popup está aberto, o painel direito fica travado naquela
+// feição: mover o cursor não deve apagar o que se está lendo.
+var _travado=false, _travEl=null;
+function _limpaTrav(){
+    if(_travEl){
+        if(_travEl._icon) _travEl._icon.style.filter='';
+        else { try{ layer_vias.resetStyle(_travEl); }catch(e){} }
+        _travEl=null;
+    }
+}
+
+
+
+// ── SAÚDE (CNES + cadastro municipal) ─────────────────────────────────
+function showSaudeInfo(p){
+    var ic=document.getElementById('info-content');
+    var cor=SAUDE_COLORS[p.tipo]||'rgba(255,239,0,.8)';
+    var n=function(v){return (v==null||isNaN(v))?'—':Number(v).toLocaleString('pt-BR');};
+    var html='<div class="info-title">Equipamento de Saúde <span class="tag">'+
+             (p.fonte==='CNES'?'CNES':'Cadastro')+'</span></div>'+
+      '<div style="margin-bottom:8px"><span style="display:inline-flex;align-items:center;gap:4px;'+
+      'padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;font-family:Outfit,sans-serif;'+
+      'background:'+cor+';color:#0f2236">'+p.tipo+'</span></div>';
+    html+='<div class="info-field"><span class="info-key">Unidade</span><span class="info-val">'+p.unidade+'</span></div>';
+    if(p.cnes) html+='<div class="info-field"><span class="info-key">Código CNES</span><span class="info-val">'+p.cnes+'</span></div>';
+
+    if(p.fonte==='CNES'){
+        html+='<div class="info-sub">Equipe</div>'+
+          '<div class="info-field"><span class="info-key">Profissionais</span><span class="info-val">'+n(p.profissionais)+'</span></div>'+
+          '<div class="info-field"><span class="info-key">Médicos</span><span class="info-val">'+n(p.medicos)+'</span></div>'+
+          '<div class="info-field"><span class="info-key">Especializações distintas</span><span class="info-val">'+n(p.especializacoes)+'</span></div>'+
+          '<div class="info-field"><span class="info-key">Horas SUS semanais</span><span class="info-val">'+n(p.horas_sus)+'</span></div>';
+        if(p.equipamentos!=null){
+            html+='<div class="info-sub">Equipamentos</div>'+
+              '<div class="info-field"><span class="info-key">Total</span><span class="info-val">'+n(p.equipamentos)+'</span></div>'+
+              '<div class="info-field"><span class="info-key">Tipos distintos</span><span class="info-val">'+n(p.equipamentos_dif)+'</span></div>';
+        }
+        var at=[['atende_24h','Atendimento 24 horas'],['ambulatorial','Atendimento ambulatorial'],
+                ['urgencia','Urgência e emergência'],['leitos_sus','Leitos SUS']];
+        html+='<div class="info-sub">Atendimento</div><div class="infra-grid">';
+        at.forEach(function(a){
+            var tem=!!p[a[0]];
+            html+='<div class="infra-item'+(tem?' tem':'')+'">'+
+                  '<span class="infra-mk">'+(tem?'&#10003;':'&#8211;')+'</span>'+a[1]+'</div>';});
+        html+='</div>';
+        html+='<div class="info-nota">Dados declarados ao CNES pela Secretaria Municipal de Saúde. '+
+              'Os campos de atendimento hospitalar, cirúrgico, obstétrico e neonatal não constam do arquivo de origem.<br><br>'+
+              'Localização: <b>'+(p.origem_coord||'—')+'</b>.'+
+              (p.origem_coord==='Cadastro SMSaúde'
+                 ? ' O ponto do CNES foi substituído pelo do cadastro municipal, mais preciso.' : '')+
+              '</div>';
+    }else{
+        html+='<div class="info-nota">Equipamento do cadastro municipal sem registro correspondente no '+
+              'recorte do CNES consultado. Não há dados de equipe, equipamentos ou horas SUS.</div>';
+    }
+    ic.innerHTML=html;
+}
+
+function makeSaudeHandler(f,l){
+    var p=f.properties;
+    l.on({
+        mouseover:function(e){
+            if(_travado)return;
+            if(e.target._icon)e.target._icon.style.filter='drop-shadow(0 0 4px rgba(255,239,0,0.9))';
+            showSaudeInfo(p);
+        },
+        mouseout:function(e){
+            if(_travado)return;
+            if(e.target._icon)e.target._icon.style.filter='';
+            clearInfoPanel();
+        },
+        click:function(e){showSaudeInfo(p);L.DomEvent.stopPropagation(e);},
+        popupopen:function(e){
+            _travado=false; _limpaTrav();
+            _travEl=e.target;
+            if(e.target._icon)e.target._icon.style.filter='drop-shadow(0 0 4px rgba(255,239,0,0.9))';
+            showSaudeInfo(p); _travado=true;
+        },
+        popupclose:function(){ _travado=false; _limpaTrav(); clearInfoPanel(); }
+    });
+    l.bindPopup(function(){
+        return '<div style="font-family:\'Outfit\',sans-serif;font-weight:700;color:#fff;font-size:12px;margin-bottom:4px">'+p.unidade+'</div>'+
+               '<div style="font-size:10px;color:#7a9ab5">'+p.tipo+'</div>'+
+               (p.profissionais!=null?'<div style="font-size:10px;color:#e8eaf0;margin-top:4px">'+
+                 Number(p.profissionais).toLocaleString('pt-BR')+' profissionais</div>':'');
+    },{maxWidth:260});
+}
+
+// ── ESCOLAS (INEP / Censo Escolar) ────────────────────────────────────
+var INFRA_CAMPOS=[['agua_pot_0','Água potável'],['alim_0','Alimentação'],
+  ['bibli_0','Biblioteca'],['sleit_1','Sala de leitura'],['labci_0','Laboratório de ciências'],
+  ['quad_0','Quadra'],['quad_cob_0','Quadra coberta'],['patio_1','Pátio'],
+  ['ref_0','Refeitório'],['vaolivre_0','Vão livre']];
+
+function showEscolaInfo(p){
+    var ic=document.getElementById('info-content');
+    var cor=EDUC_COLORS[p.rede]||'rgba(255,239,0,.8)';
+    var n=function(v){return (v==null||isNaN(v))?'—':Number(v).toLocaleString('pt-BR');};
+    var html='<div class="info-title">Escola <span class="tag">INEP 2025</span></div>'+
+      '<div style="margin-bottom:8px"><span style="display:inline-flex;align-items:center;gap:4px;'+
+      'padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;font-family:Outfit,sans-serif;'+
+      'background:'+cor+';color:#0f2236">Rede '+p.rede+'</span></div>';
+    html+='<div class="info-field"><span class="info-key">Escola</span><span class="info-val">'+p.escola+'</span></div>';
+    html+='<div class="info-field"><span class="info-key">Etapas</span><span class="info-val">'+p.etapas+'</span></div>';
+    html+='<div class="info-field"><span class="info-key">Código INEP</span><span class="info-val">'+p.cod_inep+'</span></div>';
+
+    // matrículas por etapa, só as que existem
+    var et=[['Creche','mat_creche','tur_creche'],['Pré-escola','mat_pre','tur_pre'],
+            ['Fundamental I','mat_fund1','tur_fund1'],['Fundamental II','mat_fund2','tur_fund2'],
+            ['Ensino Médio','mat_medio','tur_medio']];
+    var linhas='';
+    et.forEach(function(e){
+        if(!p[e[1]])return;
+        linhas+='<div class="info-field"><span class="info-key">'+e[0]+'</span>'+
+                '<span class="info-val">'+n(p[e[1]])+' alunos · '+n(p[e[2]])+' turmas</span></div>';
+    });
+    if(linhas) html+='<div class="info-sub">Matrículas</div>'+linhas;
+    html+='<div class="info-field"><span class="info-key">Total</span><span class="info-val">'+
+          n(p.mat_total)+' alunos · '+n(p.tur_total)+' turmas</span></div>'+
+          '<div class="info-field"><span class="info-key">Docentes</span><span class="info-val">'+n(p.doc_total)+'</span></div>';
+    if(p.mat_fund2_integral||p.mat_medio_integral){
+        html+='<div class="info-field"><span class="info-key">Em tempo integral</span><span class="info-val">'+
+              n((p.mat_fund2_integral||0)+(p.mat_medio_integral||0))+' alunos</span></div>';
+    }
+
+    // infraestrutura declarada ao Censo Escolar
+    html+='<div class="info-sub">Infraestrutura <span style="color:var(--muted);font-weight:400">'+
+          p.n_infra+' de '+INFRA_CAMPOS.length+'</span></div><div class="infra-grid">';
+    INFRA_CAMPOS.forEach(function(c){
+        var tem=!!p[c[0]];
+        html+='<div class="infra-item'+(tem?' tem':'')+'">'+
+              '<span class="infra-mk">'+(tem?'&#10003;':'&#8211;')+'</span>'+c[1]+'</div>';
+    });
+    html+='</div>';
+    html+='<div class="info-field"><span class="info-key">ICEB</span><span class="info-val">'+(p.iceb||'—')+'</span></div>';
+    html+='<div class="info-nota">Dados declarados ao Censo Escolar 2025 (INEP). '+
+          'A acessibilidade não consta do arquivo de origem.</div>';
+    ic.innerHTML=html;
+}
+
+function makeEscolaHandler(f,l){
+    var p=f.properties;
+    l.on({
+        mouseover:function(e){
+            if(_travado)return;
+            if(e.target._icon)e.target._icon.style.filter='drop-shadow(0 0 4px rgba(255,239,0,0.9))';
+            showEscolaInfo(p);
+        },
+        mouseout:function(e){
+            if(_travado)return;
+            if(e.target._icon)e.target._icon.style.filter='';
+            clearInfoPanel();
+        },
+        click:function(e){showEscolaInfo(p);L.DomEvent.stopPropagation(e);},
+        popupopen:function(e){
+            _travado=false; _limpaTrav();
+            _travEl=e.target;
+            if(e.target._icon)e.target._icon.style.filter='drop-shadow(0 0 4px rgba(255,239,0,0.9))';
+            showEscolaInfo(p); _travado=true;
+        },
+        popupclose:function(){ _travado=false; _limpaTrav(); clearInfoPanel(); }
+    });
+    l.bindPopup(function(){
+        return '<div style="font-family:\'Outfit\',sans-serif;font-weight:700;color:#fff;font-size:12px;margin-bottom:4px">'+p.escola+'</div>'+
+               '<div style="font-size:10px;color:#7a9ab5">Rede '+p.rede+' · '+p.etapas+'</div>'+
+               '<div style="font-size:10px;color:#e8eaf0;margin-top:4px">'+Number(p.mat_total).toLocaleString('pt-BR')+' alunos</div>';
+    },{maxWidth:260});
+}
+
 function makeEquipHandler(key,label,titleField,tipoField,colorMap,campos){
     return function(f,l){
         var p=f.properties;
         l.on({
             mouseover:function(e){
+                if(_travado)return;
                 if(e.target._icon)e.target._icon.style.filter='drop-shadow(0 0 4px rgba(255,239,0,0.9))';
                 showEquipInfo(key,label,titleField,tipoField,colorMap,campos,p);
             },
             mouseout:function(e){
+                if(_travado)return;
                 if(e.target._icon)e.target._icon.style.filter='';
                 clearInfoPanel();
             },
-            click:function(e){showEquipInfo(key,label,titleField,tipoField,colorMap,campos,p);L.DomEvent.stopPropagation(e);}
+            click:function(e){showEquipInfo(key,label,titleField,tipoField,colorMap,campos,p);L.DomEvent.stopPropagation(e);},
+            popupopen:function(e){
+                _travado=false; _limpaTrav();
+                _travEl=e.target;
+                if(e.target._icon)e.target._icon.style.filter='drop-shadow(0 0 4px rgba(255,239,0,0.9))';
+                showEquipInfo(key,label,titleField,tipoField,colorMap,campos,p);
+                _travado=true;
+            },
+            popupclose:function(){ _travado=false; _limpaTrav(); clearInfoPanel(); }
         });
         var titulo=p[titleField]||p['Nome']||p['Equipamento']||p['Unidade']||'Equipamento';
         var end=p['Endereço']||p['Endereco']||'';
@@ -855,11 +1331,11 @@ function makeEquipHandler(key,label,titleField,tipoField,colorMap,campos){
         var tipoCor=colorMap?(colorMap[tipo]||'rgba(255,239,0,0.8)'):'rgba(255,239,0,0.8)';
         // Para SEMADS usa getSemadsInfo
         if(key==='semads'&&tipoField){var si=getSemadsInfo(tipo);tipoCor=si.color;tipo=si.label||tipo;}
-        var chipHtml=tipo?'<span style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;padding:3px 8px;border-radius:12px;font-size:9px;font-weight:700;font-family:Syne,sans-serif;background:'+tipoCor+';color:#01305a;border:1px solid rgba(0,0,0,0.15)">'+tipo+'</span>':'';
+        var chipHtml=tipo?'<span style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;padding:3px 8px;border-radius:12px;font-size:9px;font-weight:700;font-family:Outfit,sans-serif;background:'+tipoCor+';color:#0f2236;border:1px solid rgba(0,0,0,0.15)">'+tipo+'</span>':'';
         l.bindPopup(
-            '<div style="font-family:\'Syne\',sans-serif;font-weight:700;color:#fff;font-size:12px;margin-bottom:2px">'+titulo+'</div>'+
+            '<div style="font-family:\'Outfit\',sans-serif;font-weight:700;color:#fff;font-size:12px;margin-bottom:2px">'+titulo+'</div>'+
             chipHtml+
-            (end?'<div style="font-size:10px;color:#a8cce8;margin-top:5px">'+end+'</div>':''),
+            (end?'<div style="font-size:10px;color:#7a9ab5;margin-top:5px">'+end+'</div>':''),
             {maxWidth:260}
         );
     };
@@ -871,7 +1347,7 @@ function showEquipInfo(key,label,titleField,tipoField,colorMap,campos,p){
     var tipo=tipoField?p[tipoField]||'':'';
     var tipoCor=colorMap?(colorMap[tipo]||'rgba(255,239,0,0.8)'):'';
     if(key==='semads'&&tipoField){var si=getSemadsInfo(tipo);tipoCor=si.color;tipo=si.label||tipo;}
-    var chipHtml=tipo?'<div style="margin-bottom:8px"><span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;font-family:Syne,sans-serif;background:'+tipoCor+';color:#01305a;border:1px solid rgba(0,0,0,0.1)">'+tipo+'</span></div>':'';
+    var chipHtml=tipo?'<div style="margin-bottom:8px"><span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;font-family:Outfit,sans-serif;background:'+tipoCor+';color:#0f2236;border:1px solid rgba(0,0,0,0.1)">'+tipo+'</span></div>':'';
     var html='<div class="info-title">'+label+' <span class="tag">'+(tagMap[key]||'')+'</span></div>'+chipHtml;
     campos.forEach(function(campo){
         var v=p[campo];
@@ -966,9 +1442,9 @@ function doExport(fmt){
         ];
         var PAD=10,LH=16,legW=210,legH=PAD*2+14+LEG.length*LH;
         var lx=W-legW-10,ly=H-legH-40;
-        ctx.fillStyle='rgba(1,48,90,0.93)';rr(ctx,lx,ly,legW,legH,8);ctx.fill();
+        ctx.fillStyle='rgba(15,34,54,0.93)';rr(ctx,lx,ly,legW,legH,8);ctx.fill();
         ctx.strokeStyle='rgba(255,239,0,0.35)';ctx.lineWidth=1;rr(ctx,lx,ly,legW,legH,8);ctx.stroke();
-        ctx.fillStyle='#a8cce8';ctx.font='bold 10px Arial';ctx.textAlign='left';
+        ctx.fillStyle='#7a9ab5';ctx.font='bold 10px Arial';ctx.textAlign='left';
         ctx.fillText('Equipamentos Urbanos',lx+PAD,ly+PAD+10);
         LEG.forEach(function(row,i){
             var iy=ly+PAD+18+i*LH;
@@ -1001,10 +1477,17 @@ function doExport(fmt){
 }
 function dl(href,name){var a=document.createElement('a');a.href=href;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);}
 function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
-function north(ctx,cx,cy,s){ctx.save();ctx.fillStyle='rgba(1,48,90,0.88)';ctx.beginPath();ctx.arc(cx,cy,s+6,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(cx,cy-s);ctx.lineTo(cx+s*.35,cy+s*.5);ctx.lineTo(cx,cy+s*.15);ctx.closePath();ctx.fill();ctx.fillStyle='#a8cce8';ctx.beginPath();ctx.moveTo(cx,cy-s);ctx.lineTo(cx-s*.35,cy+s*.5);ctx.lineTo(cx,cy+s*.15);ctx.closePath();ctx.fill();ctx.fillStyle='#FFEF00';ctx.font='bold '+Math.round(s*.65)+'px Arial';ctx.textAlign='center';ctx.fillText('N',cx,cy-s-4);ctx.restore();}
+function north(ctx,cx,cy,s){ctx.save();ctx.fillStyle='rgba(15,34,54,0.88)';ctx.beginPath();ctx.arc(cx,cy,s+6,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(cx,cy-s);ctx.lineTo(cx+s*.35,cy+s*.5);ctx.lineTo(cx,cy+s*.15);ctx.closePath();ctx.fill();ctx.fillStyle='#7a9ab5';ctx.beginPath();ctx.moveTo(cx,cy-s);ctx.lineTo(cx-s*.35,cy+s*.5);ctx.lineTo(cx,cy+s*.15);ctx.closePath();ctx.fill();ctx.fillStyle='#FFEF00';ctx.font='bold '+Math.round(s*.65)+'px Arial';ctx.textAlign='center';ctx.fillText('N',cx,cy-s-4);ctx.restore();}
 
 
 // ── LEGENDA COLAPSÁVEL ───────────────────────────────────────
+function toggleSub(id, cabEl){
+    var body=document.getElementById(id);
+    if(!body)return;
+    var aberto=body.classList.contains('open');
+    body.classList.toggle('open',!aberto);
+    cabEl.classList.toggle('open',!aberto);
+}
 function toggleLegendGroup(id, titleEl){
     var body = document.getElementById(id);
     var isOpen = body.classList.contains('open');
