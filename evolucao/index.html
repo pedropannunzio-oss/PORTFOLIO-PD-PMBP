@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+<title>Evolução da Ocupação no Território · Bragança Paulista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="js/leaflet.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;}
+:root{--blue:#0175bc;--accent:#FFEF00;--bg:#0d1b2a;--bg-panel:#0f2236;--bg-panel2:#132b42;
+  --bg-card:#1a3550;--border:rgba(255,255,255,.10);--text:#e8eaf0;--muted:#7a9ab5;
+  --header-h:52px;--sidebar-w:318px;--rw:286px;}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Raleway',sans-serif;background:var(--bg);color:var(--text);}
+#map{position:fixed!important;top:var(--header-h)!important;left:0;right:0;bottom:0;width:auto!important;height:auto!important;}
+.leaflet-top,.leaflet-bottom{display:none!important;}
+
+#hd{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--blue);
+  border-bottom:3px solid var(--accent);display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+#hd .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+#hd h1{font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin:0;}
+#hd h1 span{color:var(--accent);}
+#hd .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;margin:0;}
+#hd .sep{flex:1;}
+.badge{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
+  border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+#back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);color:rgba(255,255,255,.8);
+  font-size:12px;padding:6px 10px;border-radius:6px;text-decoration:none;}
+#back:hover{color:var(--accent);}
+.hbtn{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);color:var(--accent);
+  font-family:'Raleway',sans-serif;font-size:12px;font-weight:500;padding:6px 12px;border-radius:6px;cursor:pointer;}
+.hbtn:hover{background:rgba(255,239,0,.18);}
+
+.pane{position:fixed;top:var(--header-h);height:calc(100vh - var(--header-h));
+  background:var(--bg-panel);z-index:8000;display:flex;flex-direction:column;
+  transition:transform .25s;overflow:hidden;}
+#sb{left:0;width:var(--sidebar-w);border-right:1px solid var(--border);}
+#sb.hidden{transform:translateX(-100%);}
+#rb{right:0;width:var(--rw);border-left:1px solid var(--border);}
+#rb.hidden{transform:translateX(100%);}
+.pane-h{padding:12px 15px 9px;border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.pane-h span{font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--accent);
+  letter-spacing:.07em;text-transform:uppercase;}
+.pane-b{flex:1;overflow-y:auto;min-height:0;}
+.pane-b::-webkit-scrollbar{width:5px;}
+.pane-b::-webkit-scrollbar-track{background:transparent;}
+.pane-b::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px;}
+/* cartão da unidade sob o cursor */
+.sel-card{background:rgba(255,239,0,.07);border-left:2px solid var(--accent);
+  border-radius:0 5px 5px 0;padding:9px 11px;margin-bottom:13px;}
+.sel-n{font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px;}
+.sel-g{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;}
+.sel-f{display:flex;flex-direction:column;}
+.sel-k{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.sel-v{font-size:13px;font-weight:700;color:var(--accent);font-family:'Outfit',sans-serif;}
+.sel-d{font-size:10px;margin-top:7px;font-weight:600;}
+.sel-vazio{font-size:11px;color:var(--muted);font-style:italic;line-height:1.5;
+  padding:9px 11px;border-left:2px solid var(--border);margin-bottom:13px;}
+/* escala com indicador de posição */
+.scale-wrap{position:relative;padding-top:17px;}
+.scale-ind{position:absolute;top:1px;transform:translateX(-50%);transition:left .22s ease;}
+.scale-ind i{display:block;width:0;height:0;margin:0 auto;border-left:5px solid transparent;
+  border-right:5px solid transparent;border-top:6px solid var(--accent);}
+.scale-ind b{display:block;position:absolute;top:-15px;left:50%;transform:translateX(-50%);
+  font-family:'Outfit',sans-serif;font-size:9.5px;font-weight:700;color:#000;white-space:nowrap;
+  background:var(--accent);padding:1px 6px;border-radius:3px;}
+.scale-line{position:absolute;top:17px;width:2px;height:15px;background:var(--accent);
+  transform:translateX(-50%);box-shadow:0 0 5px rgba(255,239,0,.85);transition:left .22s ease;}
+.lgd-lab{display:flex;justify-content:space-between;font-family:'Outfit',sans-serif;
+  font-size:9px;font-weight:600;color:var(--muted);margin-top:5px;}
+@media(max-width:1100px){#rb{display:none;}}
+.sec{border-bottom:1px solid var(--border);flex-shrink:0;padding-bottom:11px;}
+.lbl{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--muted);
+  letter-spacing:.08em;text-transform:uppercase;padding:13px 16px 8px;display:block;}
+.hint{font-size:10.5px;color:var(--muted);line-height:1.5;padding:0 16px;font-style:italic;}
+
+.esc{display:flex;margin:0 16px 6px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.esc button{flex:1;background:var(--bg-card);border:none;color:var(--muted);font-family:'Raleway',sans-serif;
+  font-size:11.5px;font-weight:600;padding:9px 6px;cursor:pointer;transition:all .15s;line-height:1.25;}
+.esc button small{display:block;font-size:9.5px;font-weight:400;opacity:.75;margin-top:2px;}
+.esc button.on{background:rgba(255,239,0,.14);color:var(--accent);}
+
+/* pirâmide etária */
+.pir-h{display:flex;justify-content:space-between;font-family:'Outfit',sans-serif;
+  font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;}
+.pir-row{display:flex;align-items:center;gap:5px;margin-bottom:3px;}
+.pir-l,.pir-r{flex:1;display:flex;align-items:center;gap:4px;min-width:0;}
+.pir-l{flex-direction:row-reverse;}
+.pir-c{width:38px;flex-shrink:0;text-align:center;font-size:9px;color:var(--muted);
+  font-variant-numeric:tabular-nums;}
+.pir-b{height:11px;border-radius:2px;min-width:1px;}
+.pir-bf{background:#e879a6;}
+.pir-bm{background:#5b9bd5;}
+.pir-v{font-size:9px;color:var(--text);font-variant-numeric:tabular-nums;flex-shrink:0;}
+.tm{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 16px;}
+.tm button{background:var(--bg-card);border:1px solid var(--border);color:var(--muted);
+  font-family:'Raleway',sans-serif;font-size:11px;padding:8px 5px;border-radius:7px;cursor:pointer;transition:all .15s;}
+.tm button.on{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,.08);}
+#tema{width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--text);
+  font-family:'Raleway',sans-serif;font-size:11.5px;padding:7px 9px;border-radius:6px;cursor:pointer;}
+
+.ltr{display:flex;align-items:center;gap:10px;padding:6px 16px;}
+.ltr label:not(.tg){flex:1;font-size:12px;color:var(--text);cursor:pointer;}
+.tg{position:relative;width:32px;height:18px;flex:0 0 32px;}
+.tg input{opacity:0;width:0;height:0;position:absolute;}
+.trk{position:absolute;inset:0;background:var(--bg-card);border-radius:9px;cursor:pointer;transition:background .2s;border:1px solid var(--border);}
+.trk::after{content:'';position:absolute;left:2px;top:2px;width:12px;height:12px;background:var(--muted);border-radius:50%;transition:all .2s;}
+.tg input:checked + .trk{background:rgba(255,239,0,.15);border-color:var(--accent);}
+.tg input:checked + .trk::after{background:var(--accent);left:16px;}
+.opr{display:flex;align-items:center;gap:9px;padding:2px 16px 4px 34px;}
+.opr label{font-size:10px;color:var(--muted);width:58px;flex-shrink:0;}
+.opr input{flex:1;height:3px;accent-color:var(--accent);cursor:pointer;}
+.opr span{font-size:10px;color:var(--muted);width:30px;text-align:right;}
+
+#lg{padding:12px 14px;}
+.g{margin-bottom:15px;}
+.gt{font-family:'Outfit',sans-serif;font-size:9.5px;font-weight:700;color:var(--muted);
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px;}
+.li{display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer;padding:2px 4px;border-radius:4px;transition:opacity .15s;}
+.li:hover{background:rgba(255,255,255,.06);}
+.li.off{opacity:.32;}
+.li.off .sw{filter:grayscale(1);}
+.sw{width:17px;height:12px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
+.li span{font-size:11px;color:var(--text);line-height:1.3;flex:1;}
+.li .cnt{font-size:9.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.note{font-size:10px;color:var(--muted);line-height:1.5;padding:5px 3px 0;font-style:italic;}
+.rk{display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:4px;font-size:11px;cursor:pointer;}
+.rk:hover{background:rgba(255,255,255,.06);}
+.rk .n{width:14px;color:var(--muted);font-size:10px;text-align:right;flex-shrink:0;}
+.rk .m{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rk .p{font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent);flex-shrink:0;}
+
+.bmr{display:flex;gap:7px;padding:0 16px;}
+.bmb{flex:1;background:var(--bg-card);border:1px solid var(--border);color:var(--muted);
+  font-size:11px;padding:6px 4px;border-radius:6px;cursor:pointer;text-align:center;font-family:'Raleway',sans-serif;}
+.bmb.on{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,.08);}
+
+.leaflet-popup-content-wrapper{background:var(--bg-panel2)!important;border:1px solid var(--border)!important;
+  border-top:3px solid var(--accent)!important;border-radius:10px!important;
+  box-shadow:0 8px 32px rgba(0,0,0,.5)!important;width:330px!important;}
+.leaflet-popup-tip{background:var(--bg-panel2)!important;}
+.leaflet-popup-content{color:var(--text)!important;font-family:'Raleway',sans-serif!important;font-size:12px!important;
+  margin:0!important;padding:14px 16px!important;max-height:62vh!important;overflow-y:auto!important;overflow-x:hidden!important;}
+.leaflet-popup-close-button{color:var(--muted)!important;}
+.ph{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.15;}
+.ps{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:10px;}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:9px 0 4px;}
+.pf{display:flex;flex-direction:column;}
+.pk{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.pv{font-size:14px;font-weight:700;color:var(--accent);font-family:'Outfit',sans-serif;}
+.chart{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);}
+.chart-t{font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.bar-row{margin-bottom:8px;}
+.bar-lb{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px;}
+.bar-lb .n{font-size:11px;color:var(--text);}
+.bar-lb .v{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;}
+.bar-bg{height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
+.bar-fl{height:100%;border-radius:4px;}
+.bar-sub{font-size:9.5px;color:var(--muted);margin-top:2px;}
+.pt{width:100%;border-collapse:collapse;margin-top:9px;}
+.pt th{text-align:left;padding:5px 8px 5px 0;font-size:10px;font-weight:600;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid rgba(255,255,255,.06);width:58%;}
+.pt td{padding:5px 0 5px 8px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.06);
+  text-align:right;font-variant-numeric:tabular-nums;}
+.pt tr:last-child th,.pt tr:last-child td{border-bottom:none;}
+.tag{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;margin-top:9px;}
+.pexp{font-size:10.5px;color:var(--muted);line-height:1.5;margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.08);}
+
+
+/* barra de legenda contínua */
+.lgd-wrap{position:relative;margin:5px 0 3px;}
+.lgd-bar{height:14px;border-radius:4px;width:100%;position:relative;cursor:crosshair;
+  border:1px solid rgba(255,255,255,.12);}
+.lgd-ind{position:absolute;top:-5px;width:2px;height:24px;background:rgba(255,239,0,.95);
+  border-radius:1px;pointer-events:none;display:none;box-shadow:0 0 4px rgba(255,239,0,.5);transform:translateX(-50%);}
+.lgd-tip{position:absolute;bottom:20px;left:0;transform:translateX(-50%);background:var(--bg-panel2);
+  border:1px solid rgba(255,239,0,.5);border-radius:3px;padding:2px 6px;font-size:9px;color:var(--accent);
+  white-space:nowrap;pointer-events:none;font-family:'Outfit',sans-serif;font-weight:700;display:none;z-index:5;}
+.lgd-lbl{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);
+  margin-top:3px;font-family:'Outfit',sans-serif;font-weight:600;}
+
+/* barra de rolagem no padrão do restante */
+.leaflet-popup-content::-webkit-scrollbar{width:5px;}
+.leaflet-popup-content::-webkit-scrollbar-track{background:transparent;}
+.leaflet-popup-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px;}
+.leaflet-popup-content::-webkit-scrollbar-thumb:hover{background:rgba(255,239,0,.4);}
+.leaflet-popup-content{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent;}
+
+
+#md{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:99000;align-items:center;justify-content:center;}
+#md.open{display:flex;}
+#mb{background:var(--bg-panel2);border:1px solid var(--border);border-radius:14px;padding:26px 30px;width:340px;}
+#mt{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;}
+#mdesc{font-size:12px;color:var(--muted);margin:0 0 18px;}
+#mbtn{display:flex;gap:10px;margin-bottom:14px;}
+#mst{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:10px;text-align:center;}
+#mcl{width:100%;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:12px;padding:8px;cursor:pointer;font-family:'Raleway',sans-serif;}
+.eb{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:12px;cursor:pointer;font-family:'Raleway',sans-serif;}
+.eb:hover{border-color:var(--accent);color:var(--accent);}
+
+#ob{position:fixed;inset:0;z-index:99999;background:rgba(1,48,90,.93);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;}
+#ob.visible{display:flex;}
+#obb{background:var(--bg-panel2);border:1px solid var(--border);border-radius:16px;padding:30px;max-width:460px;width:92%;}
+#obi{font-size:32px;margin-bottom:10px;}
+#obt{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:10px;}
+#obd{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;}
+#obd b{color:var(--text);}
+#obl{background:rgba(255,255,255,.04);border-radius:8px;padding:11px 13px;margin-bottom:18px;font-size:12px;line-height:1.7;color:var(--muted);}
+#obbt{width:100%;background:var(--accent);color:#000;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;padding:12px;border:none;border-radius:8px;cursor:pointer;}
+
+/* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
+#hd h1, #header h1, #pd-header h1 {
+  font-family:'Outfit',sans-serif; font-weight:700; font-size:14px; color:#fff;
+  text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
+}
+#hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
+#hd .sub, #header .sub, #pd-header .sub,
+#hd .subtitle, #header .subtitle, #pd-header .subtitle {
+  font-size:11px; color:rgba(255,255,255,.65); font-weight:300;
+  white-space:nowrap; margin:0; line-height:1.3;
+}
+#hd .badge, #header .badge, #pd-header .badge,
+#hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
+  font-family:'Outfit',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
+  border:1px solid rgba(255,239,0,.4); background:transparent;
+  padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
+}
+
+/* ── tipografia e cor: textos longos e valores numéricos ──────────────── */
+/* Prosa explicativa em branco: popups, onboarding e notas de rodapé de
+   painel. Cabeçalhos e apontamentos de legenda mantêm o azul claro. */
+.pexp, #obd, .nota, .sel-vazio, .pc-note, #pnl-hint, .bar-sub-long {
+  color: var(--text) !important;
+}
+/* Valores numéricos em legenda: cor fixa de alta legibilidade.
+   A cor da categoria fica no quadradinho e na barra, nunca no número. */
+.bar-lb .v, .rk .p, .li .cnt, .sel-v, .pt td, .pc-v {
+  color: var(--text) !important;
+  font-variant-numeric: tabular-nums;
+}
+</style>
+</head>
+<body>
+
+<div id="hd">
+  <div class="dot"></div>
+  <div>
+    <h1>Evolução da Ocupação <span>no Território</span></h1>
+    <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
+  </div>
+  <div class="sep"></div>
+  <span class="badge">MAPBIOMAS · 1985–2024</span>
+  <a id="back" href="../portal.html">&#8592; Portal</a>
+  <button class="hbtn" onclick="abrirExport()">&#8595; Exportar</button>
+  <button class="hbtn" onclick="togglePainel()">&#9776; Painel</button>
+  <button class="hbtn" onclick="toggleLegenda()">&#9636; Legenda</button>
+</div>
+
+<div id="map"></div>
+
+<div id="sb" class="pane">
+  <div class="sec">
+    <span class="lbl">Modo de leitura</span>
+    <div class="esc">
+      <button id="e-periodo" class="on" onclick="setModo('periodo')">Período<small>idade do tecido</small></button>
+      <button id="e-mancha" onclick="setModo('mancha')">Mancha<small>por ano</small></button>
+    </div>
+    <div id="bx-ano" style="display:none;padding:10px 16px 0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+        <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Ano</span>
+        <span id="lb-ano" style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--accent)">2024</span>
+      </div>
+      <input type="range" id="sl-ano" min="0" max="8" step="1" value="8"
+             oninput="slAno(this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer">
+    </div>
+    <p class="hint" id="esc-hint">Cada porção recebe a cor do período em que passou a ser urbana. Mostra a idade do tecido urbano.</p>
+  </div>
+
+  <div class="sec">
+    <span class="lbl">Camadas</span>
+    <div class="ltr"><label for="k-vias">Sistema viário</label>
+      <label class="tg"><input type="checkbox" id="k-dens" checked onchange="cam('dens',this.checked)"><span class="trk"></span></label></div>
+    <div class="opr"><label>Opacidade</label>
+      <input type="range" min="0" max="1" step=".05" value=".82" oninput="op(this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'"><span>82%</span></div>
+    <div class="ltr"><label for="k-lim">Limite municipal</label>
+      <label class="tg"><input type="checkbox" id="k-lim" checked onchange="cam('lim',this.checked)"><span class="trk"></span></label></div>
+    <div class="ltr"><label for="k-vias">Sistema viário</label>
+      <label class="tg"><input type="checkbox" id="k-vias" checked onchange="cam('vias',this.checked)"><span class="trk"></span></label></div>
+    <div class="ltr"><label for="k-rot">Nomes dos bairros</label>
+      <label class="tg"><input type="checkbox" id="k-rot" onchange="cam('rot',this.checked)"><span class="trk"></span></label></div>
+  </div>
+
+  <div class="sec">
+    <span class="lbl">Mapa base</span>
+    <div class="bmr">
+      <button class="bmb on" onclick="bm('dark',this)">Escuro</button>
+      <button class="bmb" onclick="bm('osm',this)">Mapa</button>
+      <button class="bmb" onclick="bm('sat',this)">Satélite</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="rb" class="pane">
+  <div class="pane-h"><span id="rb-t">Legenda</span></div>
+  <div class="pane-b"><div id="lg"></div></div>
+</div>
+
+<div id="md"><div id="mb">
+  <div id="mt">&#8595; Exportar mapa</div>
+  <p id="mdesc">O mapa é capturado como está na tela, com a legenda do indicador selecionado.</p>
+  <div id="mbtn"><button class="eb" onclick="exportar('jpeg')">Imagem JPEG</button>
+    <button class="eb" onclick="exportar('pdf')">PDF</button></div>
+  <div id="mst"></div><button id="mcl" onclick="fecharExport()">Cancelar</button>
+</div></div>
+
+<div id="ob"><div id="obb">
+  <div id="obi">&#127961;</div>
+  <div id="obt">Evolução da Ocupação</div>
+  <div id="obd">A mancha urbana de Bragança passou de <b>12,66 km² em 1985</b> para <b>48,82 km² em 2024</b> — crescimento de <b>286%</b>, ou 0,93 km² por ano. Fonte: MapBiomas, classe Área Urbanizada.</div>
+  <div id="obl">
+    <b style="color:#e8eaf0">Período de urbanização</b> — a idade de cada porção do tecido<br>
+    <b style="color:#e8eaf0">Mancha por ano</b> — a superfície urbanizada em cada recorte
+  </div>
+  <div id="obd">Os fragmentos passaram de <b>28 para 160</b> no período, e a concentração no núcleo principal caiu de 81,5% para 60,1%: a cidade cresceu <b>mais por dispersão do que por expansão contínua</b>.</div>
+  <button id="obbt" onclick="fecharOb()">Explorar o mapa</button>
+</div></div>
+
+<script src="data/json_limite.js"></script>
+<script src="data/json_periodo.js"></script>
+<script src="data/json_mancha.js"></script>
+<script src="data/json_vias.js"></script>
+
+<script>
+(function(){
+var map=L.map('map',{zoomControl:false,maxZoom:18,minZoom:10})
+  .fitBounds([[-23.05,-46.62],[-22.85,-46.42]]);
+L.control.zoom({position:'topright'}).addTo(map);
+
+var bms={
+ dark:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:20,maxNativeZoom:16,crossOrigin:'anonymous'}),
+ osm:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:20,maxNativeZoom:17,crossOrigin:'anonymous'}),
+ sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri, Maxar, Earthstar Geographics',maxZoom:20,maxNativeZoom:17,crossOrigin:'anonymous'})};
+bms.dark.addTo(map);
+['manch','vias','lim'].forEach(function(p,i){map.createPane('p_'+p);map.getPane('p_'+p).style.zIndex=400+i;});
+map.getPane('p_vias').style.pointerEvents='none';
+
+// ── períodos ──────────────────────────────────────────────────────────────
+var PER=[['Até 1985',0,'#4a148c'],['1986–1990',1,'#6a1b9a'],['1991–1995',2,'#8e24aa'],
+         ['1996–2000',3,'#c2185b'],['2001–2005',4,'#e53935'],['2006–2010',5,'#f4511e'],
+         ['2011–2015',6,'#fb8c00'],['2016–2020',7,'#fdd835'],['2021–2024',8,'#d4e157']];
+var AREA={'Até 1985':12.66,'1986–1990':2.87,'1991–1995':3.40,'1996–2000':5.94,
+          '2001–2005':3.06,'2006–2010':4.57,'2011–2015':7.37,'2016–2020':5.16,'2021–2024':3.15};
+var ANOS=[1985,1990,1995,2000,2005,2010,2015,2020,2024];
+var TOT={1985:12.66,1990:15.59,1995:19.06,2000:25.05,2005:28.21,2010:32.85,
+         2015:40.30,2020:45.52,2024:48.82};
+var NPOL={1985:28,1990:27,1995:35,2000:64,2005:67,2010:94,2015:126,2020:152,2024:160};
+var PCTNUC={1985:81.5,1990:80.5,1995:76.5,2000:69.2,2005:81.4,2010:76.0,
+            2015:67.8,2020:62.9,2024:60.1};
+
+var modo='periodo', anoSel=2024, OP=0.85, FILTRO=null, SEL=null;
+
+function nf(v,d){return v==null||isNaN(v)?'—':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+function corPer(p){for(var i=0;i<PER.length;i++)if(PER[i][0]===p)return PER[i][2];return '#78909c';}
+function corAno(a){var i=ANOS.indexOf(a);return i<0?'#78909c':PER[i][2];}
+function ocultoP(f){return FILTRO && !FILTRO.has(f.properties.periodo);}
+function estP(f){
+  if(ocultoP(f))return{fillOpacity:0,opacity:0,weight:0};
+  return{color:'#0d1b2a',weight:.25,opacity:.4,fill:true,
+    fillColor:corPer(f.properties.periodo),fillOpacity:OP};}
+function estM(f){
+  var a=f.properties.ano;
+  if(a!==anoSel)return{fillOpacity:0,opacity:0,weight:0};
+  return{color:'#0d1b2a',weight:.3,opacity:.5,fill:true,fillColor:corAno(a),fillOpacity:OP};}
+function barra(lb,val,pct,c,sub){
+  return '<div class="bar-row"><div class="bar-lb"><span class="n">'+lb+'</span>'+
+   '<span class="v">'+val+'</span></div>'+
+   '<div class="bar-bg"><div class="bar-fl" style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+c+'"></div></div>'+
+   (sub?'<div class="bar-sub">'+sub+'</div>':'')+'</div>';}
+
+// ── popups ────────────────────────────────────────────────────────────────
+function popPeriodo(p){
+  var c=corPer(p.periodo);
+  var t='<div class="ph">'+p.periodo+'</div><div class="ps">Período de urbanização</div>';
+  t+='<div class="pgrid">'+
+     '<div class="pf"><span class="pk">Área desta porção</span><span class="pv" style="color:'+c+'">'+nf(p.area_ha,2)+' ha</span></div>'+
+     '<div class="pf"><span class="pk">Idade do tecido</span><span class="pv">'+
+       (p.idade_anos===0?'até 2024':nf(p.idade_anos)+' anos')+'</span></div></div>';
+  t+='<div class="chart"><div class="chart-t">Este período no município</div>';
+  var km=AREA[p.periodo]||0, mx=12.66;
+  t+=barra('Área urbanizada',nf(km,2)+' km²',km/mx*100,c,
+     nf(km/48.82*100,1)+'% da mancha de 2024');
+  t+='</div>';
+  t+='<div class="pexp">Porção que passou a ser classificada como área urbanizada neste período e '+
+     'não constava do recorte anterior. Fonte: MapBiomas, classe 24.</div>';
+  return t;}
+
+function popMancha(p){
+  var c=corAno(p.ano);
+  var t='<div class="ph">'+p.ano+'</div><div class="ps">Mancha urbana no ano</div>';
+  t+='<div class="pgrid">'+
+     '<div class="pf"><span class="pk">Esta porção</span><span class="pv" style="color:'+c+'">'+nf(p.area_ha,2)+' ha</span></div>'+
+     '<div class="pf"><span class="pk">Total no ano</span><span class="pv">'+nf(TOT[p.ano],2)+' km²</span></div></div>';
+  t+='<div class="chart"><div class="chart-t">Mancha urbana em '+p.ano+'</div>';
+  t+=barra('Área total',nf(TOT[p.ano],2)+' km²',TOT[p.ano]/48.82*100,c,
+     nf(TOT[p.ano]/512.5*100,1)+'% do território municipal');
+  t+=barra('Fragmentos',nf(NPOL[p.ano]),NPOL[p.ano]/160*100,'#94a3b8','em 1985 eram 28');
+  t+=barra('Concentração no núcleo',nf(PCTNUC[p.ano],1)+'%',PCTNUC[p.ano],'#60a5fa','em 1985 era 81,5%');
+  t+='</div>';
+  t+='<div class="pexp">Superfície classificada como área urbanizada no recorte de '+p.ano+
+     '. Resolução de 27 m por pixel.</div>';
+  return t;}
+
+// ── camadas ───────────────────────────────────────────────────────────────
+var Llim=L.geoJson(json_limite,{pane:'p_lim',interactive:false,
+  style:{color:'#FFEF00',weight:2.2,opacity:.9,fill:false}});
+var VIA={'Regional':{c:'#ffffff',w:2.2,o:.72},'Arterial':{c:'#f0f6fb',w:1.7,o:.62},
+  'Arterial Secundária':{c:'#d8e6f2',w:1.2,o:.52},'Coletora':{c:'#b9cddd',w:.8,o:.40},
+  'Local':{c:'#8fa6b8',w:.45,o:.26}};
+var Lvias=L.geoJson(typeof json_vias!=='undefined'?json_vias:{type:'FeatureCollection',features:[]},
+  {pane:'p_vias',interactive:false,
+   style:function(f){var v=VIA[f.properties.hierarquia]||VIA['Local'];
+     return{color:v.c,weight:v.w,opacity:v.o,interactive:false};}});
+var Lper=L.geoJson(json_periodo,{pane:'p_manch',style:estP,
+  onEachFeature:function(f,l){l.bindPopup(function(){return popPeriodo(f.properties);},{maxHeight:400});}});
+var Lman=L.geoJson(json_mancha,{pane:'p_manch',style:estM,
+  onEachFeature:function(f,l){l.bindPopup(function(){return popMancha(f.properties);},{maxHeight:400});}});
+Lper.addTo(map); Lvias.addTo(map); Llim.addTo(map);
+var CAM={vias:Lvias,lim:Llim};
+function ativa(){return modo==='periodo'?Lper:Lman;}
+
+var _destacado=null;
+// Enquanto um popup está aberto, a legenda fica travada naquela feição.
+var _travado=false;
+function limparDestaque(){
+  if(_travado)return;
+  if(!_destacado)return;
+  try{_destacado.setStyle((modo==='periodo'?estP:estM)(_destacado.feature));}catch(e){}
+  _destacado=null;}
+function ligarHover(gl,fnEst){
+  gl.eachLayer(function(l){
+    function marcar(){
+      if(_destacado!==l){limparDestaque();_destacado=l;}
+      SEL=l.feature.properties;
+      l.setStyle({weight:2,color:'#FFEF00',opacity:1});
+      if(l.bringToFront)l.bringToFront();
+      legenda();}
+    l.on('mouseover',function(){
+      if(_travado)return;                       // popup aberto: preserva a legenda
+      if(modo==='periodo'&&ocultoP(l.feature))return;
+      if(modo==='mancha'&&l.feature.properties.ano!==anoSel)return;
+      marcar();});
+    l.on('mouseout',function(){
+      if(_travado)return;
+      if(_destacado===l){limparDestaque();SEL=null;legenda();}});
+    l.on('popupopen',function(){
+      _travado=false; limparDestaque(); marcar(); _travado=true;});
+    l.on('popupclose',function(){
+      _travado=false; limparDestaque(); SEL=null; legenda();});});}
+ligarHover(Lper); ligarHover(Lman);
+['mouseout','dragstart','zoomstart','movestart'].forEach(function(ev){
+  map.on(ev,function(){
+    if(_travado)return;
+    if(_destacado){limparDestaque();SEL=null;legenda();}});});
+map.on('popupclose',function(){
+  _travado=false; limparDestaque(); SEL=null; legenda();});
+
+// ── legenda ───────────────────────────────────────────────────────────────
+function legenda(){
+  var h='';
+  if(SEL){
+    var c = modo==='periodo'?corPer(SEL.periodo):corAno(SEL.ano);
+    h+='<div class="sel-card" style="border-left-color:'+c+'"><div class="sel-n">'+
+       (modo==='periodo'?SEL.periodo:'Mancha de '+SEL.ano)+'</div>'+
+       '<div class="sel-g">'+
+       '<div class="sel-f"><span class="sel-k">Área</span><span class="sel-v">'+nf(SEL.area_ha,2)+' ha</span></div>'+
+       '<div class="sel-f"><span class="sel-k">'+(modo==='periodo'?'Idade':'Total no ano')+'</span>'+
+         '<span class="sel-v" style="font-size:11.5px">'+
+         (modo==='periodo'?(SEL.idade_anos===0?'recente':nf(SEL.idade_anos)+' anos'):nf(TOT[SEL.ano],1)+' km²')+
+         '</span></div></div></div>';
+  }else h+='<div class="sel-vazio">Passe o cursor sobre uma área para ver quando ela foi urbanizada.</div>';
+
+  if(modo==='periodo'){
+    h+='<div class="g"><div class="gt">Período de urbanização</div>';
+    PER.forEach(function(x){
+      var on=!FILTRO||FILTRO.has(x[0]);
+      h+='<div class="li'+(on?'':' off')+'" onclick="filtrar(\''+x[0]+'\')">'+
+         '<div class="sw" style="background:'+x[2]+'"></div><span>'+x[0]+'</span>'+
+         '<span class="cnt">'+nf(AREA[x[0]],2)+' km²</span></div>';});
+    h+='<div class="note">Clique num período para ocultá-lo. A área é o acréscimo do período.</div></div>';
+
+    h+='<div class="g"><div class="gt">Acréscimo por período</div>';
+    PER.forEach(function(x){
+      var km=AREA[x[0]];
+      h+='<div class="bar-row"><div class="bar-lb"><span class="n" style="font-size:10px">'+x[0]+'</span>'+
+         '<span class="v" style="font-size:10.5px">'+nf(km,2)+'</span></div>'+
+         '<div class="bar-bg" style="height:5px"><div class="bar-fl" style="width:'+(km/12.66*100)+'%;background:'+x[2]+'"></div></div></div>';});
+    h+='<div class="note">Quilômetros quadrados acrescidos em cada período.</div></div>';
+  }else{
+    h+='<div class="g"><div class="gt">Mancha urbana acumulada</div>';
+    ANOS.forEach(function(a,i){
+      var on=a===anoSel;
+      h+='<div class="li'+(on?'':' off')+'" onclick="setAno('+a+')">'+
+         '<div class="sw" style="background:'+PER[i][2]+'"></div><span>'+a+'</span>'+
+         '<span class="cnt">'+nf(TOT[a],2)+' km²</span></div>';});
+    h+='<div class="note">Clique num ano para exibi-lo. A área é o total acumulado.</div></div>';
+
+    h+='<div class="g"><div class="gt">Evolução da área urbanizada</div>';
+    ANOS.forEach(function(a,i){
+      h+='<div class="bar-row"><div class="bar-lb"><span class="n" style="font-size:10px">'+a+'</span>'+
+         '<span class="v" style="font-size:10.5px">'+nf(TOT[a],1)+' km²</span></div>'+
+         '<div class="bar-bg" style="height:5px"><div class="bar-fl" style="width:'+(TOT[a]/48.82*100)+'%;background:'+PER[i][2]+'"></div></div></div>';});
+    h+='</div>';
+  }
+
+  h+='<div class="g"><div class="gt">Fragmentação do tecido</div>';
+  [[1985,28,81.5],[2000,64,69.2],[2010,94,76.0],[2024,160,60.1]].forEach(function(x){
+    h+='<div class="bar-row"><div class="bar-lb"><span class="n" style="font-size:10px">'+x[0]+' — '+x[1]+' fragmentos</span>'+
+       '<span class="v" style="font-size:10.5px">'+nf(x[2],1)+'%</span></div>'+
+       '<div class="bar-bg" style="height:5px"><div class="bar-fl" style="width:'+x[2]+'%;background:#60a5fa"></div></div></div>';});
+  h+='<div class="note">Percentual da mancha concentrado no núcleo principal. Quanto menor, mais dispersa a cidade.</div></div>';
+
+  h+='<div class="g"><div class="gt">Síntese municipal</div><table class="pt" style="margin-top:0">'+
+     '<tr><th>Mancha em 1985</th><td>12,66 km²</td></tr>'+
+     '<tr><th>Mancha em 2024</th><td>48,82 km²</td></tr>'+
+     '<tr><th>Crescimento</th><td>+286%</td></tr>'+
+     '<tr><th>Média anual</th><td>0,93 km²/ano</td></tr>'+
+     '<tr><th>Território municipal</th><td>512,5 km²</td></tr>'+
+     '<tr><th>Urbanizado em 2024</th><td>9,5% do território</td></tr></table></div>';
+
+  h+='<div class="g"><div class="note" style="font-style:normal;background:rgba(255,239,0,.07);'+
+     'border-left:2px solid var(--accent);padding:9px 10px;border-radius:0 5px 5px 0">'+
+     '<b style="color:var(--accent)">O que este mapa mede</b><br>Superfície classificada como '+
+     '<b>área urbanizada</b> pelo MapBiomas, a 27 m por pixel. Capta a ocupação de fato, '+
+     'inclusive a informal, mas não distingue tipologia nem informa a data de aprovação do loteamento.</div></div>';
+
+  if(document.getElementById('k-vias').checked)
+    h+='<div class="g"><div class="gt">Hierarquia viária</div>'+
+       [['Regional',2.6],['Arterial',2.1],['Arterial Secundária',1.6],['Coletora',1.2],['Local',1]].map(function(x){
+         var v=VIA[x[0]];
+         return '<div class="li"><div class="sw" style="height:'+x[1]+'px;background:'+v.c+';border:none;opacity:'+
+           Math.max(.45,v.o)+'"></div><span>'+x[0]+'</span></div>';}).join('')+
+       '<div class="note">Camada de referência. Eixo de logradouro da base municipal.</div></div>';
+
+  document.getElementById('lg').innerHTML=h;}
+
+// ── controles ─────────────────────────────────────────────────────────────
+window.setModo=function(m){
+  if(m===modo)return;
+  limparDestaque(); SEL=null;
+  map.removeLayer(ativa());
+  modo=m; FILTRO=null;
+  document.getElementById('e-periodo').classList.toggle('on',m==='periodo');
+  document.getElementById('e-mancha').classList.toggle('on',m==='mancha');
+  document.getElementById('esc-hint').textContent = m==='periodo'
+    ? 'Cada porção recebe a cor do período em que passou a ser urbana. Mostra a idade do tecido urbano.'
+    : 'Mancha urbana acumulada em cada recorte. Use a legenda para alternar entre os anos.';
+  document.getElementById('bx-ano').style.display = m==='mancha' ? '' : 'none';
+  ativa().addTo(map);
+  ativa().setStyle(m==='periodo'?estP:estM);
+  legenda();};
+window.setAno=function(a){
+  anoSel=a; limparDestaque(); SEL=null;
+  document.getElementById('sl-ano').value=ANOS.indexOf(a);
+  document.getElementById('lb-ano').textContent=a;
+  Lman.setStyle(estM); legenda();};
+window.slAno=function(i){setAno(ANOS[parseInt(i)]);};
+window.filtrar=function(p){
+  if(!FILTRO) FILTRO=new Set(PER.map(function(x){return x[0];}));
+  if(FILTRO.has(p)) FILTRO.delete(p); else FILTRO.add(p);
+  limparDestaque(); SEL=null;
+  Lper.setStyle(estP);
+  Lper.eachLayer(function(l){if(l._path)l._path.style.pointerEvents=ocultoP(l.feature)?'none':'';});
+  legenda();};
+window.cam=function(k,on){
+  if(on)CAM[k].addTo(map); else map.removeLayer(CAM[k]);
+  if(k==='vias')legenda();};
+window.op=function(v){OP=parseFloat(v);ativa().setStyle(modo==='periodo'?estP:estM);};
+window.bm=function(n,b){Object.values(bms).forEach(function(l){map.removeLayer(l);});
+  bms[n].addTo(map);bms[n].bringToBack();
+  document.querySelectorAll('.bmb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');};
+window.togglePainel=function(){document.getElementById('sb').classList.toggle('hidden');};
+window.toggleLegenda=function(){document.getElementById('rb').classList.toggle('hidden');};
+
+// ── exportação ────────────────────────────────────────────────────────────
+window.abrirExport=function(){document.getElementById('mst').textContent='';document.getElementById('md').classList.add('open');};
+window.fecharExport=function(){document.getElementById('md').classList.remove('open');};
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);
+  c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
+function nrt(c,cx,cy,s){c.save();c.fillStyle='#fff';c.strokeStyle='#000';c.lineWidth=.5;
+  c.beginPath();c.moveTo(cx,cy-s);c.lineTo(cx+s*.4,cy+s*.2);c.lineTo(cx,cy+s*.05);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#666';c.beginPath();c.moveTo(cx,cy-s);c.lineTo(cx-s*.4,cy+s*.2);c.lineTo(cx,cy+s*.05);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#fff';c.font='bold 10px Arial';c.textAlign='center';c.fillText('N',cx,cy-s-6);c.restore();}
+function dl(d,n){var a=document.createElement('a');a.href=d;a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a);}
+
+window.exportar=function(fmt){
+  var st=document.getElementById('mst');st.textContent='Capturando…';
+  var el=document.getElementById('map'),W=el.offsetWidth,H=el.offsetHeight,mr=el.getBoundingClientRect();
+  var cv=document.createElement('canvas');cv.width=W;cv.height=H;var c=cv.getContext('2d');
+  c.fillStyle='#0d1b2a';c.fillRect(0,0,W,H);
+  map.eachLayer(function(l){if(!l._tiles)return;
+    Object.keys(l._tiles).forEach(function(k){var t=l._tiles[k],im=t.el;
+      if(!im||im.tagName!=='IMG'||!im.complete)return;var r=im.getBoundingClientRect();
+      try{c.drawImage(im,Math.round(r.left-mr.left),Math.round(r.top-mr.top),Math.round(r.width)||256,Math.round(r.height)||256);}catch(e){}});});
+  st.textContent='Renderizando…';
+  setTimeout(function(){
+    function pt(lng,lat){var p=map.latLngToContainerPoint(L.latLng(lat,lng));return[p.x,p.y];}
+    function pol(gl,sf,skip){if(!map.hasLayer(gl))return;
+      gl.eachLayer(function(l){if(!l.feature)return;if(skip&&skip(l.feature))return;
+        var s=sf(l.feature),g=l.feature.geometry,tp=g.type;
+        if(tp!=='Polygon'&&tp!=='MultiPolygon')return;
+        (tp==='Polygon'?[g.coordinates]:g.coordinates).forEach(function(poly){c.beginPath();
+          poly.forEach(function(ring){ring.forEach(function(co,i){var q=pt(co[0],co[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});c.closePath();});
+          if(s.fillColor&&s.fillOpacity>0){c.globalAlpha=s.fillOpacity;c.fillStyle=s.fillColor;c.fill('evenodd');}
+          if(s.color&&s.weight>0){c.globalAlpha=s.opacity||1;c.strokeStyle=s.color;c.lineWidth=s.weight;c.stroke();}});
+        c.globalAlpha=1;});}
+    if(modo==='periodo') pol(Lper,estP,ocultoP);
+    else pol(Lman,estM,function(f){return f.properties.ano!==anoSel;});
+    if(map.hasLayer(Lvias))[5,4,3,2,1].forEach(function(o){
+      Lvias.eachLayer(function(l){if(!l.feature)return;
+        var p=l.feature.properties;if(p.ordem_hier!==o)return;
+        var v=VIA[p.hierarquia]||VIA['Local'],g=l.feature.geometry;
+        (g.type==='LineString'?[g.coordinates]:g.coordinates).forEach(function(cs){
+          c.beginPath();cs.forEach(function(co,i){var q=pt(co[0],co[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});
+          c.globalAlpha=v.o;c.strokeStyle=v.c;c.lineWidth=v.w;c.lineCap='round';c.stroke();});
+        c.globalAlpha=1;});});
+    if(map.hasLayer(Llim))pol(Llim,function(){return{color:'#FFEF00',weight:2.2,opacity:.9,fillOpacity:0};});
+
+    var P=14,t1='Evolução da Ocupação no Território · Bragança Paulista',
+        t2=(modo==='periodo'?'Período de urbanização':'Mancha urbana em '+anoSel)+' · MapBiomas 1985–2024';
+    c.font='bold 13px Arial';var w1=c.measureText(t1).width;
+    c.font='10px Arial';var w2=c.measureText(t2).width;
+    var tW=Math.max(w1,w2)+P*2+4,tH=44;
+    c.fillStyle='rgba(1,117,188,.96)';rr(c,P,P,tW,tH,8);c.fill();
+    c.fillStyle='#FFEF00';c.fillRect(P,P+tH-3,tW,3);
+    c.fillStyle='#fff';c.font='bold 13px Arial';c.textAlign='left';c.fillText(t1,P*2,P+19);
+    c.fillStyle='#FFEF00';c.font='10px Arial';c.fillText(t2,P*2,P+34);
+    nrt(c,W-44,56,18);
+
+    var its = modo==='periodo'
+      ? PER.filter(function(x){return !FILTRO||FILTRO.has(x[0]);}).map(function(x){return [x[0],x[2]];})
+      : [[String(anoSel),corAno(anoSel)]];
+    if(its.length){
+      var rh=15,gp=9,LP=11,mw=0;c.font='9px Arial';
+      its.forEach(function(x){mw=Math.max(mw,c.measureText(x[0]).width);});
+      var lw=Math.min(mw+34+LP*2,220),lh=rh+its.length*rh+gp*2+6,lx=P,ly=H-lh-30;
+      c.globalAlpha=.95;c.fillStyle='rgba(1,48,90,.95)';rr(c,lx,ly,lw,lh,8);c.fill();
+      c.strokeStyle='rgba(255,239,0,.35)';c.lineWidth=1;rr(c,lx,ly,lw,lh,8);c.stroke();c.globalAlpha=1;
+      var cy=ly+gp;
+      c.fillStyle='#a8cce8';c.font='bold 8px Arial';
+      c.fillText(modo==='periodo'?'PERÍODO DE URBANIZAÇÃO':'MANCHA URBANA',lx+LP,cy+9);cy+=rh+2;
+      its.forEach(function(x){
+        c.fillStyle=x[1];c.fillRect(lx+LP,cy+2,14,10);
+        c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=.5;c.strokeRect(lx+LP,cy+2,14,10);
+        c.fillStyle='#e8eaf0';c.font='9px Arial';c.fillText(x[0],lx+LP+20,cy+10);cy+=rh;});}
+    c.fillStyle='rgba(255,255,255,.55)';c.font='8px Arial';c.textAlign='right';
+    c.fillText('Fonte: MapBiomas Coleção 9 — classe Área Urbanizada, 1985 a 2024',W-12,H-10);
+
+    try{var img=cv.toDataURL('image/jpeg',.93),fn='evolucao_'+(modo==='periodo'?'periodo':anoSel);
+      if(fmt==='jpeg'){dl(img,fn+'.jpg');}
+      else{var o=W>H?'landscape':'portrait',mW=W*.2646,mH=H*.2646;
+        var pdf=new jspdf.jsPDF({orientation:o,unit:'mm',format:[mW,mH]});
+        pdf.addImage(img,'JPEG',0,0,mW,mH);pdf.save(fn+'.pdf');}
+      st.textContent='✓ Download iniciado!';setTimeout(fecharExport,1500);
+    }catch(e){st.textContent='✗ Erro: '+e.message;}
+  },40);};
+
+var OB='bp_evolucao_v1';
+window.fecharOb=function(){document.getElementById('ob').classList.remove('visible');localStorage.setItem(OB,'1');};
+if(!localStorage.getItem(OB))document.getElementById('ob').classList.add('visible');
+
+legenda();
+})();
+</script>
+</body>
+</html>
