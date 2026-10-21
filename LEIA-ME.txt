@@ -1,0 +1,154 @@
+GEOPORTAL - REVISAO DO PLANO DIRETOR
+Braganca Paulista | Divisao de Planejamento
+Secretaria Municipal de Planejamento
+
+ESTRUTURA
+  index.html ..... pagina inicial do portal (16 mapas)
+  portal.html .... copia da pagina inicial; e para onde apontam
+                   os botoes "Portal" dentro de cada mapa.
+                   Manter os DOIS arquivos.
+  geopackages/ ... bases em GeoPackage (EPSG:31983), cada uma
+                   com projeto QGIS embutido e estilos
+  relatorios/ .... relatorios tecnicos e diagnosticos (.docx)
+
+  Os arquivos *_COMPLETO.zip na raiz sao os pacotes de entrega
+  de cada mapa (GeoPackage + QML + projeto QGIS + WebGIS +
+  relatorio). Nao precisam ir para o servidor de publicacao.
+
+MAPAS PUBLICADOS (16 cards)
+
+  mapa01          Rede de Cidades - Fluxos Intermunicipais
+                  REGIC 2018 | 41 municipios, 192 ligacoes
+  evolucao        Estrutura Regional e Ocupacao 1985-2024
+                  MapBiomas | 12,7 -> 48,8 km2
+  censo2022       Censo Demografico 2022 por setor e face
+  renda           Rendimento do Responsavel por Domicilio
+  densidade       Densidade Demografica
+  ipvs            IPVS - Vulnerabilidade Social (SEADE)
+  habitacao       Habitacao - CADHI 2022/2024
+  cadastro        Cadastro Imobiliario (tiles vetoriais)
+  ocorrencias     Seguranca Urbana - Guarda Municipal
+  queimadas       Queimadas e Focos de Calor
+  gee             Fontes de Emissao de GEE (SEEG)
+  legislacao      Legislacao Urbanistica - zoneamento e
+                  parametros do Plano Diretor
+  infraestrutura  Equipamentos Publicos e Infraestrutura
+                  CNES + INEP + cadastros municipais
+                  336 equipamentos | 3.824 eixos viarios
+  infrabasica     Infraestrutura Basica - agua, esgoto, coleta,
+                  drenagem e iluminacao por setor censitario
+                  Censo 2022 + MapBiomas colecao 11 (2025)
+
+  digitais        Cobertura e Expansao de Servicos Digitais
+                  Wi-Fi Livre previsto para 2027 e UBS em estudo
+                  SMIT + Censo 2022 | acesso a pe de 500 m
+
+  emprego         Postos de Trabalho - emprego formal privado
+                  RAIS 2024 + Receita Federal + CNEFE 2022
+                  45.606 postos em 3.494 estabelecimentos
+                  O emprego publico fica fora do mapa: e
+                  descentralizado e a base nao permite localiza-lo
+
+  ATENCAO - sao DOIS mapas com "infraestrutura" no nome e nao se
+  confundem: infraestrutura/ e o de equipamentos publicos e malha
+  viaria; infrabasica/ e o de saneamento, drenagem e iluminacao.
+
+  Em elaboracao, sem card publico: meioambiente
+
+
+PUBLICACAO
+  Copiar toda a pasta para o servidor. Os mapas usam caminhos
+  relativos, entao a estrutura de pastas deve ser preservada.
+
+  IMPORTANTE - o mapa cadastro/ usa TILES VETORIAIS e NAO
+  funciona aberto direto do disco (file://). Precisa ser
+  servido por HTTP. Os demais funcionam de qualquer forma.
+  Para testar localmente, na raiz da pasta:
+      python3 -m http.server 8000
+  e acessar http://localhost:8000
+
+MAPAS BASE - TODOS DA ESRI (sem chave de API)
+  Escuro ..... Canvas/World_Dark_Gray_Base    ate zoom 16
+  Mapa ....... World_Street_Map               ate zoom 17
+  Satelite ... World_Imagery                  ate zoom 17
+
+  URL base: https://server.arcgisonline.com/ArcGIS/rest/services/
+            <SERVICO>/MapServer/tile/{z}/{y}/{x}
+
+  ATENCAO 1 - A Esri usa a ordem {z}/{y}/{x}, e NAO {z}/{x}/{y}
+  como a maioria dos servicos XYZ. Inverter produz tiles
+  embaralhados.
+
+  ATENCAO 2 - Nao usar os enderecos ibasemaps-api.arcgis.com nem
+  static-map-tiles-api.arcgis.com: esses EXIGEM token.
+  Apenas server.arcgisonline.com e livre.
+
+  ATENCAO 3 - Acima do maxNativeZoom de cada servico o Leaflet
+  escala o tile. Como o mapa base fica sob camadas opacas, o
+  leve borrao nao compromete a leitura.
+
+  POR QUE MUDAMOS
+  - CARTO passou a exigir chave nos basemaps antes anonimos e
+    passou a servir a marca d'agua "API KEY REQUIRED".
+  - OpenStreetMap responde 403 por politica de uso, sobretudo
+    quando o arquivo e aberto localmente (sem Referer).
+  - O satelite do Google usava um endpoint interno
+    (mt1.google.com/vt), nao documentado e em desacordo com os
+    Termos da Plataforma Google Maps. Por se tratar de portal
+    institucional, foi substituido.
+
+  Se a Esri tambem vier a restringir, a alternativa definitiva e
+  servir os tiles do proprio servidor da Prefeitura, ou usar o
+  aerolevantamento municipal quando estiver disponivel.
+
+HEADERS UNIFORMIZADOS
+  Todos os 15 mapas seguem o padrao do IPVS:
+    ponto amarelo > titulo (destaque em amarelo no subtitulo)
+    > linha "Revisao do Plano Diretor - Braganca Paulista"
+    > separador flexivel > badge com a fonte do dado
+    > link Portal > botoes de acao
+
+  O bloco CSS "header uniformizado (padrao IPVS)" no fim da
+  folha de estilo de cada mapa normaliza h1, subtitulo e badge
+  independentemente do id do header (#hd, #header ou
+  #pd-header). Se um mapa novo for adicionado, copiar esse
+  bloco para ele.
+
+  ATENCAO: nao acrescentar um segundo elemento com flex:1 no
+  header. Dois separadores dividem o espaco entre si e empurram
+  o conteudo para a esquerda, que foi o que ocorreu no censo2022.
+
+TIPOGRAFIA E COR
+  Titulos, badges, rotulos de secao e valores numericos:
+      OUTFIT  (400, 500, 600, 700, 800)
+  Texto corrido, interface e legendas:
+      RALEWAY (300, 400, 500, 600, 700 e italico 400)
+
+  Um unico <link> do Google Fonts por pagina carrega as duas.
+  Nao usar Syne, DM Sans, Lora, Merriweather nem Nunito Sans -
+  todas foram removidas.
+
+  COR DOS TEXTOS
+  Prosa explicativa longa (popups, onboarding, notas de rodape
+  de painel) em BRANCO, var(--text). O azul claro var(--muted)
+  fica reservado a cabecalhos de secao e apontamentos curtos de
+  legenda.
+
+  COR DOS NUMEROS
+  Valores numericos em legenda usam SEMPRE var(--text), nunca a
+  cor da categoria. A cor identificadora fica no quadradinho da
+  legenda e na barra - no numero ela prejudica a legibilidade
+  (roxo escuro sobre fundo escuro, amarelo claro etc.).
+  Todos recebem font-variant-numeric: tabular-nums para que os
+  digitos nao dancem quando o valor muda no hover.
+
+  O bloco CSS "tipografia e cor: textos longos e valores
+  numericos" no fim da folha de estilo de cada mapa garante
+  isso com !important. Se um mapa novo for adicionado, copiar
+  esse bloco.
+
+LINGUAGEM VISUAL COMUM
+  Cabecalho azul com faixa amarela, painel de controles a
+  esquerda, painel de legenda a direita com indicador de
+  posicao na escala, popups com graficos comparativos,
+  exportacao em JPEG e PDF com legenda e rosa dos ventos.

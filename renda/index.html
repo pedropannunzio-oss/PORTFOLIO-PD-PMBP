@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+<title>Renda por Setor Censitário · Bragança Paulista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="js/leaflet.js"></script>
+<style>
+/* CABECALHO - padrao do portal */
+#pd-header{position:fixed;top:0;left:0;right:0;height:var(--header-h);
+  background:var(--blue);border-bottom:3px solid var(--accent);
+  display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+#pd-header .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;
+  box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+#pd-header h1{font-family:'Outfit',sans-serif;font-weight:700;font-size:15px;color:#fff;
+  text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin:0;}
+#pd-header h1 span{color:var(--accent);}
+#pd-header .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;margin:0;}
+#pd-header .sep{flex:1;}
+.hbadge{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
+  border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+#pd-back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);
+  color:rgba(255,255,255,.8);font-family:'Raleway',sans-serif;font-size:12px;
+  padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .15s;
+  text-decoration:none;display:flex;align-items:center;gap:6px;}
+#pd-back:hover{color:var(--accent);border-color:rgba(255,239,0,.6);}
+#pd-export,#pd-panel,#pd-legenda{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);
+  color:var(--accent);font-family:'Raleway',sans-serif;font-size:12px;font-weight:500;
+  padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;
+  white-space:nowrap;display:flex;align-items:center;gap:6px;}
+#pd-export:hover,#pd-panel:hover,#pd-legenda:hover{background:rgba(255,239,0,.18);}
+
+*,*::before,*::after{box-sizing:border-box;}
+:root{--blue:#0175bc;--accent:#FFEF00;--deep:#01305a;--bg:#0d1b2a;--bg-panel:#0f2236;
+  --bg-panel2:#132b42;--bg-card:#1a3550;--border:rgba(255,255,255,.10);--text:#e8eaf0;
+  --muted:#7a9ab5;--header-h:52px;--sw:300px;--rw:280px;}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Raleway',sans-serif;background:var(--bg);color:var(--text);}
+#map{position:fixed!important;top:var(--header-h)!important;left:0;right:0;bottom:0;width:auto!important;height:auto!important;background:var(--bg);}
+.leaflet-top,.leaflet-bottom{display:none!important;}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,239,0,.35);}
+
+.pane{position:fixed;top:var(--header-h);height:calc(100vh - var(--header-h));background:var(--bg-panel);
+  z-index:8000;display:flex;flex-direction:column;transition:transform .25s;overflow:hidden;}
+#sb{left:0;width:var(--sw);border-right:1px solid var(--border);}
+#sb.hidden{transform:translateX(-100%);}
+#rb{right:0;width:var(--rw);border-left:1px solid var(--border);}
+#rb.hidden{transform:translateX(100%);}
+.pane-h{padding:12px 15px 9px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.pane-h span{font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--accent);
+  letter-spacing:.07em;text-transform:uppercase;}
+.pane-b{flex:1;overflow-y:auto;min-height:0;}
+.sec{border-bottom:1px solid var(--border);padding-bottom:11px;}
+.lbl{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--muted);
+  letter-spacing:.08em;text-transform:uppercase;padding:13px 15px 7px;display:block;}
+.hint{font-size:10.5px;color:var(--muted);line-height:1.5;padding:5px 15px 0;font-style:italic;}
+
+.mode{display:flex;margin:0 15px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.mode button{flex:1;background:var(--bg-card);border:none;color:var(--muted);font-family:'Raleway',sans-serif;
+  font-size:11.5px;font-weight:600;padding:9px 6px;cursor:pointer;line-height:1.25;}
+.mode button small{display:block;font-size:9.5px;font-weight:400;opacity:.72;margin-top:2px;}
+.mode button.on{background:rgba(255,239,0,.14);color:var(--accent);}
+.selw{padding:8px 15px 0;}
+.selw select{width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--text);
+  font-family:'Raleway',sans-serif;font-size:11.5px;padding:7px 9px;border-radius:6px;cursor:pointer;}
+.selw select optgroup{font-family:'Outfit',sans-serif;font-weight:700;font-size:11px;
+  letter-spacing:.06em;text-transform:uppercase;color:#fff;background-color:#132b42;}
+.selw select option{font-family:'Raleway',sans-serif;font-weight:400;text-transform:none;
+  letter-spacing:0;color:#fff;background-color:#132b42;}
+
+.ltr{display:flex;align-items:center;gap:10px;padding:6px 15px;}
+.ltr label:not(.tg){flex:1;font-size:12px;color:var(--text);cursor:pointer;}
+.tg{position:relative;width:32px;height:18px;flex:0 0 32px;}
+.tg input{opacity:0;width:0;height:0;position:absolute;}
+.trk{position:absolute;inset:0;background:var(--bg-card);border-radius:9px;cursor:pointer;
+  transition:background .2s;border:1px solid var(--border);}
+.trk::after{content:'';position:absolute;left:2px;top:2px;width:12px;height:12px;background:var(--muted);
+  border-radius:50%;transition:all .2s;}
+.tg input:checked + .trk{background:rgba(255,239,0,.15);border-color:var(--accent);}
+.tg input:checked + .trk::after{background:var(--accent);left:16px;}
+.opr{display:flex;align-items:center;gap:9px;padding:2px 15px 4px 34px;}
+.opr label{font-size:10px;color:var(--muted);width:58px;flex-shrink:0;}
+.opr input{flex:1;height:3px;accent-color:var(--accent);cursor:pointer;}
+.opr span{font-size:10px;color:var(--muted);width:32px;text-align:right;}
+.bmr{display:flex;gap:7px;padding:0 15px;}
+.bmb{flex:1;background:var(--bg-card);border:1px solid var(--border);color:var(--muted);
+  font-size:11px;padding:6px 4px;border-radius:6px;cursor:pointer;text-align:center;font-family:'Raleway',sans-serif;}
+.bmb.on{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,.08);}
+
+#lg{padding:12px 14px;}
+.g{margin-bottom:15px;}
+.gt{font-family:'Outfit',sans-serif;font-size:9.5px;font-weight:700;color:var(--muted);
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px;}
+.lgd-bar{height:14px;border-radius:3px;margin-bottom:5px;}
+.scale-wrap{position:relative;padding-top:16px;}
+.scale-ind{position:absolute;top:2px;transform:translateX(-50%);transition:left .25s;}
+.scale-ind i{display:block;width:0;height:0;margin:0 auto;
+  border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--accent);}
+.scale-ind b{display:block;position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  font-size:9.5px;font-weight:700;color:var(--accent);white-space:nowrap;
+  background:rgba(13,27,42,.92);padding:1px 5px;border-radius:3px;}
+.scale-line{position:absolute;top:16px;width:2px;height:14px;background:var(--accent);
+  transform:translateX(-50%);box-shadow:0 0 4px rgba(255,239,0,.8);transition:left .25s;}
+.sel-card{background:rgba(255,239,0,.07);border-left:2px solid var(--accent);
+  border-radius:0 5px 5px 0;padding:9px 10px;margin-bottom:12px;}
+.sel-n{font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:#fff;line-height:1.2;}
+.sel-s{font-size:9.5px;color:var(--muted);margin-top:1px;}
+.sel-v{font-size:16px;font-weight:700;color:var(--accent);margin-top:6px;font-variant-numeric:tabular-nums;}
+.sel-d{font-size:10.5px;font-weight:600;margin-top:2px;}
+.mrow{margin-bottom:6px;}
+.mrow-l{display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:2px;}
+.mrow-l b{font-variant-numeric:tabular-nums;}
+.mbar{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;display:flex;}
+.mbar i{display:block;height:100%;}
+.mref{font-size:9.5px;color:var(--muted);margin-top:2px;}
+.stack{height:11px;border-radius:3px;overflow:hidden;display:flex;margin-bottom:5px;}
+.stack i{display:block;height:100%;}
+.slg{display:flex;flex-wrap:wrap;gap:4px 10px;}
+.slg span{font-size:9.5px;color:var(--text);display:flex;align-items:center;gap:4px;}
+.slg u{width:8px;height:8px;border-radius:2px;text-decoration:none;flex-shrink:0;}
+.lgd-lab{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);
+  font-variant-numeric:tabular-nums;margin-bottom:9px;}
+.cl{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.sw{width:16px;height:12px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.16);}
+.cl span{font-size:10.5px;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.3;}
+.note{font-size:10px;color:var(--muted);line-height:1.5;padding:4px 2px 0;font-style:italic;}
+.rk{display:flex;align-items:center;gap:7px;padding:3.5px 5px;border-radius:4px;font-size:11px;cursor:pointer;}
+.rk:hover{background:rgba(255,255,255,.07);}
+.rk .n{width:15px;color:var(--muted);font-size:10px;text-align:right;flex-shrink:0;}
+.rk .m{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rk .p{font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;font-size:11px;}
+
+.leaflet-popup-content-wrapper{background:var(--bg-panel2)!important;border:1px solid var(--border)!important;
+  border-radius:10px!important;box-shadow:0 8px 32px rgba(0,0,0,.5)!important;width:320px!important;}
+.leaflet-popup-tip{background:var(--bg-panel2)!important;}
+.leaflet-popup-content{color:var(--text)!important;font-family:'Raleway',sans-serif!important;font-size:12px!important;
+  margin:0!important;padding:14px 16px!important;max-height:60vh!important;overflow-y:auto!important;overflow-x:hidden!important;}
+.leaflet-popup-close-button{color:var(--muted)!important;}
+.ph{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.15;}
+.ps{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:10px;}
+.pt{width:100%;border-collapse:collapse;}
+.pt th{text-align:left;padding:5px 8px 5px 0;font-size:10px;font-weight:600;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid rgba(255,255,255,.06);width:58%;}
+.pt td{padding:5px 0 5px 8px;font-size:12px;color:var(--text);border-bottom:1px solid rgba(255,255,255,.06);
+  text-align:right;font-variant-numeric:tabular-nums;}
+.pt tr:last-child th,.pt tr:last-child td{border-bottom:none;}
+.pexp{font-size:11px;color:var(--muted);line-height:1.5;margin-top:9px;padding-top:9px;
+  border-top:1px solid rgba(255,255,255,.08);}
+.cmp{margin:10px 0 2px;}
+.cmp-t{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:7px;}
+.cmp-r{margin-bottom:7px;}
+.cmp-l{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;}
+.cmp-b{height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
+.cmp-b i{display:block;height:100%;border-radius:4px;}
+
+#md{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  z-index:99000;align-items:center;justify-content:center;}
+#md.open{display:flex;}
+#mb{background:var(--bg-panel2);border:1px solid var(--border);border-radius:14px;padding:26px 30px;width:340px;}
+#mt{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;}
+#mdesc{font-size:12px;color:var(--muted);margin:0 0 18px;}
+#mbtn{display:flex;gap:10px;margin-bottom:14px;}
+#mst{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:10px;text-align:center;}
+#mcl{width:100%;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);
+  font-size:12px;padding:8px;cursor:pointer;font-family:'Raleway',sans-serif;}
+.eb{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);
+  font-size:13px;padding:12px;cursor:pointer;font-family:'Raleway',sans-serif;}
+.eb:hover{border-color:var(--accent);color:var(--accent);}
+@media(max-width:1100px){#rb{display:none;}}
+
+/* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
+#hd h1, #header h1, #pd-header h1 {
+  font-family:'Outfit',sans-serif; font-weight:700; font-size:14px; color:#fff;
+  text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
+}
+
+/* ── tipografia e cor: textos longos e valores numéricos ──────────────── */
+/* Prosa explicativa em branco: popups, onboarding e notas de rodapé de
+   painel. Cabeçalhos e apontamentos de legenda mantêm o azul claro. */
+.pexp, .nota, .sel-vazio, .pc-note, #pnl-hint, .bar-sub-long {
+  color: var(--text) !important;
+}
+/* Valores numéricos em legenda: cor fixa de alta legibilidade.
+   A cor da categoria fica no quadradinho e na barra, nunca no número. */
+.bar-lb .v, .rk .p, .li .cnt, .sel-v, .pt td, .pc-v {
+  color: var(--text) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── lista de classes da legenda ───────────────────────────────────────── */
+.lgd-classes{margin-top:9px;}
+.lgd-classes .li{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.lgd-classes .li span{font-size:11px;color:var(--text);font-variant-numeric:tabular-nums;}
+.lgd-classes .sw{width:16px;height:11px;border-radius:2px;flex-shrink:0;
+  border:1px solid rgba(255,255,255,.15);}
+
+/* ── cartão da legenda: tabela e aviso de trava ────────────────────────── */
+.sel-t{margin-top:9px;}
+.sel-t th{font-size:9.5px;font-weight:500;color:var(--muted);text-transform:none;
+  letter-spacing:0;padding:4px 6px 4px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.sel-t td{font-size:11px;padding:4px 0 4px 6px;text-align:right;
+  font-variant-numeric:tabular-nums;border-bottom:1px solid rgba(255,255,255,.06);}
+.sel-t tr:last-child th,.sel-t tr:last-child td{border-bottom:none;}
+.sel-trav{font-size:9.5px;color:var(--accent);margin-top:7px;
+  padding-top:6px;border-top:1px solid rgba(255,239,0,.25);}
+.sel-vazio{font-size:11.5px;color:var(--muted);line-height:1.6;
+  padding:11px 12px;background:rgba(255,255,255,.03);border-radius:6px;margin-bottom:13px;}
+
+/* ── tabela comparativa de fontes ──────────────────────────────────────── */
+.cmp-fontes th{font-size:10px;font-weight:500;color:var(--muted);
+  text-transform:none;letter-spacing:0;padding:5px 6px 5px 0;width:62%;}
+.cmp-fontes td{font-size:11.5px;padding:5px 0 5px 6px;text-align:right;
+  font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body>
+
+<div id="pd-header">
+  <div class="logo-dot"></div>
+  <div>
+    <h1>Rendimento do Responsável <span>por Domicílio</span></h1>
+    <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
+  </div>
+  <div class="sep"></div>
+  <span class="hbadge">CENSO IBGE 2022</span>
+  <a id="pd-back" href="../portal.html">&#8592; Portal</a>
+  <button id="pd-export" onclick="abrirExport()">&#8595; Exportar</button>
+  <button id="pd-panel" onclick="tog('sb')">&#9776; Painel</button>
+  <button id="pd-legenda" onclick="tog('rb')">&#9636; Legenda</button>
+</div>
+
+<div id="map"></div>
+
+<div id="sb" class="pane">
+  <div class="pane-h"><span>Controles</span></div>
+  <div class="pane-b">
+    <div class="sec">
+      <span class="lbl">Unidade territorial</span>
+      <div class="mode">
+        <button id="u-setor" class="on" onclick="setUnidade('setor')">Setor censitário<small>449 unidades</small></button>
+        <button id="u-bairro" onclick="setUnidade('bairro')">Bairro<small>60 unidades</small></button>
+      </div>
+      <p class="hint" id="h-unid"></p>
+    </div>
+
+    <div class="sec">
+      <span class="lbl">Variável</span>
+      <div class="selw">
+        <select id="var" onchange="setVar(this.value)">
+          <option value="renda_media_reais" selected>Renda média em reais</option>
+          <option value="renda_media_sm">Renda média em salários mínimos</option>
+        </select>
+      </div>
+      <p class="hint" id="h-var"></p>
+    </div>
+
+    <div class="sec">
+      <span class="lbl">Camadas</span>
+      <div class="ltr"><label for="k-dado">Renda</label>
+        <label class="tg"><input type="checkbox" id="k-dado" checked onchange="cam('dado',this.checked)"><span class="trk"></span></label></div>
+      <div class="opr"><label>Opacidade</label>
+        <input type="range" min="0" max="1" step=".05" value=".88" oninput="op(this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'"><span>88%</span></div>
+      <div class="ltr"><label for="k-lim">Limite municipal</label>
+        <label class="tg"><input type="checkbox" id="k-lim" checked onchange="cam('lim',this.checked)"><span class="trk"></span></label></div>
+    </div>
+
+    <div class="sec" style="border-bottom:none">
+      <span class="lbl">Mapa base</span>
+      <div class="bmr">
+        <button class="bmb on" onclick="bm('dark',this)">Escuro</button>
+        <button class="bmb" onclick="bm('osm',this)">Mapa</button>
+        <button class="bmb" onclick="bm('sat',this)">Satélite</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="rb" class="pane">
+  <div class="pane-h"><span id="rb-t">Legenda</span></div>
+  <div class="pane-b"><div id="lg"></div></div>
+</div>
+
+<div id="md"><div id="mb">
+  <div id="mt">&#8595; Exportar mapa</div>
+  <p id="mdesc">O mapa é capturado como está na tela, com a legenda da variável selecionada.</p>
+  <div id="mbtn"><button class="eb" onclick="exportar('jpeg')">Imagem JPEG</button>
+    <button class="eb" onclick="exportar('pdf')">PDF</button></div>
+  <div id="mst"></div><button id="mcl" onclick="fecharExport()">Cancelar</button>
+</div></div>
+
+
+<script src="data/json_limite.js"></script>
+<script src="data/json_bairros.js"></script>
+<script src="data/json_setores.js"></script>
+
+<script>
+(function(){
+var SM=1212, MUN=3549, MUN_SM=2.93;   // média municipal ponderada, Censo 2022
+var unidade='setor', variavel='renda_media_reais', OP=.88;
+
+var VARS={
+ renda_media_reais:{lbl:'Rendimento do responsável pelo domicílio',un:'R$',dec:0,
+   hint:'Rendimento nominal médio mensal da PESSOA RESPONSÁVEL pelo domicílio, em reais. Inclui todas as fontes — trabalho formal e informal, aposentadoria, pensão, aluguel e benefícios. Não é salário: veja a nota sobre o CAGED na legenda.'},
+ renda_media_sm:{lbl:'Rendimento em salários mínimos',un:'SM',dec:2,
+   hint:'O mesmo rendimento do responsável pelo domicílio, expresso em salários mínimos de julho de 2022 (R$ 1.212).'}};
+// escala perceptualmente uniforme: roxo (menor) → amarelo (maior)
+// seis degraus, um por faixa de salário mínimo
+var RAMP=['#440154','#3b528b','#21918c','#5ec962','#bddf26','#fde725'];
+var MUN_RACA={branca:69.2,preta:4.8,parda:25.0,amarela:1.0,indigena:0.0};
+var MUN_ALFAB=97.6;
+var sel=null;   // unidade selecionada, para o indicador na escala
+
+var map=L.map('map',{zoomControl:false,maxZoom:18,minZoom:9})
+  .fitBounds([[-23.10,-46.75],[-22.80,-46.20]]);
+L.control.zoom({position:'topright'}).addTo(map);
+var bms={
+  dark:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{
+        referrerPolicy: 'strict-origin-when-cross-origin',attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:20,maxNativeZoom:16,crossOrigin:'anonymous'}),
+  osm:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:19,maxNativeZoom:17,crossOrigin:'anonymous',referrerPolicy:'strict-origin-when-cross-origin'}),
+  sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri, Maxar, Earthstar Geographics',maxZoom:19,maxNativeZoom:17,crossOrigin:'anonymous'})};
+bms.dark.addTo(map);
+['dado','lim'].forEach(function(p,i){map.createPane('p_'+p);map.getPane('p_'+p).style.zIndex=400+i;});
+
+function nf(v,d){return v==null||isNaN(v)?'—':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+function fmt(v,k){k=k||variavel;var c=VARS[k];
+  if(v==null||isNaN(v))return '—';
+  return (c.un==='R$'?'R$ ':'')+nf(v,c.dec)+(c.un&&c.un!=='R$'?' '+c.un:'');}
+function dados(){return unidade==='setor'?json_setores:json_bairros;}
+
+// ── quebras fixas por faixa de salário mínimo ─────────────────────────────
+var breaks=null;
+// Faixas fixas ancoradas no salário mínimo de 2022 (R$ 1.212), não quantis.
+// O quantil repartia a cidade em sete grupos de tamanho igual, mas a última
+// classe cobria 72% da amplitude: um setor de R$ 5.300 e outro de R$ 15.600
+// recebiam a mesma cor. As faixas em SM são comparáveis entre si, legíveis
+// na legenda e independentes do recorte selecionado.
+var SM_BRK=[1.5,2,3,5,10];
+function calcBreaks(){
+  var f=(variavel==='renda_media_sm')?1:SM;
+  breaks=SM_BRK.map(function(x){return x*f;});}
+function cor(v){
+  if(v==null||isNaN(v)||v<=0||!breaks)return 'rgba(120,130,140,.30)';
+  var ci=0;
+  for(var i=0;i<breaks.length;i++)if(v>=breaks[i])ci=i+1;
+  return RAMP[Math.min(ci,RAMP.length-1)];}
+
+// ── camadas ───────────────────────────────────────────────────────────────
+var Llim=L.geoJson(json_limite,{pane:'p_lim',interactive:false,
+  style:{color:'#FFEF00',weight:2,opacity:.9,fill:false}});
+var Ldado=null;
+
+// ── destaque ao passar o cursor ───────────────────────────────────────────
+// O mouseout do Leaflet não dispara de forma confiável quando o cursor se move
+// rápido, sai do mapa pela borda ou quando um popup abre por cima: guardamos a
+// referência para poder limpar em qualquer situação.
+var _destacado=null, _travado=false;
+function estiloBase(f){
+  return{color:'#9fb6c9',weight:unidade==='setor'?.4:.9,opacity:.5,
+    fill:true,fillColor:cor(f.properties[variavel]),fillOpacity:OP};}
+function limparDestaque(){
+  if(_travado)return;
+  if(!_destacado)return;
+  try{_destacado.setStyle(estiloBase(_destacado.feature));}catch(e){}
+  _destacado=null;}
+function destacar(l){
+  if(_destacado===l)return;
+  limparDestaque(); _destacado=l;
+  l.setStyle({color:'#FFEF00',weight:unidade==='setor'?1.8:2.4,opacity:1});
+  if(l.bringToFront)l.bringToFront();}
+
+function desenhar(){
+  _destacado=null; _travado=false;
+  if(Ldado)map.removeLayer(Ldado);
+  calcBreaks();
+  Ldado=L.geoJson(dados(),{pane:'p_dado',
+    style:estiloBase,
+    onEachFeature:function(f,l){
+      // popup como FUNÇÃO: recalculado a cada abertura, acompanha a troca
+      // de variável e de unidade no painel
+      l.bindPopup(function(){return popup(f.properties);});
+      l.on('mouseover',function(){
+        if(_travado)return;
+        destacar(l); sel=f.properties; legenda();});
+      l.on('mouseout',function(){
+        if(_travado)return;
+        if(_destacado===l){limparDestaque(); sel=null; legenda();}});
+      l.on('popupopen',function(){
+        _travado=false; limparDestaque();
+        destacar(l); sel=f.properties; _travado=true; legenda();});
+      l.on('popupclose',function(){
+        _travado=false; limparDestaque(); sel=null; legenda();});
+      l.on('click',function(){sel=f.properties;legenda();});}}).addTo(map);
+  if(!document.getElementById('k-dado').checked)map.removeLayer(Ldado);
+  legenda();}
+
+// ── popup ─────────────────────────────────────────────────────────────────
+function barra(v,ref,cor2){
+  var p=Math.max(3,Math.min(100,v/ref*100/2));
+  return '<div class="cmp-b"><i style="width:'+p+'%;background:'+cor2+'"></i></div>';}
+function popup(p){
+  var nome=(p.bairro&&String(p.bairro).trim())||(unidade==='setor'?'Setor censitário':'Bairro sem nome');
+  var sub=unidade==='setor'
+    ? ('Setor '+(p.cd_setor||'—')+(p.situacao?' · '+p.situacao:''))
+    : (nf(p.n_setores||0)+(p.n_setores===1?' setor':' setores'));
+  var t='<div class="ph">'+nome+'</div><div class="ps">'+sub+'</div>';
+  var r=p.renda_media_reais;
+  if(r!=null&&r>0){
+    var dif=(r/MUN-1)*100, cd=dif>=0?'#4ade80':'#fb923c';
+    t+='<div class="cmp"><div class="cmp-t">Renda comparada à média municipal</div>'+
+      '<div class="cmp-r"><div class="cmp-l"><span>Aqui</span><span style="font-weight:700;color:'+cd+'">'+fmt(r,'renda_media_reais')+'</span></div>'+
+      barra(r,MUN,cd)+'</div>'+
+      '<div class="cmp-r"><div class="cmp-l"><span style="color:var(--muted)">Município</span><span style="color:var(--muted)">'+fmt(MUN,'renda_media_reais')+'</span></div>'+
+      barra(MUN,MUN,'#7a9ab5')+'</div>'+
+      '<div style="font-size:10.5px;color:'+cd+';font-weight:600;margin-top:5px">'+
+      (dif>=0?'▲ ':'▼ ')+nf(Math.abs(dif),1)+'% '+(dif>=0?'acima':'abaixo')+' da média</div>'+
+      '<div style="font-size:9.5px;color:var(--muted);margin-top:6px;line-height:1.5">'+
+      'Rendimento do responsável pelo domicílio, todas as fontes. Não comparável ao '+
+      'salário de admissão do CAGED.</div></div>';}
+  t+='<table class="pt">';
+  if(r!=null&&r>0){
+    t+='<tr><th>Rendimento médio</th><td>'+fmt(r,'renda_media_reais')+'</td></tr>'+
+       '<tr><th>Em salários mínimos</th><td>'+nf(p.renda_media_sm,2)+' SM</td></tr>'+
+       '<tr><th>Domicílios com rendimento</th><td>'+nf(p.renda_domicilios)+'</td></tr>';}
+  t+='<tr><th>Moradores</th><td>'+nf(p.moradores_total)+'</td></tr>'+
+     '<tr><th>Domicílios ocupados</th><td>'+nf(p.dom_particulares_ocupados)+'</td></tr>'+
+     '<tr><th>Densidade</th><td>'+nf(p.densidade_hab_km2)+' hab/km²</td></tr>';
+  if(p.taxa_alfabetizacao_15_mais!=null)t+='<tr><th>Alfabetização 15+</th><td>'+nf(p.taxa_alfabetizacao_15_mais,1)+'%</td></tr>';
+  if(p.pct_pretos_pardos!=null)t+='<tr><th>Pretos e pardos</th><td>'+nf(p.pct_pretos_pardos,1)+'%</td></tr>';
+  t+='</table>';
+  var ks2=['branca','parda','preta','amarela','indigena'];
+  if(ks2.some(function(k){return p['pct_'+k]!=null;})){
+    t+='<div class="cmp"><div class="cmp-t">Composição por cor ou raça</div><div class="stack">';
+    ks2.forEach(function(k){var v=p['pct_'+k]||0;
+      if(v>0)t+='<i style="width:'+v+'%;background:'+CR[k]+'"></i>';});
+    t+='</div><div class="slg">';
+    ks2.forEach(function(k){var v=p['pct_'+k];
+      if(v!=null&&v>=0.5)t+='<span><u style="background:'+CR[k]+'"></u>'+CRL[k]+' '+nf(v,1)+'%</span>';});
+    t+='</div></div>';}
+  if(r==null||r<=0)
+    t+='<div class="pexp">Sem informação de rendimento. Ocorre em setores sem domicílios particulares ocupados ou com dado suprimido pelo IBGE por sigilo estatístico.</div>';
+  else
+    t+='<div class="pexp">Rendimento nominal médio mensal das pessoas responsáveis pelos domicílios. Salário mínimo de 2022: R$ 1.212.</div>';
+  return t;}
+
+// ── blocos de contexto ────────────────────────────────────────────────────
+var CR={branca:'#8ecae6',preta:'#5a189a',parda:'#c77dff',amarela:'#ffd166',indigena:'#06d6a0'};
+var CRL={branca:'Branca',preta:'Preta',parda:'Parda',amarela:'Amarela',indigena:'Indígena'};
+
+function barraComp(lbl,v,ref,unid){
+  if(v==null)return '';
+  var d=v-ref, cd=Math.abs(d)<1?'#7a9ab5':(d>0?'#bddf26':'#c77dff');
+  return '<div class="mrow"><div class="mrow-l"><span>'+lbl+'</span>'+
+    '<b style="color:'+cd+'">'+nf(v,1)+(unid||'%')+'</b></div>'+
+    '<div class="mbar"><i style="width:'+Math.max(2,Math.min(100,v))+'%;background:'+cd+'"></i></div>'+
+    '<div class="mref">município '+nf(ref,1)+(unid||'%')+'</div></div>';}
+
+function blocoContexto(p){
+  var h='';
+  // composição de cor ou raça
+  var ks=['branca','parda','preta','amarela','indigena'];
+  var tem=ks.some(function(k){return p['pct_'+k]!=null;});
+  if(tem){
+    h+='<div class="g"><div class="gt">Composição por cor ou raça</div><div class="stack">';
+    ks.forEach(function(k){var v=p['pct_'+k]||0;
+      if(v>0)h+='<i style="width:'+v+'%;background:'+CR[k]+'" title="'+CRL[k]+' '+nf(v,1)+'%"></i>';});
+    h+='</div><div class="slg">';
+    ks.forEach(function(k){var v=p['pct_'+k];
+      if(v!=null&&v>=0.5)h+='<span><u style="background:'+CR[k]+'"></u>'+CRL[k]+' '+nf(v,1)+'%</span>';});
+    h+='</div>';
+    if(p.pct_pretos_pardos!=null){
+      var d=p.pct_pretos_pardos-(MUN_RACA.preta+MUN_RACA.parda);
+      h+='<div class="note" style="font-style:normal">Pretos e pardos: <b style="color:'+
+         (d>0?'#c77dff':'#bddf26')+'">'+nf(p.pct_pretos_pardos,1)+'%</b> · município '+
+         nf(MUN_RACA.preta+MUN_RACA.parda,1)+'%</div>';}
+    h+='</div>';}
+  // demais indicadores
+  var b='';
+  if(p.taxa_alfabetizacao_15_mais!=null)b+=barraComp('Alfabetização 15+',p.taxa_alfabetizacao_15_mais,MUN_ALFAB);
+  if(b)h+='<div class="g"><div class="gt">Contexto</div>'+b+'</div>';
+  // contagens
+  h+='<div class="g"><div class="gt">Dados da unidade</div>'+
+     '<div class="cl"><span>Domicílios com rendimento</span></div>'+
+     '<div class="cl"><span style="font-size:13px;font-weight:700;color:var(--text)">'+nf(p.renda_domicilios)+'</span></div>'+
+     '<div class="cl" style="margin-top:6px"><span>Moradores</span></div>'+
+     '<div class="cl"><span style="font-size:13px;font-weight:700;color:var(--text)">'+nf(p.moradores_total)+'</span></div>'+
+     '</div>';
+  return h;}
+
+// ── legenda ───────────────────────────────────────────────────────────────
+function legenda(){
+  var c=VARS[variavel],r=RAMP,h='';
+  if(!breaks){document.getElementById('lg').innerHTML='<div class="note">Sem dados.</div>';return;}
+  var NC=r.length;
+  var st=[];for(var i=0;i<NC;i++){var a=(i/NC*100).toFixed(2),b2=((i+1)/NC*100).toFixed(2);
+    st.push(r[i]+' '+a+'%',r[i]+' '+b2+'%');}
+  // card da unidade selecionada
+  if(sel){
+    var sv=sel[variavel], dif=(sel.renda_media_reais/MUN-1)*100;
+    var cd=dif>=0?'#bddf26':'#c77dff';
+    h+='<div class="sel-card"><div class="sel-n">'+((sel.bairro&&String(sel.bairro).trim())||'Setor '+sel.cd_setor)+'</div>'+
+       '<div class="sel-s">'+(unidade==='setor'?'Setor '+sel.cd_setor+(sel.situacao?' · '+sel.situacao:''):nf(sel.n_setores)+' setores')+'</div>'+
+       '<div class="sel-v">'+fmt(sv)+'</div>'+
+       '<div class="sel-d" style="color:'+cd+'">'+(dif>=0?'▲ ':'▼ ')+nf(Math.abs(dif),1)+'% '+(dif>=0?'acima':'abaixo')+' da média municipal</div>'+
+       // indicadores do popup trazidos para a legenda: evita precisar clicar
+       '<table class="pt sel-t">'+
+       (sel.renda_media_sm!=null?'<tr><th>Em salários mínimos</th><td>'+nf(sel.renda_media_sm,2)+' SM</td></tr>':'')+
+       '<tr><th>Moradores</th><td>'+nf(sel.moradores_total)+'</td></tr>'+
+       '<tr><th>Domicílios ocupados</th><td>'+nf(sel.dom_particulares_ocupados)+'</td></tr>'+
+       '<tr><th>Densidade</th><td>'+nf(sel.densidade_hab_km2)+' hab/km²</td></tr>'+
+       (sel.taxa_alfabetizacao_15_mais!=null?'<tr><th>Alfabetização 15+</th><td>'+nf(sel.taxa_alfabetizacao_15_mais,1)+'%</td></tr>':'')+
+       (sel.pct_pretos_pardos!=null?'<tr><th>Pretos e pardos</th><td>'+nf(sel.pct_pretos_pardos,1)+'%</td></tr>':'')+
+       '</table>'+
+       (_travado?'<div class="sel-trav">Legenda travada — feche o popup para liberar</div>':'')+
+       '</div>';
+  }else{
+    h+='<div class="sel-vazio">Passe o cursor sobre um '+(unidade==='setor'?'setor':'bairro')+
+       ' para ver a renda e sua posição na escala. Clique para abrir o detalhamento e travar a legenda.</div>';
+  }
+
+  // escala com indicador de posição
+  // A barra é um gradiente em DEGRAUS: cada uma das 7 classes ocupa 1/7 da
+  // largura, independentemente da amplitude de renda que cobre. Posicionar o
+  // indicador linearmente entre o mínimo e o máximo o colocava sobre uma cor
+  // diferente da que o setor recebe no mapa — em 85% dos casos, porque a renda
+  // é muito assimétrica. Aqui localizamos a classe e interpolamos dentro dela.
+  // O indicador segue a classe do valor, não a posição linear na faixa.
+  var pos=null;
+  if(sel){var sv2=sel[variavel];
+    if(sv2!=null&&sv2>0){
+      var ci=0;
+      for(var k=0;k<breaks.length;k++) if(sv2>=breaks[k]) ci=k+1;
+      var a0=(ci===0)?0:breaks[ci-1];
+      var a1=(ci>=breaks.length)?breaks[breaks.length-1]*1.6:breaks[ci];
+      var dentro=(a1>a0)?Math.max(0,Math.min(1,(sv2-a0)/(a1-a0))):0.5;
+      pos=Math.max(0,Math.min(100,(ci+dentro)/NC*100));}}
+  h+='<div class="g"><div class="gt">'+c.lbl+'</div>'+
+    '<div class="scale-wrap">'+
+    (pos!==null?'<div class="scale-ind" style="left:'+pos+'%"><b>'+fmt(sel[variavel])+'</b><i></i></div>':'')+
+    '<div class="lgd-bar" style="background:linear-gradient(to right,'+st.join(',')+')"></div>'+
+    (pos!==null?'<div class="scale-line" style="left:'+pos+'%"></div>':'')+
+    '</div>'+
+    '<div class="lgd-lab"><span>'+(variavel==='renda_media_sm'?'0':'R$ 0')+'</span><span>'+
+      (variavel==='renda_media_sm'?'10+ SM':'R$ 12.120+')+'</span></div>'+
+    '<div class="lgd-classes">'+r.map(function(cc,i){
+      // unidade só na primeira e na última linha, para não repetir
+      var un = (variavel==='renda_media_sm')?' SM':'';
+      var nn = function(x){return (variavel==='renda_media_sm')?nf(x,x%1?1:0):nf(x);};
+      var faixa = (i===0) ? 'Até '+nn(breaks[0])+un
+                : (i>=breaks.length) ? 'Acima de '+nn(breaks[breaks.length-1])+un
+                : nn(breaks[i-1])+' a '+nn(breaks[i])+un;
+      return '<div class="li"><div class="sw" style="background:'+cc+'"></div>'+
+             '<span>'+faixa+'</span></div>';}).join('')+'</div>'+
+    (pos!==null?'<div class="note" style="font-style:normal;padding-top:0">Posição na escala: classe '+
+      (Math.floor(pos/100*NC)+1)+' de '+NC+'.</div>':'<div class="note" style="padding-top:0">Clique em uma área do mapa para ver sua posição na escala.</div>');
+  h+='<div class="cl"><div class="sw" style="background:rgba(120,130,140,.30)"></div><span>Sem informação</span></div>'+
+     '<div class="note">Faixas fixas de salário mínimo (R$ 1.212, julho de 2022), '+
+     'iguais nas duas unidades e nos dois recortes.</div></div>';
+
+  // contexto da unidade selecionada
+  if(sel)h+=blocoContexto(sel);
+
+  h+='<div class="g"><div class="gt">Média municipal</div>'+
+    '<div class="cl"><span style="font-size:13px;font-weight:700;color:var(--accent)">'+fmt(MUN,'renda_media_reais')+'</span></div>'+
+    '<div class="cl"><span style="color:var(--muted)">'+nf(MUN_SM,2)+' salários mínimos</span></div>'+
+    '<div class="note">Média ponderada pelo número de domicílios de cada setor.</div></div>';
+
+  // ── comparação com o mercado formal de trabalho ─────────────────────────
+  // O Censo e o CAGED medem coisas diferentes. Explicitar isso evita a
+  // comparação direta entre os dois números em audiência pública.
+  h+='<div class="g"><div class="gt">Este dado não é salário</div>'+
+     '<table class="pt cmp-fontes">'+
+     '<tr><th>Censo 2022 — responsável pelo domicílio</th><td>R$ '+nf(MUN)+'</td></tr>'+
+     '<tr><th>CAGED — admissão, média nacional</th><td>R$ 2.411</td></tr>'+
+     '<tr><th>RAIS + CAGED — mediana em Bragança</th><td>R$ 3.234</td></tr>'+
+     '</table>'+
+     '<div class="note" style="font-style:normal;line-height:1.6;margin-top:8px">'+
+     'O mapa mostra o <b>rendimento do responsável pelo domicílio</b> apurado pelo Censo: '+
+     'soma trabalho formal e informal, aposentadoria, pensão, aluguel e benefícios, de uma '+
+     'única pessoa por domicílio.<br><br>'+
+     'O <b>CAGED</b> registra apenas o salário de admissão em vínculos formais, por trabalhador. '+
+     'Exclui informais, autônomos, servidores e aposentados.<br><br>'+
+     'São universos distintos: os valores <b>não são comparáveis</b> entre si.'+
+     '</div></div>';
+
+  // ranking — só faz sentido por bairro
+  if(unidade==='bairro'){
+    var fs=dados().features.filter(function(f){var v=f.properties[variavel];return v!=null&&v>0;});
+    var ord=fs.slice().sort(function(a,b){return b.properties[variavel]-a.properties[variavel];});
+    function lista(arr,titulo,cor2){
+      var s='<div class="g"><div class="gt">'+titulo+'</div>';
+      arr.forEach(function(f,i){var p=f.properties;
+        var nmEsc=String(p.bairro).replace(/'/g,"");
+        s+='<div class="rk" onclick="irPara(\''+nmEsc+'\')"'+
+           ' onmouseenter="realcaItem(\''+nmEsc+'\')" onmouseleave="realcaItem(null)">'+
+           '<span class="n">'+(i+1)+'</span><span class="m">'+p.bairro+'</span>'+
+           '<span class="p">'+fmt(p[variavel])+'</span></div>';});
+      return s+'</div>';}
+    h+=lista(ord.slice(0,8),'Maiores valores','#4ade80');
+    h+=lista(ord.slice(-8).reverse(),'Menores valores','#fb923c');
+  }
+  document.getElementById('lg').innerHTML=h;
+  document.getElementById('rb-t').textContent=c.lbl;}
+
+// limpeza garantida: o mouseout nem sempre dispara ao sair do mapa pela
+// borda, ao arrastar ou ao dar zoom
+['mouseout','dragstart','zoomstart','movestart'].forEach(function(ev){
+  map.on(ev,function(){
+    if(_travado)return;                 // popup aberto: preserva a legenda
+    if(_destacado){limparDestaque(); sel=null; legenda();}});});
+map.on('popupclose',function(){
+  _travado=false; limparDestaque(); sel=null; legenda();});
+
+// ── realce ao percorrer o ranking ────────────────────────────────────────
+var _rkRealce=null;
+window.realcaItem=function(nome){
+  if(_travado) return;                  // popup aberto: não interfere
+  if(_rkRealce===nome) return;
+  _rkRealce=nome;
+  if(!Ldado)return;
+  Ldado.eachLayer(function(l){
+    var q=l.feature.properties;
+    var id=(unidade==='setor')?String(q.cd_setor):String(q.bairro||'').trim();
+    if(nome!=null && id===String(nome)){
+      l.setStyle({color:'#FFEF00',weight:unidade==='setor'?1.8:2.4,opacity:1});
+      if(l.bringToFront)l.bringToFront();
+    }else if(l!==_destacado){
+      l.setStyle(estiloBase(l.feature));
+    }});};
+
+window.irPara=function(nome){
+  if(!Ldado)return;
+  Ldado.eachLayer(function(l){
+    if(l.feature&&String(l.feature.properties.bairro)===nome){
+      map.fitBounds(l.getBounds(),{maxZoom:14,padding:[40,40]});l.openPopup();}});};
+
+// ── controles ─────────────────────────────────────────────────────────────
+window.setUnidade=function(u){unidade=u;
+  document.getElementById('u-setor').classList.toggle('on',u==='setor');
+  document.getElementById('u-bairro').classList.toggle('on',u==='bairro');
+  document.getElementById('h-unid').textContent=u==='setor'?
+    'Menor unidade divulgada pelo IBGE. Revela variações internas ao bairro.':
+    'Agregação dos setores por bairro, com médias ponderadas pelo número de domicílios.';
+  desenhar();};
+window.setVar=function(v){variavel=v;
+  document.getElementById('h-var').textContent=VARS[v].hint;desenhar();};
+window.cam=function(k,on){var l=k==='dado'?Ldado:Llim;
+  if(!l)return; if(on)l.addTo(map);else map.removeLayer(l);legenda();};
+window.op=function(v){OP=parseFloat(v);
+  if(Ldado)Ldado.setStyle(function(f){return{color:'#9fb6c9',weight:unidade==='setor'?.4:.9,opacity:.5,
+    fill:true,fillColor:cor(f.properties[variavel]),fillOpacity:OP};});};
+window.bm=function(n,b){Object.values(bms).forEach(function(l){map.removeLayer(l);});
+  bms[n].addTo(map);bms[n].bringToBack();
+  document.querySelectorAll('.bmb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');};
+window.tog=function(id){document.getElementById(id).classList.toggle('hidden');};
+
+// ── exportação ────────────────────────────────────────────────────────────
+window.abrirExport=function(){document.getElementById('mst').textContent='';
+  document.getElementById('md').classList.add('open');};
+window.fecharExport=function(){document.getElementById('md').classList.remove('open');};
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);
+  c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
+function nrt(c,cx,cy,s){c.save();c.fillStyle='#fff';c.strokeStyle='#000';c.lineWidth=.5;
+  c.beginPath();c.moveTo(cx,cy-s);c.lineTo(cx+s*.4,cy+s*.2);c.lineTo(cx,cy+s*.05);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#666';c.beginPath();c.moveTo(cx,cy-s);c.lineTo(cx-s*.4,cy+s*.2);c.lineTo(cx,cy+s*.05);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#fff';c.font='bold 10px Arial';c.textAlign='center';c.fillText('N',cx,cy-s-6);c.restore();}
+function dl(d,n){var a=document.createElement('a');a.href=d;a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a);}
+
+window.exportar=function(fmt2){
+  var st=document.getElementById('mst');st.textContent='Capturando…';
+  var el=document.getElementById('map'),W=el.offsetWidth,H=el.offsetHeight,mr=el.getBoundingClientRect();
+  var cv=document.createElement('canvas');cv.width=W;cv.height=H;var c=cv.getContext('2d');
+  c.fillStyle='#0d1b2a';c.fillRect(0,0,W,H);
+  map.eachLayer(function(l){if(!l._tiles)return;
+    Object.keys(l._tiles).forEach(function(k){var t=l._tiles[k],im=t.el;
+      if(!im||im.tagName!=='IMG'||!im.complete)return;var r=im.getBoundingClientRect();
+      try{c.drawImage(im,Math.round(r.left-mr.left),Math.round(r.top-mr.top),Math.round(r.width)||256,Math.round(r.height)||256);}catch(e){}});});
+  st.textContent='Renderizando…';
+  setTimeout(function(){
+    function pt(lng,lat){var p=map.latLngToContainerPoint(L.latLng(lat,lng));return[p.x,p.y];}
+    function pol(gl,sf){if(!gl||!map.hasLayer(gl))return;
+      gl.eachLayer(function(l){if(!l.feature)return;var s=sf(l.feature),g=l.feature.geometry,t=g.type;
+        if(t!=='Polygon'&&t!=='MultiPolygon')return;
+        (t==='Polygon'?[g.coordinates]:g.coordinates).forEach(function(p){c.beginPath();
+          p.forEach(function(r){r.forEach(function(co,i){var q=pt(co[0],co[1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]);});c.closePath();});
+          if(s.fillColor&&s.fillOpacity>0){c.globalAlpha=s.fillOpacity;c.fillStyle=s.fillColor;c.fill('evenodd');}
+          if(s.color&&s.weight>0){c.globalAlpha=s.opacity||1;c.strokeStyle=s.color;c.lineWidth=s.weight;c.stroke();}});
+        c.globalAlpha=1;});}
+    pol(Ldado,function(f){return{color:'#9fb6c9',weight:unidade==='setor'?.4:.9,opacity:.5,
+      fillColor:cor(f.properties[variavel]),fillOpacity:OP};});
+    pol(Llim,function(){return{color:'#FFEF00',weight:2,opacity:.9,fillOpacity:0};});
+
+    var P=14,t1='Renda por Setor Censitário — Bragança Paulista',
+        t2=VARS[variavel].lbl+' · '+(unidade==='setor'?'Setor censitário':'Bairro');
+    c.font='bold 13px Arial';var w1=c.measureText(t1).width;
+    c.font='10px Arial';var w2=c.measureText(t2).width;
+    var tW=Math.max(w1,w2)+P*2+4,tH=44;
+    c.fillStyle='rgba(1,117,188,.96)';rr(c,P,P,tW,tH,8);c.fill();
+    c.fillStyle='#FFEF00';c.fillRect(P,P+tH-3,tW,3);
+    c.fillStyle='#fff';c.font='bold 13px Arial';c.textAlign='left';c.fillText(t1,P*2,P+19);
+    c.fillStyle='#FFEF00';c.font='10px Arial';c.fillText(t2,P*2,P+34);
+    nrt(c,W-44,56,18);
+
+    if(breaks){
+      var r=RAMP,rh=15,gp=9,LP=11;
+      c.font='9px Arial';var mw=0;
+      for(var i=0;i<7;i++){var s2=(i===6?'≥ '+fmt(breaks[i]):fmt(breaks[i])+' – '+fmt(breaks[i+1]));
+        mw=Math.max(mw,c.measureText(s2).width);}
+      var lw=Math.min(mw+20+LP*2,235),lh=rh+(r.length+2)*rh+gp*2,lx=P,ly=H-lh-30;
+      c.globalAlpha=.95;c.fillStyle='rgba(15,34,54,.95)';rr(c,lx,ly,lw,lh,8);c.fill();
+      c.strokeStyle='rgba(255,239,0,.35)';c.lineWidth=1;rr(c,lx,ly,lw,lh,8);c.stroke();c.globalAlpha=1;
+      var cy=ly+gp;
+      c.fillStyle='#7a9ab5';c.font='bold 8px Arial';
+      c.fillText(VARS[variavel].lbl.toUpperCase(),lx+LP,cy+9);cy+=rh+2;
+      // seis faixas fixas, da maior para a menor
+      var unX=(variavel==='renda_media_sm')?' SM':'';
+      var nnX=function(x){return (variavel==='renda_media_sm')?nf(x,x%1?1:0):nf(x);};
+      for(var i=r.length-1;i>=0;i--){
+        c.fillStyle=r[i];c.fillRect(lx+LP,cy+2,14,10);
+        c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=.5;c.strokeRect(lx+LP,cy+2,14,10);
+        c.fillStyle='#e8eaf0';c.font='9px Arial';
+        var txX = (i===0) ? 'Até '+nnX(breaks[0])+unX
+                : (i>=breaks.length) ? 'Acima de '+nnX(breaks[breaks.length-1])+unX
+                : nnX(breaks[i-1])+' – '+nnX(breaks[i])+unX;
+        c.fillText(txX,lx+LP+20,cy+11);cy+=rh;}
+      c.fillStyle='rgba(120,130,140,.5)';c.fillRect(lx+LP,cy+2,14,10);
+      c.fillStyle='#e8eaf0';c.fillText('Sem informação',lx+LP+20,cy+11);
+    }
+    c.fillStyle='rgba(255,255,255,.55)';c.font='8px Arial';c.textAlign='right';
+    c.fillText('Fonte: IBGE — Censo Demográfico 2022, agregados por setores censitários',W-12,H-10);
+    try{var img=cv.toDataURL('image/jpeg',.93),fn='renda_'+unidade+'_'+variavel;
+      if(fmt2==='jpeg')dl(img,fn+'.jpg');
+      else{var o=W>H?'landscape':'portrait',mW=W*.2646,mH=H*.2646;
+        var pdf=new jspdf.jsPDF({orientation:o,unit:'mm',format:[mW,mH]});
+        pdf.addImage(img,'JPEG',0,0,mW,mH);pdf.save(fn+'.pdf');}
+      st.textContent='✓ Download iniciado!';setTimeout(fecharExport,1500);
+    }catch(e){st.textContent='✗ Erro: '+e.message;}},40);};
+
+
+Llim.addTo(map);
+document.getElementById('h-unid').textContent='Menor unidade divulgada pelo IBGE. Revela variações internas ao bairro.';
+document.getElementById('h-var').textContent=VARS[variavel].hint;
+desenhar();
+})();
+</script>
+</body>
+</html>

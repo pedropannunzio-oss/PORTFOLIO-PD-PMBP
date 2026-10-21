@@ -1,0 +1,1646 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/qgis2web.css">
+    <link rel="stylesheet" href="css/fontawesome-all.min.css">
+    <title>Queimadas · Bragança Paulista</title>
+    <style>
+    :root { --bg:#0d1b2a;
+        --bg-panel:#0f2236; --bg-panel2:#132b42; --bg-card:#1a3550;
+        --accent:#FFEF00; --accent2:#ffe44d; --text:#e8eaf0;
+        --text-muted:#7a9ab5; --border:rgba(255,255,255,0.10);
+        --blue:#0175bc; --sidebar-w:310px; --rw:300px; --header-h:52px; --muted:#7a9ab5;}
+    *,*::before,*::after{box-sizing:border-box;}
+    html,body{width:100%;height:100%;padding:0;margin:0;font-family:'Raleway',sans-serif;background:var(--bg-panel);overflow:hidden;}
+    /* CABECALHO - padrao do portal */
+    #pd-header{position:fixed;top:0;left:0;right:0;height:var(--header-h);
+      background:var(--blue);border-bottom:3px solid var(--accent);
+      display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+    #pd-header .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;
+      box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+    #pd-header h1{font-family:'Outfit',sans-serif;font-weight:700;font-size:15px;color:#fff;
+      text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin:0;}
+    #pd-header h1 span{color:var(--accent);}
+    #pd-header .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;margin:0;}
+    #pd-header .sep{flex:1;}
+    .hbadge{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
+      border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+    #pd-back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);
+      color:rgba(255,255,255,.8);font-family:'Raleway',sans-serif;font-size:12px;
+      padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .15s;
+      text-decoration:none;display:flex;align-items:center;gap:6px;}
+    #pd-back:hover{color:var(--accent);border-color:rgba(255,239,0,.6);}
+    #pd-export,#pd-panel,#pd-legenda{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);
+      color:var(--accent);font-family:'Raleway',sans-serif;font-size:12px;font-weight:500;
+      padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;
+      white-space:nowrap;display:flex;align-items:center;gap:6px;}
+    #pd-export:hover,#pd-panel:hover,#pd-legenda:hover{background:rgba(255,239,0,.18);}
+    #app{display:flex;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;}
+    #sidebar{width:var(--sidebar-w);background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .3s cubic-bezier(.4,0,.2,1),opacity .3s;flex-shrink:0;z-index:8000;}
+    #sidebar.collapsed{width:0;opacity:0;pointer-events:none;}
+    #sidebar-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bg-card) transparent;}
+    #sidebar-scroll::-webkit-scrollbar{width:4px;}
+    #sidebar-scroll::-webkit-scrollbar-thumb{background:var(--bg-card);border-radius:2px;}
+    .panel-section{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+    .panel-section:last-child{border-bottom:none;}
+    .section-label{font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin:0 0 10px;}
+    /* MAPA BASE - padrao do portal */
+    .bmr{display:flex;gap:8px;margin-top:6px;}
+    .bmb{flex:1;background:var(--bg-card);border:1px solid var(--border);
+      color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:11px;
+      padding:6px 4px;border-radius:6px;cursor:pointer;text-align:center;}
+    .bmb:hover{border-color:rgba(255,239,0,.5);color:var(--text);}
+    .bmb.on{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,.08);}
+    /* Filtro de ano */
+    .year-filter-grid{display:flex;flex-wrap:wrap;gap:6px;}
+    .year-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;color:var(--text-muted);transition:all .15s;}
+    .year-btn:hover{border-color:rgba(255,100,0,0.5);color:var(--text);}
+    .year-btn.active{border-color:#ff6b00;color:#ff6b00;background:rgba(255,107,0,0.12);}
+    .year-btn.all-btn{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,0.08);}
+    .mes-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:5px 9px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;color:var(--text-muted);transition:all .15s;}
+    .mes-btn:hover{border-color:rgba(255,100,0,0.5);color:var(--text);}
+    .mes-btn.active{border-color:#ff6b00;color:#ff6b00;background:rgba(255,107,0,0.12);}
+    .mes-btn.all-btn{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,0.08);}
+    /* gráfico de sazonalidade: 12 barras, altura proporcional aos focos do mês */
+    #saz-graf{display:flex;align-items:flex-end;gap:3px;height:42px;margin:10px 0 2px;}
+    .saz-b{flex:1;background:rgba(255,107,0,.35);border-radius:2px 2px 0 0;min-height:2px;transition:background .15s;}
+    .saz-b.on{background:#ff6b00;}
+    /* blocos de análise no painel direito */
+    .an-tab{width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:4px;}
+    .an-tab th{text-align:left;font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;
+      letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);
+      padding:3px 4px;border-bottom:1px solid var(--border);font-weight:700;}
+    .an-tab td{padding:3px 4px;border-bottom:1px solid rgba(255,255,255,.05);color:var(--text);}
+    .an-tab td.n{text-align:right;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap;}
+    .an-tab tr.destaque td{color:#ff8c00;}
+    .an-nota{font-size:9.5px;color:var(--text-muted);line-height:1.5;margin:4px 2px 12px;font-style:italic;}
+    .an-sub{font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;
+      text-transform:uppercase;color:var(--text-muted);margin:14px 0 5px;}
+    .stats-bar{display:flex;gap:6px;margin-top:10px;}
+    .stat-item{flex:1;text-align:center;padding:8px 4px;background:rgba(1,48,90,0.6);border-radius:6px;border:1px solid var(--border);}
+    .stat-num{font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;color:#ff6b00;display:block;}
+    .stat-label{font-size:9px;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;}
+    /* Layer controls */
+    .layer-item{margin-bottom:10px;} .layer-item:last-child{margin-bottom:0;}
+    .layer-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+    .layer-toggle{position:relative;width:32px;height:18px;flex-shrink:0;}
+    .layer-toggle input{opacity:0;width:0;height:0;}
+    .toggle-track{position:absolute;inset:0;background:var(--bg-card);border-radius:9px;cursor:pointer;transition:background .2s;border:1px solid var(--border);}
+    .toggle-track::after{content:'';position:absolute;left:2px;top:2px;width:12px;height:12px;background:var(--text-muted);border-radius:50%;transition:all .2s;}
+    .layer-toggle input:checked+.toggle-track{background:rgba(255,239,0,0.15);border-color:var(--accent);}
+    .layer-toggle input:checked+.toggle-track::after{background:var(--accent);left:16px;}
+    .layer-name{font-size:12px;color:var(--text);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .opacity-row{display:flex;align-items:center;gap:8px;padding-left:40px;}
+    .opacity-label{font-size:10px;color:var(--text-muted);width:20px;text-align:right;flex-shrink:0;}
+    input[type=range]{flex:1;appearance:none;height:3px;border-radius:2px;background:var(--bg-card);outline:none;cursor:pointer;}
+    input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;}
+    .layer-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0;}
+    .layer-info-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:0 2px;opacity:.6;transition:opacity .15s,color .15s;flex-shrink:0;}
+    .layer-info-btn:hover{opacity:1;color:var(--accent2);}
+    .layer-tooltip{position:absolute;left:16px;right:16px;background:rgba(1,48,90,0.97);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text-muted);line-height:1.6;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;}
+    .layer-tooltip.visible{display:block;}
+    .layer-tooltip strong{color:var(--text);display:block;margin-bottom:4px;font-size:12px;}
+    /* Legenda */
+    .legend-row{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);margin-bottom:5px;}
+    .legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+    .legend-line{width:20px;height:2px;flex-shrink:0;}
+    /* rótulo de bairro: ancorado no polo de inacessibilidade do polígono */
+    .rot-bairro{pointer-events:none!important;}
+    .rot-bairro span{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;
+      font-family:'Outfit',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.02em;
+      color:#fff;text-shadow:0 0 3px rgba(0,0,0,.95),0 0 6px rgba(0,0,0,.8),0 1px 2px rgba(0,0,0,.9);}
+    .sw-calor{width:16px;height:12px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
+    /* Info panel */
+    #info-panel{padding:14px 16px;}
+    #info-content{font-size:11px;color:var(--text-muted);line-height:1.7;}
+    .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80px;text-align:center;gap:8px;}
+    .placeholder .ph-icon{font-size:26px;opacity:.2;}
+    .placeholder p{margin:0;font-size:11px;color:var(--text-muted);}
+    .info-field{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;border-bottom:1px solid var(--border);gap:8px;}
+    .info-field:last-child{border-bottom:none;}
+    .info-key{font-size:10px;color:var(--text-muted);flex:1;padding-top:1px;}
+    .info-val{font-size:11px;color:var(--accent);font-weight:500;font-family:'Outfit',sans-serif;text-align:right;max-width:170px;word-break:break-word;}
+    .info-title .tag{font-size:9px;background:rgba(255,107,0,0.15);color:#ff6b00;border-radius:3px;padding:1px 5px;font-weight:600;}
+    .risco-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;font-family:'Outfit',sans-serif;}
+    .frp-warning{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.35);border-radius:6px;padding:8px 10px;margin-top:8px;font-size:10px;color:#fbbf24;line-height:1.5;display:none;}
+    .frp-warning.visible{display:block;}
+    .frp-warning strong{color:#fde68a;display:block;margin-bottom:2px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;}
+    /* Map */
+    #map-wrap{flex:1;position:relative;overflow:hidden;}
+    #map{width:100%;height:100%;}
+    #bottom-bar{position:absolute;bottom:0;left:0;right:0;height:28px;background:rgba(1,48,90,0.92);backdrop-filter:blur(6px);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:16px;z-index:1000;font-size:10px;color:var(--text-muted);font-family:'Raleway',sans-serif;}
+    #coords-display{font-variant-numeric:tabular-nums;}
+    #zoom-display{margin-left:auto;}
+                                                    /* Leaflet overrides */
+    .leaflet-control-zoom{border:none!important;box-shadow:none!important;}
+    .leaflet-control-zoom a{background:var(--bg-panel)!important;color:var(--text-muted)!important;border:1px solid var(--border)!important;border-radius:6px!important;margin-bottom:3px!important;width:30px!important;height:30px!important;line-height:30px!important;font-size:16px!important;}
+    .leaflet-control-zoom a:hover{background:var(--bg-card)!important;color:var(--accent)!important;border-color:var(--accent)!important;}
+                    .leaflet-control-attribution{background:rgba(1,48,90,0.85)!important;color:var(--text-muted)!important;font-size:9px!important;}
+    .leaflet-control-attribution a{color:var(--accent2)!important;}
+    .leaflet-control-scale-line{background:rgba(1,48,90,0.85)!important;border-color:var(--text-muted)!important;color:var(--text-muted)!important;font-size:9px!important;}
+    .leaflet-control-scale{margin-bottom:34px!important;}
+    .leaflet-popup-content-wrapper{background:var(--bg-panel2)!important;border:1px solid var(--border)!important;border-radius:10px!important;color:var(--text)!important;box-shadow:0 8px 32px rgba(0,0,0,0.5)!important;}
+    .leaflet-popup-tip{background:var(--bg-panel2)!important;}
+    .leaflet-popup-content{margin:12px 14px!important;font-size:11px;color:var(--text-muted);}
+    .leaflet-popup-close-button{color:var(--text-muted)!important;}
+    .leaflet-popup-close-button:hover{color:var(--accent)!important;}
+    .popup-queimada .leaflet-popup-content-wrapper{background:var(--bg-panel2)!important;border:1px solid rgba(255,107,0,0.3)!important;border-top:3px solid #ff6b00!important;}
+    .popup-queimada .leaflet-popup-tip{background:var(--bg-panel2)!important;}
+    .leaflet-control-layers,.leaflet-photon{display:none!important;}
+    /* Export */
+    #export-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:99000;display:flex;align-items:center;justify-content:center;}
+    #export-box{background:var(--bg-panel2);border:1px solid var(--border);border-radius:14px;padding:28px 32px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+    #export-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;}
+    #export-desc{font-size:12px;color:var(--text-muted);margin:0 0 20px;}
+    #export-btns{display:flex;gap:10px;margin-bottom:16px;}
+    .exp-btn{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Raleway',sans-serif;font-size:13px;padding:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .exp-btn:hover{border-color:var(--accent);color:var(--accent);}
+    #export-status{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:12px;text-align:center;}
+    #export-close{width:100%;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:12px;padding:8px;cursor:pointer;}
+    
+        .badge {
+            font-family: 'Outfit',sans-serif; font-size: 10px; font-weight: 700;
+            color: var(--accent); border: 1px solid rgba(255,239,0,.4);
+            padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+        }
+        .hdr-sep { flex: 1; }
+                .sub {
+            font-size: 11px; color: rgba(255,255,255,.65);
+            font-weight: 300; white-space: nowrap; margin: 0;
+        }
+        
+/* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
+#hd h1, #header h1, #pd-header h1 {
+  font-family:'Outfit',sans-serif; font-weight:700; font-size:14px; color:#fff;
+  text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
+}
+#hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
+#hd .sub, #header .sub, #pd-header .sub,
+#hd .subtitle, #header .subtitle, #pd-header .subtitle {
+  font-size:11px; color:rgba(255,255,255,.65); font-weight:300;
+  white-space:nowrap; margin:0; line-height:1.3;
+}
+#hd .badge, #header .badge, #pd-header .badge,
+#hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
+  font-family:'Outfit',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
+  border:1px solid rgba(255,239,0,.4); background:transparent;
+  padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
+}
+
+/* ── tipografia e cor: textos longos e valores numéricos ──────────────── */
+/* Prosa explicativa em branco: popups, onboarding e notas de rodapé de
+   painel. Cabeçalhos e apontamentos de legenda mantêm o azul claro. */
+.pexp, .nota, .sel-vazio, .pc-note, #pnl-hint, .bar-sub-long {
+  color: var(--text) !important;
+}
+/* Valores numéricos em legenda: cor fixa de alta legibilidade.
+   A cor da categoria fica no quadradinho e na barra, nunca no número. */
+.bar-lb .v, .rk .p, .li .cnt, .sel-v, .pt td, .pc-v {
+  color: var(--text) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+    /* Painel direito — convenção dos demais mapas */
+    #rb{width:var(--rw);background:var(--bg-panel);border-left:1px solid var(--border);
+      display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;z-index:8000;
+      transition:width .3s cubic-bezier(.4,0,.2,1),opacity .3s;}
+    #rb.collapsed{width:0;opacity:0;pointer-events:none;}
+    .rb-head{padding:12px 15px 9px;border-bottom:1px solid var(--border);flex-shrink:0;
+      font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--accent);
+      text-transform:uppercase;letter-spacing:.07em;}
+    .rb-body{flex:1;overflow-y:auto;min-height:0;}
+    .rb-body::-webkit-scrollbar{width:4px;}
+    .rb-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
+    #rb .panel-section{border-bottom:1px solid var(--border);}
+    #rb .panel-section:last-child{border-bottom:none;}
+
+    /* Card de leitura — mesmo desenho dos demais mapas */
+    .info-card{background:rgba(255,239,0,.07);border-left:2px solid var(--accent);
+      border-radius:0 5px 5px 0;padding:9px 11px;margin-bottom:10px;}
+    .info-title{font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:700;
+      color:#fff;line-height:1.25;margin:0;}
+    .info-cls{font-size:9.5px;color:var(--text-muted);margin-top:2px;line-height:1.3;}
+    .info-tab{width:100%;border-collapse:collapse;}
+    .info-tab th{text-align:left;padding:5px 8px 5px 0;font-size:10px;font-weight:600;
+      text-transform:uppercase;color:var(--text-muted);
+      border-bottom:1px solid rgba(255,255,255,.06);width:52%;line-height:1.35;}
+    .info-tab td{padding:5px 0 5px 8px;font-size:11.5px;color:var(--text);
+      border-bottom:1px solid rgba(255,255,255,.06);text-align:right;
+      font-variant-numeric:tabular-nums;font-family:'Outfit',sans-serif;overflow-wrap:break-word;}
+    .info-tab tr:last-child th,.info-tab tr:last-child td{border-bottom:none;}
+    .iz-trava{display:flex;align-items:center;gap:6px;font-family:'Outfit',sans-serif;
+      font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+      color:var(--accent);margin-bottom:7px;}
+    .iz-trava button{margin-left:auto;font-family:'Outfit',sans-serif;font-size:9px;
+      font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);
+      background:transparent;border:1px solid var(--border);border-radius:4px;
+      padding:2px 7px;cursor:pointer;}
+    .iz-trava button:hover{color:var(--accent);border-color:var(--accent);}
+
+    .stat-nota{font-size:10px;color:var(--text-muted);line-height:1.5;margin:7px 2px 0;font-style:italic;}
+    .stat-nota b{color:var(--text);font-style:normal;}
+</style>
+</head>
+<body>
+
+<!-- CABECALHO -->
+<div id="pd-header">
+    <div class="logo-dot"></div>
+    <div>
+        <h1>Queimadas <span>Focos de Incêndio</span></h1>
+        <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
+    </div>
+    <div class="sep"></div>
+    <span class="hbadge">INPE · 2015–2025</span>
+    <a id="pd-back" href="../portal.html">&#8592; Portal</a>
+    <button id="pd-export" onclick="openExportModal()">&#8595; Exportar</button>
+    <button id="pd-panel" onclick="toggleSidebar()">&#9776; Painel</button>
+    <button id="pd-legenda" onclick="toggleLegenda()">&#9636; Legenda</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div id="sidebar">
+<div id="sidebar-scroll">
+
+    <!-- Basemap -->
+    <div class="panel-section">
+        <p class="section-label">Mapa base</p>
+        <div class="bmr">
+            <button class="bmb" onclick="setBasemap('dark')" id="bm-dark">Escuro</button>
+            <button class="bmb" onclick="setBasemap('osm')" id="bm-osm">Mapa</button>
+            <button class="bmb on" onclick="setBasemap('satellite')" id="bm-satellite">Satélite</button>
+        </div>
+    </div>
+
+    <!-- Filtro de Ano -->
+    <div class="panel-section">
+        <p class="section-label">Filtrar por ano</p>
+        <div class="year-filter-grid">
+            <button class="year-btn all-btn active" onclick="setYearFilter('all')">Todos</button>
+            <button class="year-btn" onclick="setYearFilter('2015')">2015</button>
+            <button class="year-btn" onclick="setYearFilter('2016')">2016</button>
+            <button class="year-btn" onclick="setYearFilter('2017')">2017</button>
+            <button class="year-btn" onclick="setYearFilter('2018')">2018</button>
+            <button class="year-btn" onclick="setYearFilter('2019')">2019</button>
+            <button class="year-btn" onclick="setYearFilter('2020')">2020</button>
+            <button class="year-btn" onclick="setYearFilter('2021')">2021</button>
+            <button class="year-btn" onclick="setYearFilter('2022')">2022</button>
+            <button class="year-btn" onclick="setYearFilter('2023')">2023</button>
+            <button class="year-btn" onclick="setYearFilter('2024')">2024</button>
+            <button class="year-btn" onclick="setYearFilter('2025')">2025</button>
+        </div>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-num" id="stat-focos">—</span>
+                <span class="stat-label">Detecções</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num" id="stat-eventos">—</span>
+                <span class="stat-label">Focos distintos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num" id="stat-ano">Todos</span>
+                <span class="stat-label">Período</span>
+            </div>
+        </div>
+
+    <!-- Filtro de Mês -->
+    <div class="panel-section">
+        <p class="section-label">Filtrar por mês</p>
+        <div class="year-filter-grid">
+            <button class="mes-btn all-btn active" onclick="setMesFilter('all')">Todos</button>
+            <button class="mes-btn" onclick="setMesFilter(1)">jan</button>
+            <button class="mes-btn" onclick="setMesFilter(2)">fev</button>
+            <button class="mes-btn" onclick="setMesFilter(3)">mar</button>
+            <button class="mes-btn" onclick="setMesFilter(4)">abr</button>
+            <button class="mes-btn" onclick="setMesFilter(5)">mai</button>
+            <button class="mes-btn" onclick="setMesFilter(6)">jun</button>
+            <button class="mes-btn" onclick="setMesFilter(7)">jul</button>
+            <button class="mes-btn" onclick="setMesFilter(8)">ago</button>
+            <button class="mes-btn" onclick="setMesFilter(9)">set</button>
+            <button class="mes-btn" onclick="setMesFilter(10)">out</button>
+            <button class="mes-btn" onclick="setMesFilter(11)">nov</button>
+            <button class="mes-btn" onclick="setMesFilter(12)">dez</button>
+        </div>
+        <div id="saz-graf"></div>
+        <p class="stat-nota">Três em cada quatro focos caem entre junho e setembro.</p>
+    </div>
+        <p class="stat-nota">Dezesseis satélites alimentam a série e o mesmo
+        incêndio costuma ser visto por vários deles. Agrupando as detecções
+        vizinhas em até 1&nbsp;km e 24&nbsp;h, das 1.537 detecções restam
+        <b>702 focos distintos</b> — é sobre eles que a recorrência é
+        calculada, e é o que o mapa desenha por padrão.</p>
+        <div class="frp-warning" id="frp-warning">
+            <strong>Sem potência radiativa neste período</strong>
+            <span id="frp-total-detected"></span> não trazem FRP no extrato do INPE. Elas aparecem no mapa com tamanho neutro: a detecção é válida, só não há medida de intensidade.
+        </div>
+    </div>
+
+    <!-- Camadas -->
+    <div class="panel-section">
+        <p class="section-label">Camadas visíveis</p>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-focos" checked onchange="toggleLayerPane('pane_Queimadas_UsodoSolo_5',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🔥</span><span class="layer-name">Focos de Queimada</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-focos')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-focos"><strong>Focos de Queimada — INPE/BDQueimadas</strong>Registros de satélite de 2015 a 2025, com data, satélite, bioma, risco de fogo e FRP (Fire Radiative Power). Em <strong>focos distintos</strong>, as detecções do mesmo incêndio (até 1 km e 24 h) entram uma só vez, pela de maior FRP — é o conjunto que alimenta a superfície de recorrência. Em <strong>detecções</strong>, cada passagem de satélite aparece separadamente.</div>
+            <div class="bmr" style="margin-top:8px">
+                <button class="bmb modo-btn on" onclick="setModoFocos('eventos',this)">Focos distintos</button>
+                <button class="bmb modo-btn" onclick="setModoFocos('deteccoes',this)">Detecções</button>
+            </div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-heat" checked onchange="toggleHeatmap(this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🌡️</span><span class="layer-name">Recorrência de Focos</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-heat')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-heat"><strong>Recorrência de Focos — superfície de densidade</strong>Densidade dos 702 focos distintos de 2015 a 2025, estimada por núcleo quártico de 1.000 m em SIRGAS 2000 / UTM 23S e recortada em cinco classes de intervalo de retorno. O núcleo vale zero fora do raio: nenhuma mancha nasce a mais de 1 km de um foco real, e os 190 km² em branco são ausência de registro, não resíduo de desenho. A geometria é fixa no território: aproximar ou afastar o mapa não altera o tamanho nem o formato das manchas. Cobre a série inteira e não acompanha o filtro de ano — um ano isolado tem de 6 a 115 focos em 512 km², amostra pequena demais para estimar densidade.</div>
+            <div class="opacity-row">
+                <span class="opacity-label" id="op-heat-val">60%</span>
+                <input type="range" min="0" max="100" value="60" oninput="setHeatOpacity(this.value)">
+            </div>
+            <p class="stat-nota" id="calor-serie" style="display:none">A recorrência continua mostrando <b>a série inteira</b>; o filtro de ano age sobre os focos.</p>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-hidro" checked onchange="toggleHidro(this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">💧</span><span class="layer-name">Hidrografia</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-hidro')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-hidro"><strong>Hidrografia — Linhas e Polígonos</strong>Rede hidrográfica e corpos d'água do município para referência territorial.</div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-bacias" checked onchange="toggleLayerPane('pane_BACIAS_HIDROGRAFICAS_4',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🔲</span><span class="layer-name">Bacias Hidrográficas</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-bacias')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-bacias"><strong>Bacias Hidrográficas — PMBP</strong>As onze bacias do município, com focos, área e densidade próprias. Passe o cursor para ler. A do Lavapés sozinha concentra um terço dos focos da série.</div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-bairros" checked onchange="toggleLayerPane('pane_BAIRROS_IBGE_7',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🏘️</span><span class="layer-name">Bairros (IBGE)</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-bairros')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-bairros"><strong>Bairros — IBGE, Censo 2022</strong>Os 60 bairros da divisão do IBGE. Cada um traz focos, área, densidade, variação entre 2015–2019 e 2020–2025, exposição por 10 mil moradores e a composição urbana e rural dos seus setores censitários. Entram como contorno: a cor do mapa pertence à superfície de recorrência.</div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-limite" checked onchange="toggleLayerPane('pane_LIMITE_MUNICIPAL_8',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">▭</span><span class="layer-name">Perímetro municipal</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-limite')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-limite"><strong>Perímetro municipal</strong>Limite de Bragança Paulista, 512,5 km². Todas as densidades deste mapa usam essa área como referência.</div>
+        </div>
+
+        <div class="layer-item">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-base" checked onchange="toggleBasemapLayer(this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🛰️</span><span class="layer-name">Imagem de fundo</span>
+            </div>
+            <div class="opacity-row">
+                <span class="opacity-label" id="op-base-val">70%</span>
+                <input type="range" min="0" max="100" value="70" oninput="setBasemapOpacity(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Legenda -->
+
+
+    <!-- Info -->
+
+
+</div></div><!-- /sidebar-scroll /sidebar -->
+
+<!-- MAP -->
+<div id="map-wrap">
+    <div id="map"></div>
+    <div id="bottom-bar"><span id="coords-display">—</span><span id="zoom-display">Zoom: —</span></div>
+</div>
+    <div id="rb">
+      <div class="rb-head">Legenda e informações</div>
+      <div class="rb-body">
+    <div id="info-panel" class="panel-section">
+        <p class="section-label">Dados do foco selecionado</p>
+        <div id="info-content">
+            <div class="placeholder"><span class="ph-icon">🔥</span><p>Passe o cursor sobre um foco ou sobre a superfície de recorrência para ver os dados. Clique para travar a leitura.</p></div>
+        </div>
+    </div>
+    <div class="panel-section">
+        <p class="section-label">Análise do território</p>
+        <div id="an-conteudo"></div>
+    </div>
+    <div class="panel-section">
+        <p class="section-label">Legenda do mapa</p>
+        <p style="font-size:9px;color:var(--text-muted);margin:0 0 6px;font-family:'Raleway',sans-serif">Foco de queimada — tamanho proporcional ao FRP (Fire Radiative Power). Anel tracejado: detecção sem FRP no extrato do INPE.</p>
+        <div style="display:flex;align-items:center;gap:10px;padding-left:2px">
+<div class="legend-row"><div style="width:6px;height:6px;border-radius:50%;background:#ff6b00;border:1px solid rgba(0,0,0,0.4);flex-shrink:0;margin:0 3px"></div>FRP baixo</div>
+<div class="legend-row"><div style="width:9px;height:9px;border-radius:50%;background:#ff6b00;border:1px solid rgba(0,0,0,0.4);flex-shrink:0;margin:0 1px"></div>FRP médio</div>
+<div class="legend-row"><div style="width:12px;height:12px;border-radius:50%;background:#ff6b00;border:1px solid rgba(0,0,0,0.4);flex-shrink:0;margin:0 0px"></div>FRP alto</div>
+        </div>
+        <div class="legend-row" style="margin-top:6px"><div style="width:11px;height:11px;border-radius:50%;background:rgba(255,107,0,0.35);border:1px dashed rgba(255,255,255,0.85);flex-shrink:0"></div>Sem FRP no extrato</div>
+        <p style="font-size:9px;color:var(--text-muted);margin:12px 0 5px;font-family:'Raleway',sans-serif">Recorrência de focos — intervalo esperado entre dois focos num mesmo km², pela taxa observada em 2015–2025.</p>
+        <div class="legend-row"><div class="sw-calor" style="background:#b5161a"></div>Crítica — 1 a cada 2 anos ou menos</div>
+        <div class="legend-row"><div class="sw-calor" style="background:#f04b1e"></div>Muito alta — 1 a cada 2 a 3 anos</div>
+        <div class="legend-row"><div class="sw-calor" style="background:#ff8c00"></div>Alta — 1 a cada 3 a 5 anos</div>
+        <div class="legend-row"><div class="sw-calor" style="background:#ffc14d"></div>Moderada — 1 a cada 5 a 10 anos</div>
+        <div class="legend-row"><div class="sw-calor" style="background:#ffe79a"></div>Baixa — 1 a cada 10 a 20 anos</div>
+        <p style="font-size:9px;color:var(--text-muted);margin:5px 0 0;font-family:'Raleway',sans-serif;font-style:italic">Os 190 km² sem cor estão a mais de 1 km de qualquer foco ou abaixo de 1 a cada 20 anos por km² — além do que onze anos de série sustentam.</p>
+        <div class="legend-row" style="margin-top:6px"><div class="legend-line" style="background:rgba(34,108,220,1);height:1.5px"></div>Hidrografia</div>
+        <div class="legend-row"><div class="legend-line" style="background:rgba(34,108,220,0.8);height:2px;border-top:1px dashed rgba(34,108,220,1)"></div>Bacias Hidrográficas</div>
+    </div>
+      </div>
+    </div>
+
+</div><!-- /app -->
+
+<!-- EXPORT MODAL -->
+<div id="export-modal" style="display:none">
+    <div id="export-box">
+        <div id="export-title">&#8595; Exportar mapa</div>
+        <p id="export-desc">Escolha o formato. O mapa será capturado na visualização atual.</p>
+        <div id="export-btns">
+            <button class="exp-btn" onclick="doExport('jpeg')">Imagem JPEG</button>
+            <button class="exp-btn" onclick="doExport('pdf')">PDF</button>
+        </div>
+        <div id="export-status"></div>
+        <button id="export-close" onclick="closeExportModal()">Cancelar</button>
+    </div>
+</div>
+
+
+<!-- SCRIPTS — mesma ordem do original -->
+<script src="js/qgis2web_expressions.js"></script>
+<script src="js/leaflet.js"></script>
+<script src="js/leaflet.rotatedMarker.js"></script>
+<script src="js/leaflet.pattern.js"></script>
+<script src="js/leaflet-hash.js"></script>
+<script src="js/Autolinker.min.js"></script>
+<script src="data/hidrografia_linha_correo_2.js"></script>
+<script src="data/hidrografia_polgono_correo_3.js"></script>
+<script src="data/BACIAS_HIDROGRAFICAS_4.js"></script>
+<script src="data/Queimadas_UsodoSolo_5.js"></script>
+<script src="data/CALOR_RECORRENCIA_6.js"></script>
+<script src="data/BAIRROS_IBGE_7.js"></script>
+<script src="data/LIMITE_MUNICIPAL_8.js"></script>
+<script src="data/RESUMO_ANALISE_9.js"></script>
+<script>
+'use strict';
+
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[-23.0530,-46.7220],[-22.8210,-46.4050]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // modify popup if contains media
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
+                    var audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = src;
+                    imgTd.parentNode.replaceChild(audio, imgTd);
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
+                    var video = document.createElement('video');
+                    video.controls = true;
+                    video.src = src;
+                    video.style.width = "400px";
+                    video.style.height = "300px";
+                    video.style.maxHeight = "60vh";
+                    video.style.maxWidth = "60vw";
+                    imgTd.parentNode.replaceChild(video, imgTd);
+                    popup._contentNode.classList.add('media');
+                    // Aggiorna il popup quando il video carica i metadati
+                    video.addEventListener('loadedmetadata', function() {
+                        popup.update();
+                    });
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else {
+                    popup._contentNode.classList.remove('media');
+                }
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleSatellite_0');
+        map.getPane('pane_GoogleSatellite_0').style.zIndex = 400;
+        var layer_GoogleSatellite_0 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            pane: 'pane_GoogleSatellite_0',
+            opacity: 0.7,
+            attribution:'Esri, Maxar, Earthstar Geographics',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleSatellite_0;
+        map.addLayer(layer_GoogleSatellite_0);
+        function pop_hidrografia_linha_correo_2(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['fid'] !== null ? autolinker.link(String(feature.properties['fid']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['id'] !== null ? autolinker.link(String(feature.properties['id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Name'] !== null ? autolinker.link(String(feature.properties['Name']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['description'] !== null ? autolinker.link(String(feature.properties['description']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+        }
+
+        function style_hidrografia_linha_correo_2_0() {
+            return {
+                pane: 'pane_hidrografia_linha_correo_2',
+                opacity: 1,
+                color: 'rgba(34,108,220,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: false,
+            }
+        }
+        map.createPane('pane_hidrografia_linha_correo_2');
+        map.getPane('pane_hidrografia_linha_correo_2').style.zIndex = 402;
+        map.getPane('pane_hidrografia_linha_correo_2').style['mix-blend-mode'] = 'normal';
+        var layer_hidrografia_linha_correo_2 = new L.geoJson(json_hidrografia_linha_correo_2, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_hidrografia_linha_correo_2',
+            layerName: 'layer_hidrografia_linha_correo_2',
+            pane: 'pane_hidrografia_linha_correo_2',
+            onEachFeature: pop_hidrografia_linha_correo_2,
+            style: style_hidrografia_linha_correo_2_0,
+        });
+        bounds_group.addLayer(layer_hidrografia_linha_correo_2);
+        map.addLayer(layer_hidrografia_linha_correo_2);
+        function pop_hidrografia_polgono_correo_3(feature, layer) {
+            var popupContent = '<table>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+        }
+
+        function style_hidrografia_polgono_correo_3_0() {
+            return {
+                pane: 'pane_hidrografia_polgono_correo_3',
+                opacity: 1,
+                color: 'rgba(34,108,220,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(34,108,220,1.0)',
+                interactive: false,
+            }
+        }
+        map.createPane('pane_hidrografia_polgono_correo_3');
+        map.getPane('pane_hidrografia_polgono_correo_3').style.zIndex = 403;
+        map.getPane('pane_hidrografia_polgono_correo_3').style['mix-blend-mode'] = 'normal';
+        var layer_hidrografia_polgono_correo_3 = new L.geoJson(json_hidrografia_polgono_correo_3, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_hidrografia_polgono_correo_3',
+            layerName: 'layer_hidrografia_polgono_correo_3',
+            pane: 'pane_hidrografia_polgono_correo_3',
+            onEachFeature: pop_hidrografia_polgono_correo_3,
+            style: style_hidrografia_polgono_correo_3_0,
+        });
+        bounds_group.addLayer(layer_hidrografia_polgono_correo_3);
+        map.addLayer(layer_hidrografia_polgono_correo_3);
+        function style_BACIAS_HIDROGRAFICAS_4_0() {
+            return {
+                pane: 'pane_BACIAS_HIDROGRAFICAS_4',
+                opacity: 1,
+                color: 'rgba(34,108,220,1.0)',
+                dashArray: '20.0,4.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 4.0, 
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_BACIAS_HIDROGRAFICAS_4');
+        map.getPane('pane_BACIAS_HIDROGRAFICAS_4').style.zIndex = 404;
+        map.getPane('pane_BACIAS_HIDROGRAFICAS_4').style['mix-blend-mode'] = 'normal';
+        var layer_BACIAS_HIDROGRAFICAS_4 = new L.geoJson(json_BACIAS_HIDROGRAFICAS_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_BACIAS_HIDROGRAFICAS_4',
+            layerName: 'layer_BACIAS_HIDROGRAFICAS_4',
+            pane: 'pane_BACIAS_HIDROGRAFICAS_4',
+            style: style_BACIAS_HIDROGRAFICAS_4_0,
+        });
+        bounds_group.addLayer(layer_BACIAS_HIDROGRAFICAS_4);
+        map.addLayer(layer_BACIAS_HIDROGRAFICAS_4);
+        map.createPane('pane_Queimadas_UsodoSolo_5');
+        map.getPane('pane_Queimadas_UsodoSolo_5').style.zIndex = 408;
+        map.getPane('pane_Queimadas_UsodoSolo_5').style['mix-blend-mode'] = 'normal';
+        function style_Queimadas_UsodoSolo_5_0(feature) {
+            var temFrp = feature.properties['FRP'] != null && feature.properties['FRP'] !== '';
+            var frp   = temFrp ? (parseFloat(feature.properties['FRP']) || 2) : null;
+            var risco = parseFloat(feature.properties['RiscoFogo']) || 0;
+            // Cor única: o ponto diz apenas que houve fogo ali. A classificação
+            // por uso do solo saiu — ela vem de um recorte do MapBiomas feito
+            // para outro estudo, sobre áreas do CAR, e não é objeto deste mapa.
+            // O que o ponto ainda codifica é o FRP, no tamanho.
+            var cor = '#ff6b00';
+            // Sem FRP não é fogo fraco, é medida ausente: dar a esses focos o
+            // menor raio os faria parecer de baixa intensidade. Recebem um
+            // tamanho intermediário e o anel tracejado, que diz "sem medida".
+            var radius = temFrp ? Math.min(12, Math.max(4, 4 + Math.sqrt(frp) * 0.8)) : 6;
+            var fillOp = risco > 0 ? Math.max(0.5, Math.min(1.0, risco)) : 0.75;
+            return {
+                pane:        'pane_Queimadas_UsodoSolo_5',
+                radius:      radius,
+                color:       temFrp ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.85)',
+                weight:      temFrp ? 0.8 : 1.1,
+                dashArray:   temFrp ? null : '2,2',
+                fill:        true,
+                fillOpacity: temFrp ? fillOp : 0.35,
+                fillColor:   cor,
+                interactive: true,
+            };
+        }
+        var layer_Queimadas_UsodoSolo_5 = new L.geoJson(json_Queimadas_UsodoSolo_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Queimadas_UsodoSolo_5',
+            layerName: 'layer_Queimadas_UsodoSolo_5',
+            pane: 'pane_Queimadas_UsodoSolo_5',
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Queimadas_UsodoSolo_5_0(feature));
+            },
+        });
+        // Todas as detecções entram no mapa. O FRP é um atributo entre outros:
+        // a sua ausência não desfaz a detecção. O INPE não publicou FRP para
+        // 2015, 2016 e 2017 neste extrato — ocultá-los apagava três dos onze
+        // anos da série.
+        bounds_group.addLayer(layer_Queimadas_UsodoSolo_5);
+        map.addLayer(layer_Queimadas_UsodoSolo_5);
+
+
+        // ── SUPERFÍCIE DE RECORRÊNCIA ─────────────────────────────────────
+        // O mapa de calor anterior era desenhado em pixels de tela: o raio
+        // acompanhava o zoom e as manchas mudavam de tamanho e de forma a cada
+        // aproximação, de modo que a leitura não era estável nem mensurável.
+        // Esta camada é uma superfície de densidade calculada em metros e
+        // recortada em classes: a geometria é fixa no território e só muda de
+        // escala junto com o mapa. Ver METODO_CALOR no rodapé do arquivo.
+        map.createPane('pane_CALOR_RECORRENCIA_6');
+        map.getPane('pane_CALOR_RECORRENCIA_6').style.zIndex = 405;
+
+        var CALOR_CORES = {1:'#ffe79a', 2:'#ffc14d', 3:'#ff8c00', 4:'#f04b1e', 5:'#b5161a'};
+        var _calorOp = 0.60;
+
+        function estiloCalor(f) {
+            return {pane:'pane_CALOR_RECORRENCIA_6', stroke:true,
+                    color:'rgba(0,0,0,0.25)', weight:0.5, opacity:_calorOp,
+                    fill:true, fillColor:CALOR_CORES[f.properties.classe],
+                    fillOpacity:_calorOp};
+        }
+
+        var layer_CALOR_RECORRENCIA_6 = new L.geoJson(json_CALOR_RECORRENCIA, {
+            attribution:'', pane:'pane_CALOR_RECORRENCIA_6',
+            interactive:true, style:estiloCalor});
+        bounds_group.addLayer(layer_CALOR_RECORRENCIA_6);
+        map.addLayer(layer_CALOR_RECORRENCIA_6);
+
+        // ── BAIRROS (IBGE) ────────────────────────────────────────────────
+        // Entram como contorno, nao como mancha: a cor do mapa ja pertence a
+        // superficie de recorrencia. Cada bairro carrega as suas contas
+        // (focos, densidade, tendencia, exposicao) para a leitura no painel.
+        map.createPane('pane_BAIRROS_IBGE_7');
+        map.getPane('pane_BAIRROS_IBGE_7').style.zIndex = 407;
+
+        function estiloBairro(f) {
+            return {pane:'pane_BAIRROS_IBGE_7', stroke:true,
+                    color:'rgba(255,255,255,0.55)', weight:1.1, opacity:0.75,
+                    dashArray:null, fill:true, fillColor:'#ffffff', fillOpacity:0.001};
+        }
+        var layer_BAIRROS_IBGE_7 = new L.geoJson(json_BAIRROS_IBGE, {
+            attribution:'', pane:'pane_BAIRROS_IBGE_7',
+            interactive:true, style:estiloBairro});
+        bounds_group.addLayer(layer_BAIRROS_IBGE_7);
+        map.addLayer(layer_BAIRROS_IBGE_7);
+
+        // ── PERIMETRO MUNICIPAL ───────────────────────────────────────────
+        map.createPane('pane_LIMITE_MUNICIPAL_8');
+        map.getPane('pane_LIMITE_MUNICIPAL_8').style.zIndex = 409;
+        map.getPane('pane_LIMITE_MUNICIPAL_8').style.pointerEvents = 'none';
+        var layer_LIMITE_MUNICIPAL_8 = new L.geoJson(json_LIMITE_MUNICIPAL, {
+            attribution:'', pane:'pane_LIMITE_MUNICIPAL_8', interactive:false,
+            style:{pane:'pane_LIMITE_MUNICIPAL_8', color:'#FFEF00', weight:2.2,
+                   opacity:0.95, fill:false, lineJoin:'round'}});
+        bounds_group.addLayer(layer_LIMITE_MUNICIPAL_8);
+        map.addLayer(layer_LIMITE_MUNICIPAL_8);
+        L.ImageOverlay.include({
+            getBounds: function () {
+                return this._bounds;
+            }
+        });
+
+// ── BASEMAPS (substituindo o Google Satellite original) ──
+map.createPane('pane_base_gui');
+map.getPane('pane_base_gui').style.zIndex = 200;
+var BASEMAP_CONFIGS = {
+    satellite: {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', opts:{attribution:'Esri, Maxar, Earthstar Geographics',maxZoom:28,maxNativeZoom:17,pane:'pane_base_gui'}},
+    osm:       {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',  opts:{attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:28,maxNativeZoom:17,pane:'pane_base_gui'}},
+    dark:      {url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', opts:{attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:28,maxNativeZoom:16,pane:'pane_base_gui'}}
+};
+var curBM_gui = null;
+// Remove original satellite on startup — replaced by our switcher
+try { map.removeLayer(layer_GoogleSatellite_0); } catch(e){}
+
+var _baseOpacity = 0.70;
+
+function setBasemap(n) {
+    if (curBM_gui) map.removeLayer(curBM_gui);
+    var cfg = BASEMAP_CONFIGS[n];
+    curBM_gui = L.tileLayer(cfg.url, cfg.opts);
+    curBM_gui.setOpacity(_baseOpacity);
+    map.addLayer(curBM_gui);
+    ['satellite','osm','dark'].forEach(function(b){
+        document.getElementById('bm-'+b).classList.toggle('on', b===n);
+    });
+}
+function setBasemapOpacity(v) {
+    _baseOpacity = v / 100;
+    if (curBM_gui) curBM_gui.setOpacity(_baseOpacity);
+    document.getElementById('op-base-val').textContent = v+'%';
+}
+function toggleBasemapLayer(on) {
+    if (!curBM_gui) return;
+    if (on) map.addLayer(curBM_gui); else map.removeLayer(curBM_gui);
+}
+// Inicia com satélite
+setBasemap('satellite');
+
+// ── SIDEBAR ──────────────────────────────────────────────
+function _qRedimensiona(){ setTimeout(function(){ if(map&&map.invalidateSize) map.invalidateSize(); }, 320); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); _qRedimensiona(); }
+function toggleLegenda() { var el=document.getElementById('rb'); if(!el) return;
+  el.classList.toggle('collapsed'); _qRedimensiona(); }
+window.toggleLegenda = toggleLegenda;
+
+// ── BOTTOM BAR ────────────────────────────────────────────
+map.on('mousemove', function(e) {
+    document.getElementById('coords-display').textContent = 'Lat: '+e.latlng.lat.toFixed(5)+'  Lng: '+e.latlng.lng.toFixed(5);
+});
+map.on('zoomend', function() { document.getElementById('zoom-display').textContent = 'Zoom: '+map.getZoom(); });
+document.getElementById('zoom-display').textContent = 'Zoom: ' + map.getZoom();
+
+
+
+// ── RÓTULOS DOS BAIRROS ───────────────────────────────────────────────────
+// O centro do bounding box cai fora de polígono côncavo ou em forma de L, e o
+// nome acaba sobre o bairro vizinho. A âncora abaixo é o polo de
+// inacessibilidade — o ponto mais distante de qualquer borda, garantidamente
+// interno. Mesmo código usado no mapa de legislação.
+function polylabel(polygon, precision) {
+            precision = precision || 1.0;
+            var minX, minY, maxX, maxY;
+            var outerRing = polygon[0];
+            for (var i = 0; i < outerRing.length; i++) {
+                var p = outerRing[i];
+                if (!i || p[0] < minX) minX = p[0];
+                if (!i || p[1] < minY) minY = p[1];
+                if (!i || p[0] > maxX) maxX = p[0];
+                if (!i || p[1] > maxY) maxY = p[1];
+            }
+            var width  = maxX - minX;
+            var height = maxY - minY;
+            var cellSize = Math.min(width, height);
+            if (cellSize === 0) return [minX, minY];
+
+            // priority queue (max-heap por potencial máximo)
+            var queue = [];
+            function compare(a, b) { return b.max - a.max; }
+            function qpush(cell) {
+                queue.push(cell);
+                queue.sort(compare);
+            }
+
+            function Cell(x, y, h, polygon) {
+                this.x = x; this.y = y; this.h = h;
+                this.d = pointToPolygonDist(x, y, polygon);
+                this.max = this.d + this.h * Math.SQRT2;
+            }
+
+            // preenche com células iniciais
+            for (var x = minX; x < maxX; x += cellSize) {
+                for (var y = minY; y < maxY; y += cellSize) {
+                    qpush(new Cell(x + cellSize / 2, y + cellSize / 2, cellSize / 2, polygon));
+                }
+            }
+
+            var bestCell = new Cell(minX + width / 2, minY + height / 2, 0, polygon);
+            var bboxCell = new Cell(minX + width / 2, minY + height / 2, 0, polygon);
+            if (bboxCell.d > bestCell.d) bestCell = bboxCell;
+
+            var numIter = 0;
+            while (queue.length) {
+                var cell = queue.shift();
+                if (cell.d > bestCell.d) bestCell = cell;
+                if (cell.max - bestCell.d <= precision) continue;
+                var h = cell.h / 2;
+                qpush(new Cell(cell.x - h, cell.y - h, h, polygon));
+                qpush(new Cell(cell.x + h, cell.y - h, h, polygon));
+                qpush(new Cell(cell.x - h, cell.y + h, h, polygon));
+                qpush(new Cell(cell.x + h, cell.y + h, h, polygon));
+            }
+            return [bestCell.x, bestCell.y];
+        }
+
+        function pointToPolygonDist(x, y, polygon) {
+            var inside = false;
+            var minDistSq = Infinity;
+            for (var k = 0; k < polygon.length; k++) {
+                var ring = polygon[k];
+                for (var i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+                    var a = ring[i], b = ring[j];
+                    if ((a[1] > y) !== (b[1] > y) &&
+                        (x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0])) {
+                        inside = !inside;
+                    }
+                    minDistSq = Math.min(minDistSq, getSegDistSq(x, y, a, b));
+                }
+            }
+            return (inside ? 1 : -1) * Math.sqrt(minDistSq);
+        }
+function getSegDistSq(px, py, a, b) {
+            var x = a[0], y = a[1], dx = b[0] - x, dy = b[1] - y;
+            if (dx !== 0 || dy !== 0) {
+                var t = ((px - x) * dx + (py - y) * dy) / (dx * dx + dy * dy);
+                if (t > 1) { x = b[0]; y = b[1]; }
+                else if (t > 0) { x += dx * t; y += dy * t; }
+            }
+            dx = px - x; dy = py - y;
+            return dx * dx + dy * dy;
+        }
+
+    // area aproximada do anel, para escolher a maior parte de um multipoligono
+    function _pdAreaAnel(anel) {
+        var s = 0;
+        for (var i = 0, j = anel.length - 1; i < anel.length; j = i++) {
+            s += (anel[j][0] + anel[i][0]) * (anel[j][1] - anel[i][1]);
+        }
+        return Math.abs(s / 2);
+    }
+    // ponto dentro do anel, pela regra do cruzamento
+    function _pdDentroAnel(pt, anel) {
+        var d = false;
+        for (var i = 0, j = anel.length - 1; i < anel.length; j = i++) {
+            var a = anel[i], c = anel[j];
+            if (((a[1] > pt[1]) !== (c[1] > pt[1])) &&
+                (pt[0] < (c[0] - a[0]) * (pt[1] - a[1]) / (c[1] - a[1]) + a[0])) d = !d;
+        }
+        return d;
+    }
+    function _pdAncora(l) {
+        if (l._pdAnc !== undefined) return l._pdAnc;
+        var anc = null;
+        try {
+            var g = l.feature && l.feature.geometry;
+            if (g && (g.type === 'Polygon' || g.type === 'MultiPolygon')) {
+                // maior parte do multipoligono: o rotulo vai onde ha area
+                var partes = (g.type === 'Polygon') ? [g.coordinates] : g.coordinates;
+                var melhor = null, maior = -1;
+                for (var i = 0; i < partes.length; i++) {
+                    var a = _pdAreaAnel(partes[i][0]);
+                    if (a > maior) { maior = a; melhor = partes[i]; }
+                }
+                if (melhor) {
+                    // precisao proporcional ao tamanho, em graus
+                    var xs = melhor[0].map(function(p){return p[0];});
+                    var ys = melhor[0].map(function(p){return p[1];});
+                    var w = Math.max.apply(null, xs) - Math.min.apply(null, xs);
+                    var hh = Math.max.apply(null, ys) - Math.min.apply(null, ys);
+                    // Em feicao muito pequena ou muito fina, a precisao grosseira
+                    // fazia o polo cair fora do proprio anel. Confere o resultado
+                    // e refina ate ele ficar dentro; nao ficando, usa um ponto do
+                    // proprio contorno, que ao menos pertence a feicao.
+                    var prec = Math.max(Math.min(w, hh) / 60, 1e-9);
+                    var pole = null;
+                    for (var t = 0; t < 4; t++) {
+                        var cand = polylabel(melhor, prec);
+                        if (cand && isFinite(cand[0]) && isFinite(cand[1])
+                            && _pdDentroAnel(cand, melhor[0])) { pole = cand; break; }
+                        prec = prec / 20;
+                    }
+                    if (!pole) {
+                        var r0 = melhor[0];
+                        var v = r0[0], v2 = r0[1] || r0[0];
+                        pole = [(v[0] + v2[0]) / 2, (v[1] + v2[1]) / 2];
+                    }
+                    if (pole && isFinite(pole[0]) && isFinite(pole[1])) anc = L.latLng(pole[1], pole[0]);
+                }
+            } else if (g && (g.type === 'LineString' || g.type === 'MultiLineString')) {
+                // em linha, o meio do traçado: sempre sobre a própria via
+                var lns = (g.type === 'LineString') ? [g.coordinates] : g.coordinates;
+                var ml = null, maiorN = -1;
+                for (var k = 0; k < lns.length; k++) if (lns[k].length > maiorN) { maiorN = lns[k].length; ml = lns[k]; }
+                if (ml && ml.length) { var p = ml[Math.floor(ml.length / 2)]; anc = L.latLng(p[1], p[0]); }
+            }
+        } catch (e) { anc = null; }
+        if (!anc) { try { anc = l.getBounds().getCenter(); } catch (e2) { anc = null; } }
+        l._pdAnc = anc;
+        return anc;
+    }
+
+// Os rótulos ficam sempre ligados, num pane próprio acima dos bairros e
+// abaixo dos focos, sem capturar o cursor.
+map.createPane('pane_ROTULOS_BAIRRO');
+map.getPane('pane_ROTULOS_BAIRRO').style.zIndex = 410;
+map.getPane('pane_ROTULOS_BAIRRO').style.pointerEvents = 'none';
+
+var _rotBairro = [];
+function qzRotulosBairro() {
+    _rotBairro.forEach(function(m){ try { map.removeLayer(m); } catch(e){} });
+    _rotBairro = [];
+    layer_BAIRROS_IBGE_7.eachLayer(function(l){
+        var nome = l.feature && l.feature.properties && l.feature.properties.bairro;
+        if (!nome) return;
+        var anc = _pdAncora(l);
+        if (!anc) return;
+        var m = L.marker(anc, {
+            pane: 'pane_ROTULOS_BAIRRO', interactive: false, keyboard: false,
+            icon: L.divIcon({className:'rot-bairro', html:'<span>'+nome+'</span>',
+                             iconSize:[0,0], iconAnchor:[0,0]})
+        });
+        m.addTo(map);
+        m._pdArea = (l.feature.properties.area_km2 || 0);
+        _rotBairro.push(m);
+    });
+    qzDescolide();
+}
+
+// ── descolisão dos rótulos ────────────────────────────────────────────────
+// Com os 60 bairros ligados, os nomes se sobrepõem no centro adensado. A cada
+// movimento do mapa os rótulos são colocados do maior bairro para o menor, e
+// quem encosta em alguém já colocado fica oculto até haver espaço — o nome
+// reaparece sozinho ao aproximar. Preferir o bairro maior mantém visível a
+// referência de leitura, não o retalho.
+function qzDescolide() {
+    if (!_rotBairro.length) return;
+    var postos = [];
+    _rotBairro.slice().sort(function(a,b){ return (b._pdArea||0) - (a._pdArea||0); })
+    .forEach(function(m){
+        var el = m.getElement && m.getElement();
+        if (!el) return;
+        var sp = el.firstElementChild; if (!sp) { el.style.visibility=''; return; }
+        el.style.visibility = '';
+        var r = sp.getBoundingClientRect();
+        if (!r.width) return;
+        var cx = {l:r.left-2, t:r.top-1, r:r.right+2, b:r.bottom+1};
+        var bate = postos.some(function(o){
+            return !(cx.r < o.l || cx.l > o.r || cx.b < o.t || cx.t > o.b);
+        });
+        if (bate) el.style.visibility = 'hidden';
+        else postos.push(cx);
+    });
+}
+map.on('zoomend moveend', qzDescolide);
+qzRotulosBairro();
+
+// Os rótulos acompanham a camada: desligar bairros desliga os nomes.
+(function(){
+    var cx = document.getElementById('tog-bairros');
+    if (!cx) return;
+    cx.addEventListener('change', function(){
+        var pane = map.getPane('pane_ROTULOS_BAIRRO');
+        if (pane) pane.style.display = cx.checked ? '' : 'none';
+    });
+})();
+
+// ── TOGGLE CAMADAS ────────────────────────────────────────
+function toggleLayerPane(paneName, on) {
+    var p = map.getPane(paneName);
+    if (p) p.style.display = on ? '' : 'none';
+}
+function toggleHidro(on) {
+    toggleLayerPane('pane_hidrografia_linha_correo_2', on);
+    toggleLayerPane('pane_hidrografia_polgono_correo_3', on);
+}
+function toggleHeatmap(on) {
+    if (on) map.addLayer(layer_CALOR_RECORRENCIA_6);
+    else    map.removeLayer(layer_CALOR_RECORRENCIA_6);
+}
+function setHeatOpacity(v) {
+    document.getElementById('op-heat-val').textContent = v+'%';
+    _calorOp = v/100;
+    layer_CALOR_RECORRENCIA_6.setStyle(estiloCalor);
+}
+
+// ── TOOLTIP ⓘ ─────────────────────────────────────────────
+function toggleLayerTooltip(id) {
+    var el = document.getElementById(id); if(!el) return;
+    var was = el.classList.contains('visible');
+    document.querySelectorAll('.layer-tooltip').forEach(function(t){t.classList.remove('visible');});
+    if(!was) el.classList.add('visible');
+}
+document.addEventListener('click',function(e){ if(!e.target.closest('.layer-item')) document.querySelectorAll('.layer-tooltip').forEach(function(t){t.classList.remove('visible');}); });
+
+// ── FILTRO DE ANO ─────────────────────────────────────────
+var currentYear = 'all', currentMes = 'all';
+function setMesFilter(mes) {
+    currentMes = mes;
+    document.querySelectorAll('.mes-btn').forEach(function(b){ b.classList.remove('active'); });
+    var alvo = (mes === 'all') ? 'Todos'
+        : ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][mes-1];
+    var b = Array.from(document.querySelectorAll('.mes-btn')).find(function(x){ return x.textContent === alvo; });
+    if (b) b.classList.add('active');
+    setYearFilter(currentYear);
+}
+// barras de sazonalidade: altura pelo total do mes na serie, destaque no filtro
+function qzSazonal(feats) {
+    var el = document.getElementById('saz-graf'); if (!el) return;
+    var base = (typeof QZ_RESUMO !== 'undefined') ? QZ_RESUMO.meses : null;
+    if (!base) return;
+    var mx = Math.max.apply(null, base);
+    var MES = ['janeiro','fevereiro','março','abril','maio','junho','julho',
+               'agosto','setembro','outubro','novembro','dezembro'];
+    el.innerHTML = base.map(function(n,i){
+        var on = (currentMes !== 'all' && parseInt(currentMes) === i+1);
+        return '<div class="saz-b' + (on ? ' on' : '') + '" style="height:' +
+               Math.max(2, Math.round(100*n/mx)) + '%" title="' + MES[i] + ': ' + n + ' focos"></div>';
+    }).join('');
+}
+function setYearFilter(year) {
+    currentYear = year;
+    document.querySelectorAll('.year-btn').forEach(function(b){ b.classList.remove('active'); });
+    var btn = year === 'all'
+        ? document.querySelector('.all-btn')
+        : Array.from(document.querySelectorAll('.year-btn')).find(function(b){ return b.textContent === year; });
+    if (btn) btn.classList.add('active');
+
+    var all = typeof json_Queimadas_UsodoSolo_5 !== 'undefined' ? json_Queimadas_UsodoSolo_5.features : [];
+    // Ano e mes se combinam: o mes atravessa a serie inteira, de modo que
+    // "agosto" com "todos os anos" mostra os onze agostos.
+    var filtered = all.filter(function(f){
+        var p = f.properties;
+        if (year !== 'all' && parseInt(p['ano'] || 0) !== parseInt(year)) return false;
+        if (currentMes !== 'all' && parseInt(p['mes'] || 0) !== parseInt(currentMes)) return false;
+        return true;
+    });
+    layer_Queimadas_UsodoSolo_5.clearLayers();
+    layer_Queimadas_UsodoSolo_5.addData({type:'FeatureCollection', features:_qDesenhar(filtered)});
+    // clearLayers/addData refaz as subcamadas e leva junto os eventos: sem
+    // reconectar aqui, o cursor para de responder depois do primeiro filtro
+    qLigar(layer_Queimadas_UsodoSolo_5, showInfoFoco);
+    if (_qTrava) { _qTrava = false; clearInfoPanel(); }
+    document.getElementById('stat-focos').textContent = filtered.length.toLocaleString('pt-BR');
+    var MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    var rotAno = (year === 'all' ? 'Todos' : year);
+    document.getElementById('stat-ano').textContent =
+        currentMes === 'all' ? rotAno : (MESES[currentMes-1] + (year==='all' ? '' : '/' + String(year).slice(2)));
+    qzSazonal(filtered);
+
+    // Aviso de dados incompletos
+    var TOTAL_DETECTED = {'2015':43, '2016':125, '2017':103, '2018':118, '2019':130, '2020':269, '2021':211, '2022':78, '2023':96, '2024':357, '2025':7};
+    var WITH_FRP       = {'2015':0, '2016':0, '2017':0, '2018':108, '2019':69, '2020':154, '2021':201, '2022':77, '2023':96, '2024':337, '2025':7};
+    var warnEl = document.getElementById('frp-warning');
+    var detectedEl = document.getElementById('frp-total-detected');
+    // os contadores: o que os satélites registraram e quantos focos distintos isso representa
+    var elD = document.getElementById('stat-focos'), elE = document.getElementById('stat-eventos');
+    if (elD) elD.textContent = filtered.length.toLocaleString('pt-BR');
+    if (elE) elE.textContent = _qEventos(filtered).toLocaleString('pt-BR');
+    // o FRP deixou de esconder feição: o aviso passa a dizer o que falta, não o que sumiu
+    var semFrp = filtered.filter(function(f){ return f.properties['FRP'] == null || f.properties['FRP'] === ''; }).length;
+    if (semFrp > 0) {
+        detectedEl.textContent = semFrp === filtered.length
+            ? 'Todas as ' + semFrp + ' detecções deste ano'
+            : semFrp + ' das ' + filtered.length + ' detecções';
+        warnEl.classList.add('visible');
+    } else {
+        warnEl.classList.remove('visible');
+    }
+
+    // A superfície de recorrência NÃO acompanha o filtro de ano. Ela é
+    // calculada sobre os onze anos inteiros porque é disso que vem a taxa:
+    // um ano isolado tem de 6 a 115 eventos em 512 km², amostra pequena
+    // demais para sustentar uma estimativa de densidade. Ao filtrar um ano,
+    // os pontos daquele ano são lidos sobre a recorrência de toda a série.
+    var avisoCalor = document.getElementById('calor-serie');
+    if (avisoCalor) avisoCalor.style.display = (year === 'all') ? 'none' : 'block';
+}
+// ── ANÁLISE DO TERRITÓRIO ─────────────────────────────────────────────────
+// Os quadros abaixo são fixos: descrevem a série inteira, como a superfície de
+// recorrência, e por isso não acompanham os filtros de ano e mês.
+function qzAnalise() {
+    var el = document.getElementById('an-conteudo');
+    if (!el || typeof QZ_RESUMO === 'undefined') return;
+    var R = QZ_RESUMO, mun = R.municipio, h = '';
+
+    function tabela(titulo, cab, linhas, nota) {
+        var t = '<div class="an-sub">' + titulo + '</div><table class="an-tab"><tr>';
+        cab.forEach(function(c,i){ t += '<th' + (i ? ' style="text-align:right"' : '') + '>' + c + '</th>'; });
+        t += '</tr>';
+        linhas.forEach(function(l){
+            t += '<tr' + (l.destaque ? ' class="destaque"' : '') + '><td>' + l.c[0] + '</td>';
+            for (var i=1;i<l.c.length;i++) t += '<td class="n">' + l.c[i] + '</td>';
+            t += '</tr>';
+        });
+        t += '</table>';
+        if (nota) t += '<p class="an-nota">' + nota + '</p>';
+        return t;
+    }
+
+    h += '<p class="an-nota" style="margin-top:0">Todas as taxas em focos distintos por km² por ano. ' +
+         'O município inteiro marca <b style="color:var(--text);font-style:normal">' + _n(mun.dens,3) +
+         '</b> — é essa a régua das tabelas.</p>';
+
+    h += tabela('Situação do setor censitário (IBGE 2022)',
+        ['Situação','km²','Focos','Taxa'],
+        R.situacao.map(function(r){
+            return {c:[r.sit, _n(r.area_km2,1), _n(r.focos), _n(r.dens,3)],
+                    destaque: r.dens !== null && r.dens > mun.dens*1.5};
+        }),
+        'Em contagem bruta a queimada parece rural: 77% dos focos. Por área, não é — ' +
+        'a franja urbana de baixa densidade queima ao dobro de todo o resto. ' +
+        'A situação vem do setor onde o foco caiu, não do bairro: 52 dos 60 bairros ' +
+        'misturam setores urbanos e rurais, e ler pelo bairro erraria 13% dos focos.');
+
+    h += tabela('Macrozona do Plano Diretor vigente',
+        ['Macrozona','km²','Focos','Taxa'],
+        R.macrozona.filter(function(r){ return r.dens !== null; }).map(function(r){
+            return {c:[r.mz, _n(r.area_km2,1), _n(r.focos), _n(r.dens,3)],
+                    destaque: r.dens > mun.dens};
+        }),
+        'A Macrozona Urbana ocupa 37% do território e concentra metade dos focos.');
+
+    h += tabela('Bacias com maior recorrência',
+        ['Bacia','km²','Focos','Taxa'],
+        R.bacias.slice(0,5).map(function(r){
+            return {c:[r.bacia.replace(/^Bacia d[aoe]s? /,'').replace(/^Bacia /,''),
+                       _n(r.area_km2,1), _n(r.focos), _n(r.dens,3)],
+                    destaque: r.dens > mun.dens*1.5};
+        }),
+        'A bacia do Lavapés sozinha responde por um terço dos focos da série.');
+
+    h += tabela('Bairros com maior recorrência',
+        ['Bairro','Focos','Taxa'],
+        R.bairros.slice(0,8).map(function(r){
+            return {c:[r.bairro, _n(r.focos), _n(r.dens,3)], destaque: r.dens > mun.dens*2};
+        }),
+        'Passe o cursor sobre um bairro no mapa para a ficha completa.');
+
+    var cresc = R.bairros.filter(function(r){ return r.var_pct !== null && r.focos >= 10; })
+                         .sort(function(a,b){ return b.var_pct - a.var_pct; });
+    h += tabela('Onde mais cresceu — 2015–2019 para 2020–2025',
+        ['Bairro','Antes','Depois','Var.'],
+        cresc.slice(0,5).map(function(r){
+            var b = R.bairros.find(function(x){ return x.bairro === r.bairro; });
+            return {c:[r.bairro, _n(b.d_1519,3), _n(b.d_2025,3),
+                       (r.var_pct>0?'+':'') + _n(r.var_pct) + '%'], destaque: r.var_pct > 100};
+        }),
+        'O município passou de ' + _n(mun.d_1519,3) + ' para ' + _n(mun.d_2025,3) +
+        ' foco/km²/ano, alta de ' + _n(100*(mun.d_2025/mun.d_1519-1)) + '%.');
+
+    // Piso de 300 moradores: abaixo disso a taxa por 10 mil vira ruído — um
+    // bairro de 162 habitantes chegava a 180 focos/10 mil/ano só pelo divisor.
+    var exp = R.bairros.filter(function(r){ return r.por10k !== null && r.moradores_total >= 300; })
+                       .sort(function(a,b){ return b.por10k - a.por10k; });
+    h += tabela('Maior exposição da população',
+        ['Bairro','Moradores','Focos/10 mil/ano'],
+        exp.slice(0,5).map(function(r){
+            return {c:[r.bairro, _n(r.moradores_total), _n(r.por10k,1)], destaque:false};
+        }),
+        'Inverte a leitura: não onde queima mais, mas onde mais gente convive com o fogo. ' +
+        'Só entram os 50 bairros com 300 moradores ou mais — abaixo disso o divisor é pequeno ' +
+        'demais e a taxa deixa de significar.');
+
+    el.innerHTML = h;
+}
+
+// Primeira carga: a camada entra no mapa com todas as detecções, e o modo
+// padrão é focos distintos — sem esta chamada o mapa abriria duplicado e só
+// se corrigiria no primeiro clique de filtro.
+setTimeout(function(){ setYearFilter('all'); qzAnalise(); }, 300);
+
+// ── Detecção x evento ─────────────────────────────────────────────────────
+// A série traz tudo o que 16 satélites captaram, e o mesmo incêndio costuma
+// ser visto por vários deles em passagens diferentes: as 1.537 detecções
+// correspondem a 702 focos distintos, 54% de repetição. O agrupamento foi
+// feito uma vez, fora do mapa (DBSCAN em SIRGAS 2000 / UTM 23S, raio de
+// 1.000 m e janela de 24 h) e gravado em cada registro no campo "evento":
+// contar aqui é só contar identificadores distintos, sem reestimar nada.
+// Mostrar as 1.537 detecções onde houve 702 focos repete no desenho a mesma
+// duplicidade que a superfície já descarta: a chave abaixo escolhe o que a
+// camada de pontos exibe. Em "focos distintos", de cada grupo fica a detecção
+// de maior FRP (ou a primeira, quando o extrato não traz FRP).
+var _qModo = 'eventos';
+function _qDesenhar(feats){
+    if (_qModo !== 'eventos') return feats;
+    var melhor = {};
+    feats.forEach(function(f){
+        var k = f.properties['evento'];
+        if (k === undefined || k === null) { melhor['d'+(f.properties.fid)] = f; return; }
+        var a = melhor[k];
+        if (!a) { melhor[k] = f; return; }
+        var vf = f.properties['FRP'], va = a.properties['FRP'];
+        if (vf != null && (va == null || vf > va)) melhor[k] = f;
+    });
+    return Object.keys(melhor).map(function(k){ return melhor[k]; });
+}
+window.setModoFocos = function(modo, btn){
+    _qModo = modo;
+    document.querySelectorAll('.modo-btn').forEach(function(b){ b.classList.remove('on'); });
+    if (btn) btn.classList.add('on');
+    setYearFilter(currentYear);
+};
+function _qEventos(feats){
+    var vistos = {}, n = 0;
+    feats.forEach(function(f){
+        var k = f.properties && f.properties['evento'];
+        if (k === undefined || k === null) return;
+        if (!vistos[k]) { vistos[k] = 1; n++; }
+    });
+    return n;
+}
+
+// ── INFO PANEL ────────────────────────────────────────────
+// Escala do risco de fogo do INPE: indice de 0 a 1.
+var QZ_RISCO = [{ate:0.15,rot:'Mínimo',cor:'#3b82f6'},{ate:0.40,rot:'Baixo',cor:'#22c55e'},
+                {ate:0.70,rot:'Médio',cor:'#f59e0b'},{ate:0.95,rot:'Alto',cor:'#ef4444'},
+                {ate:1.01,rot:'Crítico',cor:'#b5161a'}];
+// A situação vem gravada como código IBGE, para não repetir o texto longo em
+// 1.537 registros; o nome por extenso fica aqui.
+var QZ_SIT = {1:'Área urbana de alta densidade de edificações',
+              2:'Área urbana de baixa densidade de edificações',
+              3:'Núcleo urbano', 5:'Aglomerado rural — povoado',
+              6:'Aglomerado rural — núcleo rural', 7:'Aglomerado rural — lugarejo',
+              8:'Área rural, exclusive aglomerados', 9:'Massa d\u2019água'};
+function _n(v,d){ return (v===null||v===undefined||v!==v) ? '—'
+    : Number(v).toLocaleString('pt-BR',{minimumFractionDigits:d||0,maximumFractionDigits:d||0}); }
+
+// ── leitura de um bairro ──────────────────────────────────────────────────
+function showInfoBairro(p) {
+    var ic = document.getElementById('info-content');
+    var mun = QZ_RESUMO.municipio;
+    var rel = p.dens / mun.dens;
+    var cor = rel >= 1.5 ? '#b5161a' : rel >= 1 ? '#f04b1e' : rel >= 0.6 ? '#ff8c00' : '#ffc14d';
+    var html = '<div class="info-card"><div class="info-title">' + p.bairro + '</div>' +
+        '<div class="info-cls">Bairro IBGE · ' + p.sit_pred.toLowerCase() +
+        ' (' + _n(p.pct_urb) + '% da área em setor urbano)</div></div>' +
+        '<div style="margin-bottom:9px"><span class="risco-chip" style="background:'+cor+'22;color:'+cor+
+        ';border:1px solid '+cor+'55">' + _n(p.dens,3) + ' foco/km²/ano · ' +
+        (rel>=1 ? _n(rel,1)+'× a média do município' : _n(rel,1)+'× a média') + '</span></div>';
+    var v = p.var_pct;
+    var seta = (v===null||v===undefined||v!==v) ? '—'
+        : (v>0 ? '▲ +' : v<0 ? '▼ ' : '') + _n(v) + '%';
+    html += '<table class="info-tab">' +
+        '<tr><th>Focos distintos</th><td>' + _n(p.focos) + '</td></tr>' +
+        '<tr><th>Área</th><td>' + _n(p.area_km2,1) + ' km²</td></tr>' +
+        '<tr><th>Densidade</th><td>' + _n(p.dens,3) + ' foco/km²/ano</td></tr>' +
+        '<tr><th>Posição no município</th><td>' + p.rank + 'º de 60</td></tr>' +
+        '<tr><th>2015–2019</th><td>' + _n(p.d_1519,3) + ' foco/km²/ano</td></tr>' +
+        '<tr><th>2020–2025</th><td>' + _n(p.d_2025,3) + ' foco/km²/ano</td></tr>' +
+        '<tr><th>Variação</th><td>' + seta + '</td></tr>' +
+        '<tr><th>Moradores</th><td>' + _n(p.moradores_total) + '</td></tr>' +
+        '<tr><th>Exposição</th><td>' + _n(p.por10k,1) + ' focos/10 mil moradores/ano</td></tr>' +
+        '</table>';
+    if (_qTrava) html = '<div class="iz-trava">Leitura travada'
+        + '<button type="button" onclick="qLiberar()">Liberar</button></div>' + html;
+    ic.innerHTML = html;
+}
+
+// ── leitura de uma bacia ──────────────────────────────────────────────────
+function showInfoBacia(p) {
+    var ic = document.getElementById('info-content');
+    var mun = QZ_RESUMO.municipio;
+    var rel = p.dens / mun.dens;
+    var cor = rel >= 1.5 ? '#b5161a' : rel >= 1 ? '#f04b1e' : '#ffc14d';
+    var html = '<div class="info-card"><div class="info-title">' + p.bacia + '</div>' +
+        '<div class="info-cls">Bacia hidrográfica · ' + p.rank + 'ª de 11 em densidade</div></div>' +
+        '<div style="margin-bottom:9px"><span class="risco-chip" style="background:'+cor+'22;color:'+cor+
+        ';border:1px solid '+cor+'55">' + _n(p.dens,3) + ' foco/km²/ano</span></div>' +
+        '<table class="info-tab">' +
+        '<tr><th>Focos distintos</th><td>' + _n(p.focos) + '</td></tr>' +
+        '<tr><th>Área</th><td>' + _n(p.area_km2,1) + ' km²</td></tr>' +
+        '<tr><th>Da série do município</th><td>' + _n(100*p.focos/QZ_RESUMO.municipio.focos,1) + '%</td></tr>' +
+        '<tr><th>Média do município</th><td>' + _n(mun.dens,3) + ' foco/km²/ano</td></tr>' +
+        '</table>';
+    if (_qTrava) html = '<div class="iz-trava">Leitura travada'
+        + '<button type="button" onclick="qLiberar()">Liberar</button></div>' + html;
+    ic.innerHTML = html;
+}
+function showInfoFoco(p) {
+    var ic = document.getElementById('info-content');
+    // O RiscoFogo do INPE e um indice de 0 a 1, com -999 para sem informacao;
+    // o painel vinha exibindo "Risco 1", que nao diz nada. Agora traduz pela
+    // escala do proprio INPE.
+    var rf = p['RiscoFogo'];
+    var risco = '', rCor = '#ff6b00';
+    if (typeof rf === 'number' && rf >= 0) {
+        var f = QZ_RISCO.find(function(x){ return rf <= x.ate; }) || QZ_RISCO[QZ_RISCO.length-1];
+        risco = f.rot; rCor = f.cor;
+    }
+    var html = '<div class="info-card"><div class="info-title">Foco de queimada</div>' +
+        '<div class="info-cls">INPE' + (p['DataHora'] ? ' · ' + String(p['DataHora']).split(' ')[0] : '') + '</div></div>';
+    if (risco) html += '<div style="margin-bottom:9px"><span class="risco-chip" style="background:'+rCor+'22;color:'+rCor+
+        ';border:1px solid '+rCor+'55">Risco de fogo ' + risco.toLowerCase() +
+        ' · ' + _n(rf,2) + '</span></div>';
+    var campos = [
+        {k:'Data/Hora',v:p['DataHora']},{k:'Satélite',v:p['Satelite']},
+        {k:'Bairro',v:p['bairro']},{k:'Bacia',v:p['bacia']},
+        {k:'Macrozona',v:p['macrozona']},
+        {k:'Situação (IBGE)',v:QZ_SIT[p['cd_sit']]},
+        {k:'Bioma',v:p['Bioma']},
+        {k:'Dias sem chuva',v:p['DiaSemChuv']},{k:'Precipitação',v:p['Precipitac']},
+        {k:'FRP',v:p['FRP']},{k:'Uso do Solo',v:p['TIPO']||p['SAMPLE_1']},
+    ];
+    if (p['ev_det'] > 1) campos.push({k:'Detecções do mesmo foco',v:p['ev_det']});
+    var linhas = '';
+    campos.forEach(function(c){
+        if(c.v==null||c.v===''||c.v==='null') return;
+        linhas += '<tr><th>'+c.k+'</th><td>'+String(c.v)+'</td></tr>';
+    });
+    if (linhas) html += '<table class="info-tab">' + linhas + '</table>';
+    if (_qTrava) html = '<div class="iz-trava">Leitura travada'
+        + '<button type="button" onclick="qLiberar()">Liberar</button></div>' + html;
+    ic.innerHTML = html;
+}
+function clearInfoPanel() {
+    if (_qTrava) return;
+    document.getElementById('info-content').innerHTML = '<div class="placeholder"><span class="ph-icon">🔥</span><p>Passe o cursor sobre um foco ou sobre a superfície de recorrência para ver os dados. Clique para travar a leitura.</p></div>';
+}
+// ── leitura no painel: hover escreve, clique trava ────────────────────────
+// Padrão comum aos demais mapas; o popup sobre o mapa foi retirado.
+var _qTrava = false;
+window.qLiberar = function(){ _qTrava = false; clearInfoPanel(); };
+function qLigar(gl, montar) {
+    if (!gl || !gl.eachLayer) return;
+    gl.eachLayer(function(l) {
+        if (!l.feature || l._qOn) return; l._qOn = true;
+        l.on('mouseover', function(){ if(!_qTrava) montar(l.feature.properties); });
+        l.on('mouseout',  function(){ clearInfoPanel(); });
+        l.on('click', function(e){ _qTrava = false; montar(l.feature.properties);
+            _qTrava = true; montar(l.feature.properties);
+            if (L.DomEvent) L.DomEvent.stopPropagation(e); });
+    });
+}
+// A superfície também é lida no painel, mas só quando o cursor não está sobre
+// um foco: o ponto é a informação mais específica e tem precedência.
+function showInfoCalor(p) {
+    var ic = document.getElementById('info-content');
+    var cor = {1:'#ffe79a',2:'#ffc14d',3:'#ff8c00',4:'#f04b1e',5:'#b5161a'}[p.classe];
+    var html = '<div class="info-card"><div class="info-title">Recorrência ' +
+        String(p.rotulo).toLowerCase() + '</div>' +
+        '<div class="info-cls">Superfície de densidade · 2015–2025</div></div>' +
+        '<div style="margin-bottom:9px"><span class="risco-chip" style="background:'+cor+'22;color:'+cor+';border:1px solid '+cor+'55">'+p.leitura+'</span></div>';
+    var faixa = p.vmax ? (p.vmin.toFixed(2)+' a '+p.vmax.toFixed(2)) : ('acima de '+p.vmin.toFixed(2));
+    html += '<table class="info-tab">' +
+        '<tr><th>Classe</th><td>'+p.rotulo+'</td></tr>' +
+        '<tr><th>Densidade</th><td>'+faixa+' focos/km²/ano</td></tr>' +
+        '<tr><th>Área da classe</th><td>'+String(p.area_km2).replace('.',',')+' km²</td></tr>' +
+        '</table>';
+    if (_qTrava) html = '<div class="iz-trava">Leitura travada'
+        + '<button type="button" onclick="qLiberar()">Liberar</button></div>' + html;
+    ic.innerHTML = html;
+}
+// Ordem de precedencia da leitura: a camada ligada por ultimo e a que fica
+// por cima nos panes, entao o cursor sempre entrega a feicao mais especifica.
+qLigar(layer_CALOR_RECORRENCIA_6, showInfoCalor);
+qLigar(layer_BACIAS_HIDROGRAFICAS_4, showInfoBacia);
+qLigar(layer_BAIRROS_IBGE_7, showInfoBairro);
+qLigar(layer_Queimadas_UsodoSolo_5, showInfoFoco);
+map.on('click', function(){ _qTrava = false; clearInfoPanel(); });
+
+// ── EXPORTAÇÃO ────────────────────────────────────────────
+function openExportModal(){document.getElementById('export-modal').style.display='flex';}
+function closeExportModal(){document.getElementById('export-modal').style.display='none';}
+function doExport(fmt){
+    var st=document.getElementById('export-status'); st.textContent='Capturando mapa…';
+    leafletImage(map,function(err,canvas){
+        if(err){st.textContent='Erro ao capturar.';return;}
+        var W=canvas.width,H=canvas.height;
+        var out=document.createElement('canvas'); out.width=W; out.height=H;
+        var ctx=out.getContext('2d'); ctx.drawImage(canvas,0,0);
+        ctx.fillStyle='rgba(1,117,188,0.96)'; rr(ctx,12,12,320,44,8); ctx.fill();
+        ctx.fillStyle='#FFEF00'; ctx.fillRect(12,55,320,3);
+        ctx.fillStyle='#fff'; ctx.font='bold 13px Arial'; ctx.textAlign='left';
+        ctx.fillText('WebGIS — Série Histórica de Queimadas',22,31);
+        ctx.fillStyle='#FFEF00'; ctx.font='10px Arial';
+        var anoLabel = currentYear==='all'?'2015–2025':currentYear;
+        ctx.fillText('INPE/BDQueimadas · Bragança Paulista · '+anoLabel,22,46);
+        north(ctx,W-38,56,20);
+        var fname='mapa_queimadas'+(currentYear==='all'?'':'_'+currentYear)+'.'+(fmt==='pdf'?'pdf':'jpg');
+        if(fmt==='jpeg'){
+            st.textContent='Gerando JPEG…';
+            out.toBlob(function(b){dl(URL.createObjectURL(b),fname);st.textContent='✓ Download iniciado!';setTimeout(closeExportModal,1500);},'image/jpeg',0.93);
+        } else {
+            st.textContent='Gerando PDF…';
+            var img=out.toDataURL('image/jpeg',0.93),ori=W>H?'landscape':'portrait',mmW=W*0.2646,mmH=H*0.2646;
+            var pdf=new jspdf.jsPDF({orientation:ori,unit:'mm',format:[mmW,mmH]});
+            pdf.addImage(img,'JPEG',0,0,mmW,mmH); pdf.save(fname);
+            st.textContent='✓ Download iniciado!'; setTimeout(closeExportModal,1500);
+        }
+    });
+}
+function dl(href,name){var a=document.createElement('a');a.href=href;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+function north(ctx,cx,cy,s){ctx.save();ctx.fillStyle='rgba(1,48,90,0.88)';ctx.beginPath();ctx.arc(cx,cy,s+6,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(cx,cy-s);ctx.lineTo(cx+s*.35,cy+s*.5);ctx.lineTo(cx,cy+s*.15);ctx.closePath();ctx.fill();ctx.fillStyle='#a8cce8';ctx.beginPath();ctx.moveTo(cx,cy-s);ctx.lineTo(cx-s*.35,cy+s*.5);ctx.lineTo(cx,cy+s*.15);ctx.closePath();ctx.fill();ctx.fillStyle='#FFEF00';ctx.font='bold '+Math.round(s*.65)+'px Arial';ctx.textAlign='center';ctx.fillText('N',cx,cy-s-4);ctx.restore();}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"></script>
+
+<!-- METODO_CALOR ──────────────────────────────────────────────
+Superficie de recorrencia de focos — como foi calculada
+(camada: data/CALOR_RECORRENCIA_6.js)
+
+1. Entrada: 1.537 deteccoes do INPE/BDQueimadas, 2015–2025, 16 satelites,
+   todas dentro do limite municipal.
+
+2. Remocao de duplicidade. O mesmo incendio e visto por varios satelites em
+   passagens diferentes. As deteccoes foram agrupadas por DBSCAN em SIRGAS
+   2000 / UTM 23S (EPSG:31983), com raio de 1.000 m e janela de 24 h (o tempo
+   entra na distancia pela escala 1.000 m / 24 h). Resultado: 702 focos
+   distintos, 54% de reducao. O maior grupo reune 46 deteccoes de 9 satelites
+   no incendio de 20 e 21 de agosto de 2024.
+   O raio foi escolhido medindo: a distancia mediana ao vizinho do mesmo dia
+   e de 322 m e 83% dos vizinhos estao a menos de 1 km; de 1 km para 2 km a
+   contagem de focos cai so 8%, enquanto de 375 m para 1 km cai 28%. 1 km e
+   tambem o pixel MODIS, o mais grosseiro entre os sensores da serie.
+   Verificado que nao ha encadeamento temporal: a duracao maxima de um grupo
+   e de 1,2 dia.
+
+3. Densidade. Nucleo QUARTICO (biweight, o mesmo do mapa de calor do QGIS)
+   com raio de 1.000 m, sobre malha de 100 m, normalizado para focos/km2/ano
+   (11 anos de serie).
+   A primeira versao desta camada usava nucleo gaussiano com banda de 1.500 m
+   e foi substituida: a gaussiana nao tem suporte compacto — deposita
+   densidade a qualquer distancia — e por isso pintava 25,6 km2 a mais de
+   1 km de qualquer foco, chegando a 1.659 m, inclusive preenchendo vazios
+   entre focos vizinhos. O quartico vale exatamente zero fora do raio: no
+   recorte atual nada e pintado a mais de 789 m de um foco real, e 0,0 km2
+   ficam alem de 1 km.
+
+4. Classes por intervalo de retorno (1/densidade), em valores redondos:
+     >= 0,500 focos/km2/ano  Critica     1 a cada 2 anos ou menos   10,6 km2
+     0,333 a 0,500           Muito alta  1 a cada 2 a 3 anos        26,9 km2
+     0,200 a 0,333           Alta        1 a cada 3 a 5 anos        62,9 km2
+     0,100 a 0,200           Moderada    1 a cada 5 a 10 anos      119,0 km2
+     0,050 a 0,100           Baixa       1 a cada 10 a 20 anos     103,3 km2
+   Abaixo de 0,050 nada e desenhado: 1 foco a cada 20 anos por km2 esta alem
+   do que onze anos de serie sustentam. Sao 190 km2 (37% do municipio) em
+   branco, e nenhum dos 702 focos cai nessa faixa.
+
+5. Validacao. Contando os focos reais dentro de cada classe (ponto-em-poligono
+   independente, sobre o arquivo publicado), a densidade observada por classe
+   e 0,043 / 0,134 / 0,299 / 0,534 / 0,961 focos/km2/ano. Tres classes caem
+   dentro do proprio intervalo; a mais baixa fica 14% abaixo e a quarta 7%
+   acima, efeito esperado da suavizacao na borda das manchas. Um unico foco
+   (0,1%) cai fora de qualquer classe, na borda de um poligono.
+   A mesma auditoria mede o vertice da camada mais distante de um foco:
+   789 m, contra os 1.659 m da versao gaussiana.
+
+6. Saida. Isolinhas vetorizadas, recortadas pelo limite municipal e
+   simplificadas a ~15 m. 185 KB, contra 848 KB do arquivo de pontos que
+   alimentava o mapa de calor anterior.
+
+Por que nao e mais um mapa de calor de tela: o leaflet-heat desenhava num
+raio em pixels, entao as manchas mudavam de tamanho e de forma a cada zoom e
+nenhuma leitura era mensuravel. Esta camada e geometria em metros.
+──────────────────────────────────────────────────────── -->
+
+<!-- METODO_ANALISE ──────────────────────────────────────────
+Analise do territorio — como as contas foram feitas
+
+Unidade de analise: os 702 focos distintos (ver METODO_CALOR), nao as 1.537
+deteccoes. Toda taxa e focos/km2/ano sobre os 11 anos da serie. O municipio
+inteiro marca 0,125 — e a regua de comparacao de todas as tabelas.
+
+1. Camadas herdadas
+   - Bairros: divisao do IBGE, Censo 2022 (60 bairros), a mesma usada nos
+     mapas de renda, IPVS, densidade, seguranca e habitacao.
+   - Perimetro municipal: 512,5 km2, conferido contra a area do IBGE.
+   - Bacias hidrograficas: PMBP, 11 bacias, ja presentes neste mapa; passaram
+     a carregar focos, area e densidade proprios.
+
+2. Situacao urbana ou rural — pelo SETOR, nao pelo bairro
+   Cada foco recebe a situacao do setor censitario em que caiu (campo
+   SITUACAO/CD_SIT da malha do IBGE 2022). A malha de setores NAO entra como
+   camada do mapa: serve so de atribuicao.
+   O motivo e medido: 52 dos 60 bairros (87%) contem setores urbanos e rurais
+   ao mesmo tempo. Classificar o foco pelo bairro predominante erraria 92 dos
+   702 focos (13%) e subestimaria o fogo urbano em 29% — 110 focos no lugar
+   dos 154 reais.
+   O resultado so aparece nessa resolucao: em contagem bruta a queimada parece
+   rural (77,5% dos focos), mas por area nao e. A area urbana de baixa
+   densidade de edificacoes (CD_SIT 2) marca 0,280 focos/km2/ano, o dobro da
+   area rural (0,122) e da area urbana de alta densidade (0,139).
+
+3. Macrozona do Plano Diretor vigente
+   Cruzamento com a camada MACROZONEAMENTO do mapa de legislacao. A Macrozona
+   Urbana ocupa 37% do territorio (190,8 km2) e concentra metade dos focos:
+   0,168 focos/km2/ano contra 0,097 da Macrozona Rural. Seis focos caem fora
+   das duas, em vazios da malha, e aparecem como "Fora".
+
+4. Tendencia
+   Comparacao entre 2015–2019 (5 anos) e 2020–2025 (6 anos), sempre em taxa
+   anual para os periodos serem comparaveis. O municipio passou de 0,110 para
+   0,137 focos/km2/ano, alta de 25%. Por bairro a variacao vai de +644%
+   (Araras) a −49% (Guaripocaba); o quadro do painel exibe apenas bairros com
+   10 focos ou mais, para nao transformar ruido em tendencia.
+
+5. Exposicao da populacao
+   Focos por 10 mil moradores por ano, pelo Censo 2022. Entram apenas os 50
+   bairros com 300 moradores ou mais: abaixo disso o divisor e pequeno demais
+   — um bairro de 162 habitantes chegava a 180 focos/10 mil/ano.
+
+6. Sazonalidade
+   Mes extraido da data de cada deteccao. 533 dos 702 focos (76%) estao entre
+   junho e setembro, com pico em julho (165) e agosto (166). O filtro de mes
+   atravessa a serie: "agosto" com "todos os anos" mostra os onze agostos.
+
+7. O que NAO foi feito, e por que
+   - A superficie de recorrencia e os quadros de analise descrevem a serie
+     inteira e nao acompanham os filtros de ano e mes.
+   - A classificacao por uso do solo saiu da simbologia: o ponto tem cor unica
+     e so o tamanho codifica o FRP. O campo TIPO vem de um recorte do MapBiomas
+     restrito a areas do CAR, feito para outro estudo — comparar o que queima
+     fora de qualquer cadastro, para averiguar parcelamento e limpeza de
+     terreno irregulares. Nao e objeto deste mapa, entao nao colore nem entra
+     na legenda; permanece apenas como atributo na ficha do foco.
+   - Proximidade de curso d'agua foi testada e descartada como camada: na
+     faixa de 30 m a densidade e 0,067 focos/km2/ano, metade da media
+     municipal. As APPs nao concentram queimadas aqui.
+──────────────────────────────────────────────────────── -->
+</body>
+</html>

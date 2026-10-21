@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/qgis2web.css">
+    <link rel="stylesheet" href="css/fontawesome-all.min.css">
+    <link rel="stylesheet" href="css/leaflet-measure.css">
+    <title>WebGIS — Recursos Naturais & Meio Ambiente</title>
+    <style>
+    :root {
+        --bg-panel:#01305a; --bg-panel2:#012d54; --bg-card:#014a8a;
+        --accent:#FFEF00; --accent2:#ffe44d; --text:#ffffff;
+        --text-muted:#a8cce8; --border:rgba(255,255,255,0.12);
+        --blue:#0175bc; --sidebar-w:310px; --header-h:52px;
+    }
+    *,*::before,*::after{box-sizing:border-box;}
+    html,body{width:100%;height:100%;padding:0;margin:0;font-family:'Raleway',sans-serif;background:var(--bg-panel);overflow:hidden;}
+    #header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--blue);border-bottom:3px solid var(--accent);display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+    #portal-back-btn{background:rgba(255,239,0,0.08);border:1px solid rgba(255,239,0,0.25);border-radius:6px;color:var(--text-muted);cursor:pointer;padding:4px 8px;transition:all .2s;display:flex;align-items:center;gap:5px;font-family:'Raleway',sans-serif;font-size:11px;text-decoration:none;}
+    #portal-back-btn:hover{color:var(--accent);border-color:rgba(255,239,0,0.5);background:rgba(255,239,0,0.14);}
+    #header .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+    #header h1{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--text);letter-spacing:.04em;margin:0;text-transform:uppercase;}
+    #header h1 span{color:var(--accent);}
+    #header .subtitle{font-size:11px;color:var(--text-muted);margin:0;font-weight:300;letter-spacing:.02em;}
+    #header .sep{flex:1;}
+    #header .header-badge{font-size:10px;font-family:'Outfit',sans-serif;font-weight:600;color:var(--accent);border:1px solid rgba(255,239,0,0.4);border-radius:4px;padding:2px 8px;letter-spacing:.08em;text-transform:uppercase;}
+    #sidebar-toggle{background:rgba(255,239,0,0.1);border:1px solid rgba(255,239,0,0.4);border-radius:6px;color:var(--accent);cursor:pointer;padding:4px 8px;transition:all .2s;display:flex;align-items:center;gap:5px;font-family:'Raleway',sans-serif;font-size:12px;}
+    #sidebar-toggle:hover{background:rgba(255,239,0,0.2);border-color:var(--accent);}
+    #app{display:flex;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;}
+    #sidebar{width:var(--sidebar-w);background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .3s cubic-bezier(.4,0,.2,1),opacity .3s;flex-shrink:0;z-index:8000;}
+    #sidebar.collapsed{width:0;opacity:0;pointer-events:none;}
+    #sidebar-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bg-card) transparent;display:flex;flex-direction:column;}
+    #sidebar-scroll::-webkit-scrollbar{width:4px;}
+    #sidebar-scroll::-webkit-scrollbar-thumb{background:var(--bg-card);border-radius:2px;}
+    .panel-section{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+    .panel-section:last-child{border-bottom:none;}
+    .section-label{font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin:0 0 10px;}
+    .basemap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+    .basemap-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 4px;cursor:pointer;text-align:center;transition:all .15s;color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:10px;}
+    .basemap-btn .bm-icon{font-size:18px;display:block;margin-bottom:3px;}
+    .basemap-btn:hover{border-color:rgba(255,239,0,0.5);color:var(--text);}
+    .basemap-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,0.08);box-shadow:0 0 12px rgba(255,239,0,0.1);}
+    .layer-item{margin-bottom:10px;} .layer-item:last-child{margin-bottom:0;}
+    .layer-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+    .layer-toggle{position:relative;width:32px;height:18px;flex-shrink:0;}
+    .layer-toggle input{opacity:0;width:0;height:0;}
+    .toggle-track{position:absolute;inset:0;background:var(--bg-card);border-radius:9px;cursor:pointer;transition:background .2s;border:1px solid var(--border);}
+    .toggle-track::after{content:'';position:absolute;left:2px;top:2px;width:12px;height:12px;background:var(--text-muted);border-radius:50%;transition:all .2s;}
+    .layer-toggle input:checked+.toggle-track{background:rgba(255,239,0,0.15);border-color:var(--accent);}
+    .layer-toggle input:checked+.toggle-track::after{background:var(--accent);left:16px;}
+    .layer-name{font-size:12px;color:var(--text);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .opacity-row{display:flex;align-items:center;gap:8px;padding-left:40px;}
+    .opacity-label{font-size:10px;color:var(--text-muted);width:20px;text-align:right;flex-shrink:0;}
+    input[type=range]{flex:1;appearance:none;height:3px;border-radius:2px;background:var(--bg-card);outline:none;cursor:pointer;}
+    input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 6px rgba(255,239,0,0.4);}
+    .layer-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0;}
+    .layer-info-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:0 2px;opacity:.6;transition:opacity .15s,color .15s;flex-shrink:0;}
+    .layer-info-btn:hover{opacity:1;color:var(--accent2);}
+    .layer-tooltip{position:absolute;left:16px;right:16px;background:rgba(1,48,90,0.97);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text-muted);line-height:1.6;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;}
+    .layer-tooltip.visible{display:block;}
+    .layer-tooltip strong{color:var(--text);display:block;margin-bottom:4px;font-size:12px;}
+    /* Legenda colapsável */
+    .legend-items{display:flex;flex-direction:column;gap:0;}
+    .lg-group{border-bottom:1px solid rgba(255,255,255,0.06);}
+    .lg-group:last-child{border-bottom:none;}
+    .lg-title{display:flex;align-items:center;justify-content:space-between;font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);padding:7px 0 5px;cursor:pointer;user-select:none;transition:color .15s;}
+    .lg-title:hover{color:var(--accent);}
+    .lg-title .lg-arrow{font-size:9px;transition:transform .25s;flex-shrink:0;opacity:.6;margin-left:6px;}
+    .lg-title.open .lg-arrow{transform:rotate(180deg);}
+    .lg-body{display:flex;flex-direction:column;gap:5px;overflow:hidden;max-height:0;transition:max-height .3s cubic-bezier(.4,0,.2,1),padding .3s;padding-bottom:0;}
+    .lg-body.open{max-height:500px;padding-bottom:8px;}
+    .legend-row{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);}
+    .legend-poly{width:14px;height:12px;border-radius:2px;flex-shrink:0;}
+    .legend-line{width:20px;height:2px;border-radius:1px;flex-shrink:0;}
+    .legend-dot-wrap{width:14px;height:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    /* Info panel */
+    #info-panel{padding:14px 16px;}
+    #info-content{font-size:11px;color:var(--text-muted);line-height:1.7;}
+    .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80px;text-align:center;gap:8px;}
+    .placeholder .ph-icon{font-size:26px;opacity:.2;}
+    .placeholder p{margin:0;font-size:11px;color:var(--text-muted);}
+    .info-field{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;border-bottom:1px solid var(--border);gap:8px;}
+    .info-field:last-child{border-bottom:none;}
+    .info-key{font-size:10px;color:var(--text-muted);flex:1;padding-top:1px;}
+    .info-val{font-size:11px;color:var(--accent);font-weight:500;font-family:'Outfit',sans-serif;text-align:right;max-width:170px;word-break:break-word;}
+    .info-title{font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+    .info-title .tag{font-size:9px;background:rgba(255,239,0,0.12);color:var(--accent);border-radius:3px;padding:1px 5px;font-weight:600;letter-spacing:.06em;}
+    /* Map */
+    #map-wrap{flex:1;position:relative;overflow:hidden;}
+    #map{width:100%;height:100%;}
+    #bottom-bar{position:absolute;bottom:0;left:0;right:0;height:28px;background:rgba(1,48,90,0.92);backdrop-filter:blur(6px);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:16px;z-index:1000;font-size:10px;color:var(--text-muted);font-family:'Raleway',sans-serif;}
+    #coords-display{font-variant-numeric:tabular-nums;}
+    #zoom-display{margin-left:auto;}
+    /* Busca */
+    #map-search{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:2000;background:var(--bg-panel);border:1px solid var(--border);border-radius:24px;display:flex;align-items:center;gap:8px;padding:8px 14px;width:min(420px,calc(100% - 32px));box-shadow:0 4px 20px rgba(0,0,0,0.4);transition:border-color .15s;}
+    #map-search:focus-within{border-color:var(--accent);box-shadow:0 4px 24px rgba(255,239,0,0.15);}
+    #map-search-icon{color:var(--text-muted);font-size:13px;flex-shrink:0;}
+    #addr-input{flex:1;background:transparent;border:none;color:var(--text);font-family:'Raleway',sans-serif;font-size:13px;outline:none;min-width:0;}
+    #addr-input::placeholder{color:var(--text-muted);}
+    #addr-clear-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;transition:color .15s;flex-shrink:0;}
+    #addr-clear-btn:hover{color:var(--accent);}
+    #addr-suggestions{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:flex;flex-direction:column;}
+    #addr-suggestions:empty{display:none;}
+    .addr-item{font-size:12px;color:var(--text-muted);padding:9px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s,color .1s;line-height:1.4;}
+    .addr-item:last-child{border-bottom:none;}
+    .addr-item:hover{background:var(--bg-card);color:var(--text);}
+    /* Leaflet overrides */
+    .leaflet-control-zoom{border:none!important;box-shadow:none!important;}
+    .leaflet-control-zoom a{background:var(--bg-panel)!important;color:var(--text-muted)!important;border:1px solid var(--border)!important;border-radius:6px!important;margin-bottom:3px!important;width:30px!important;height:30px!important;line-height:30px!important;font-size:16px!important;transition:all .15s!important;}
+    .leaflet-control-zoom a:hover{background:var(--bg-card)!important;color:var(--accent)!important;border-color:var(--accent)!important;}
+    .leaflet-control-measure{border:none!important;box-shadow:none!important;}
+    .leaflet-control-measure-toggle{background:var(--bg-panel)!important;border:1px solid var(--border)!important;border-radius:6px!important;color:var(--text-muted)!important;width:30px!important;height:30px!important;line-height:30px!important;transition:all .15s!important;}
+    .leaflet-control-measure-toggle:hover{color:var(--accent)!important;border-color:var(--accent)!important;}
+    .leaflet-control-geolocate{background:var(--bg-panel)!important;border:1px solid var(--border)!important;border-radius:6px!important;cursor:pointer;width:30px;height:30px;display:flex!important;align-items:center;justify-content:center;color:var(--text-muted)!important;font-size:13px;transition:all .15s;}
+    .leaflet-control-geolocate:hover{color:var(--accent)!important;border-color:var(--accent)!important;}
+    .leaflet-control-attribution{background:rgba(1,48,90,0.85)!important;color:var(--text-muted)!important;font-size:9px!important;backdrop-filter:blur(4px);}
+    .leaflet-control-attribution a{color:var(--accent2)!important;}
+    .leaflet-control-scale-line{background:rgba(1,48,90,0.85)!important;border-color:var(--text-muted)!important;color:var(--text-muted)!important;font-size:9px!important;font-family:'Raleway',sans-serif!important;}
+    .leaflet-control-scale{margin-bottom:34px!important;}
+    .leaflet-popup-content-wrapper{background:var(--bg-panel2)!important;border:1px solid var(--border)!important;border-radius:10px!important;color:var(--text)!important;box-shadow:0 8px 32px rgba(0,0,0,0.5)!important;}
+    .leaflet-popup-tip{background:var(--bg-panel2)!important;}
+    .leaflet-popup-content{margin:12px 14px!important;font-size:11px;color:var(--text-muted);line-height:1.6;}
+    .leaflet-popup-close-button{color:var(--text-muted)!important;}
+    .leaflet-popup-close-button:hover{color:var(--accent)!important;}
+    .leaflet-control-layers,.leaflet-photon{display:none!important;}
+    /* Nascente icon */
+    .nascente-icon{width:12px;height:12px;border-radius:50%;background:rgba(0,191,255,1);border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 4px rgba(0,191,255,0.6);}
+    /* Export */
+    #export-btn{background:rgba(255,239,0,0.1);border:1px solid rgba(255,239,0,0.4);border-radius:6px;color:var(--accent);cursor:pointer;padding:4px 10px;transition:all .2s;display:flex;align-items:center;gap:5px;font-family:'Raleway',sans-serif;font-size:12px;}
+    #export-btn:hover{background:rgba(255,239,0,0.22);}
+    #export-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:99000;display:flex;align-items:center;justify-content:center;}
+    #export-box{background:var(--bg-panel2);border:1px solid var(--border);border-radius:14px;padding:28px 32px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+    #export-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;}
+    #export-desc{font-size:12px;color:var(--text-muted);margin:0 0 20px;}
+    #export-btns{display:flex;gap:10px;margin-bottom:16px;}
+    .exp-btn{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Raleway',sans-serif;font-size:13px;padding:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .exp-btn:hover{border-color:var(--accent);color:var(--accent);}
+    #export-status{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:12px;text-align:center;}
+    #export-close{width:100%;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:12px;padding:8px;cursor:pointer;transition:all .15s;}
+    #export-close:hover{border-color:var(--text-muted);color:var(--text);}
+    /* Onboarding */
+    #onboarding-overlay{position:fixed;inset:0;z-index:99999;pointer-events:none;}
+    #onboarding-overlay.hidden{display:none;}
+    #onboarding-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.55);pointer-events:all;}
+    #onboarding-box{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 32px));background:var(--bg-panel2);border:1px solid rgba(255,239,0,0.35);border-radius:16px;padding:24px 24px 20px;pointer-events:all;box-shadow:0 24px 64px rgba(0,0,0,0.7);animation:slideUp .4s cubic-bezier(.34,1.4,.64,1) both;}
+    @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(32px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+    .ob-step{display:none;} .ob-step.active{display:block;}
+    .ob-eyebrow{font-size:10px;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+    .ob-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+    .ob-title .ob-icon{font-size:22px;flex-shrink:0;}
+    .ob-desc{font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:16px;}
+    .ob-footer{display:flex;align-items:center;gap:10px;}
+    .ob-dots{display:flex;gap:5px;flex:1;}
+    .ob-dot{width:6px;height:6px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border);transition:all .2s;}
+    .ob-dot.active{background:var(--accent);border-color:var(--accent);width:18px;border-radius:3px;}
+    .ob-skip{background:none;border:none;color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:11px;cursor:pointer;padding:4px 0;transition:color .15s;}
+    .ob-skip:hover{color:var(--text);}
+    .ob-next{background:var(--accent);border:none;border-radius:8px;color:var(--bg-panel);font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;padding:8px 20px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+    .ob-next:hover{background:var(--accent2);}
+    
+        .badge {
+            font-family: 'Outfit',sans-serif; font-size: 10px; font-weight: 700;
+            color: var(--accent); border: 1px solid rgba(255,239,0,.4);
+            padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+        }
+        .hdr-sep { flex: 1; }
+                .sub {
+            font-size: 11px; color: rgba(255,255,255,.65);
+            font-weight: 300; white-space: nowrap; margin: 0;
+        }
+        
+/* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
+#hd h1, #header h1, #pd-header h1 {
+  font-family:'Outfit',sans-serif; font-weight:700; font-size:14px; color:#fff;
+  text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
+}
+#hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
+#hd .sub, #header .sub, #pd-header .sub,
+#hd .subtitle, #header .subtitle, #pd-header .subtitle {
+  font-size:11px; color:rgba(255,255,255,.65); font-weight:300;
+  white-space:nowrap; margin:0; line-height:1.3;
+}
+#hd .badge, #header .badge, #pd-header .badge,
+#hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
+  font-family:'Outfit',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
+  border:1px solid rgba(255,239,0,.4); background:transparent;
+  padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
+}
+
+/* ── tipografia e cor: textos longos e valores numéricos ──────────────── */
+/* Prosa explicativa em branco: popups, onboarding e notas de rodapé de
+   painel. Cabeçalhos e apontamentos de legenda mantêm o azul claro. */
+.pexp, #obd, .nota, .sel-vazio, .pc-note, #pnl-hint, .bar-sub-long {
+  color: var(--text) !important;
+}
+/* Valores numéricos em legenda: cor fixa de alta legibilidade.
+   A cor da categoria fica no quadradinho e na barra, nunca no número. */
+.bar-lb .v, .rk .p, .li .cnt, .sel-v, .pt td, .pc-v {
+  color: var(--text) !important;
+  font-variant-numeric: tabular-nums;
+}
+</style>
+</head>
+<body>
+<div id="aviso-dados" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+ z-index:99999;background:#0f2236;border:1px solid rgba(255,239,0,.5);border-top:4px solid #FFEF00;
+ border-radius:12px;padding:24px 28px;max-width:440px;font-family:'Raleway',sans-serif;font-size:13px;
+ line-height:1.65;color:#e8eaf0;box-shadow:0 12px 40px rgba(0,0,0,.6)">
+ <b style="color:#FFEF00">Camadas indisponíveis</b><br>
+ Os arquivos de dados deste mapa (hidrografia, nascentes, APP, curvas de nível, bacias e unidades
+ de conservação) não acompanharam a publicação. O mapa abre, mas sem as camadas temáticas.<br><br>
+ É necessário reenviar a pasta <code style="background:rgba(255,255,255,.08);padding:2px 6px;
+ border-radius:4px">data/</code> do export original.
+ <button onclick="this.parentNode.style.display='none'" style="width:100%;margin-top:16px;
+  background:#FFEF00;color:#000;font-weight:700;padding:10px;border:none;border-radius:8px;
+  cursor:pointer;font-family:'Outfit',sans-serif">Entendi</button></div>
+
+<!-- HEADER -->
+<div id="header">
+    <div class="logo-dot"></div>
+    <div>
+        <h1>Meio Ambiente <span>Recursos Naturais</span></h1>
+        <p class="subtitle">Revisão do Plano Diretor · Bragança Paulista</p>
+    </div>
+    <div class="sep"></div>
+    <span class="header-badge">FÍSICO-AMBIENTAL</span>
+                        <a id="portal-back-btn" href="../portal.html"><i class="fas fa-th-large"></i> Portal</a>
+    <button id="export-btn" onclick="openExportModal()"><i class="fas fa-download"></i> Exportar</button>
+    <button id="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-sliders-h"></i> Painel</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div id="sidebar">
+<div id="sidebar-scroll">
+
+    <!-- Basemap -->
+    <div class="panel-section">
+        <p class="section-label">Mapa base</p>
+        <div class="basemap-grid">
+            <button class="basemap-btn active" onclick="setBasemap('satellite')" id="bm-satellite"><span class="bm-icon">🛰</span>Satélite</button>
+            <button class="basemap-btn" onclick="setBasemap('osm')" id="bm-osm"><span class="bm-icon">🗺</span>OSM</button>
+            <button class="basemap-btn" onclick="setBasemap('dark')" id="bm-dark"><span class="bm-icon">🌑</span>Dark</button>
+        </div>
+    </div>
+
+    <!-- Camadas -->
+    <div class="panel-section">
+        <p class="section-label">Camadas visíveis</p>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-uc" checked onchange="toggleLayer('uc',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🌳</span><span class="layer-name">Unidades de Conservação</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-uc')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-uc"><strong>Unidades de Conservação</strong>Áreas protegidas por legislação municipal: ARIEs e Parques Municipais de Bragança Paulista. Cada unidade é representada por uma cor distinta. Fonte: SMMA/PMBP.</div>
+            <div class="opacity-row">
+                <span class="opacity-label" id="op-uc-val">70%</span>
+                <input type="range" min="0" max="100" value="70" oninput="setOpacityUC(this.value)">
+            </div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-buffer" checked onchange="toggleLayer('buffer',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🔵</span><span class="layer-name">Área de Influência UC (2km)</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-buffer')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-buffer"><strong>Área de Influência — Buffer 2km</strong>Zona de amortecimento de 2 quilômetros calculada individualmente ao redor de cada Unidade de Conservação. Cada buffer mantém a cor de sua UC de origem. Calculado em tempo real pela biblioteca Turf.js.</div>
+            <div class="opacity-row">
+                <span class="opacity-label" id="op-buffer-val">30%</span>
+                <input type="range" min="0" max="100" value="30" oninput="setOpacityBuffer(this.value)">
+            </div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-app" checked onchange="toggleLayer('app',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🌿</span><span class="layer-name">APP — Áreas de Preservação</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-app')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-app"><strong>Área de Preservação Permanente (APP)</strong>Faixas de proteção obrigatória conforme o Código Florestal (Lei 12.651/2012): margens de cursos d'água, entorno de nascentes, topos de morro e encostas. Representada em verde translúcido com contorno escuro. Fonte: ANA/PMBP.</div>
+            <div class="opacity-row">
+                <span class="opacity-label" id="op-app-val">70%</span>
+                <input type="range" min="0" max="100" value="70" oninput="setOpacity('app',this.value)">
+            </div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-hidro" checked onchange="toggleLayer('hidro',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">💧</span><span class="layer-name">Hidrografia — Cursos d'água</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-hidro')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-hidro"><strong>Hidrografia — Linhas (ANA)</strong>Rede hidrográfica do município com rios e córregos classificados pela Agência Nacional de Águas (ANA). Representada em azul para indicar cursos d'água superficiais.</div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-nascentes" checked onchange="toggleLayer('nascentes',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">💦</span><span class="layer-name">Nascentes</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-nasc')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-nasc"><strong>Nascentes — ANA</strong>Pontos de surgência de água identificados pela ANA. Cada nascente gera uma APP de raio mínimo de 50 metros conforme o Código Florestal.</div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-bacias" checked onchange="toggleLayer('bacias',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🗺️</span><span class="layer-name">Bacias Hidrográficas</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-bacias')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-bacias"><strong>Bacias Hidrográficas</strong>Delimitação das bacias hidrográficas do município de Bragança Paulista. Representadas por contorno tracejado azul para não sobrepor as demais camadas. Clique para ver o nome da bacia.</div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-curvas" onchange="toggleLayer('curvas',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">📈</span><span class="layer-name">Curvas de Nível (5m)</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-curvas')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-curvas"><strong>Curvas de Nível — IGC 5m</strong>Isolinhas de altitude com equidistância de 5 metros, derivadas do levantamento aerofotogramétrico do IGC na escala 1:10.000. Desligadas por padrão pelo alto volume de dados.</div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-declividade" onchange="toggleLayer('declividade',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">⛰️</span><span class="layer-name">Declividade &gt;25°</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-decliv')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-decliv"><strong>Declividade &gt;25° — PMBP/IGC 25m</strong>Destaca áreas com declividade acima de 25 graus, correspondentes a terrenos de alta suscetibilidade a erosão e deslizamento. Enquadradas como APP por declividade pelo Código Florestal. Desligado por padrão.</div>
+            <div class="opacity-row">
+                <span class="opacity-label" id="op-decliv-val">80%</span>
+                <input type="range" min="0" max="100" value="80" oninput="setOpacity('declividade',this.value)">
+            </div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-vegetacao" onchange="toggleLayer('vegetacao',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🌱</span><span class="layer-name">Cobertura Vegetal</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-veg')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-veg"><strong>Cobertura e Uso do Solo — MapBiomas</strong>Mapa de cobertura vegetal e uso do solo derivado da plataforma MapBiomas (Coleção 9). Classifica o território em formações florestais, savânicas, agropecuária, área urbana e corpos d'água. Desligado por padrão.</div>
+            <div class="opacity-row">
+                <span class="opacity-label" id="op-veg-val">80%</span>
+                <input type="range" min="0" max="100" value="80" oninput="setOpacity('vegetacao',this.value)">
+            </div>
+        </div>
+
+        <div class="layer-item" style="position:relative">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-municipios" checked onchange="toggleLayer('municipios',this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🔲</span><span class="layer-name">Limites Municipais</span>
+                <button class="layer-info-btn" onclick="toggleLayerTooltip('tt-mun')">ⓘ</button>
+            </div>
+            <div class="layer-tooltip" id="tt-mun"><strong>Municípios SP — IBGE 2022</strong>Limites municipais do estado de São Paulo para contextualização territorial. Representados com contorno cinza tracejado suave.</div>
+        </div>
+
+        </div>
+
+        <div class="layer-item">
+            <div class="layer-header">
+                <label class="layer-toggle"><input type="checkbox" id="tog-base" checked onchange="toggleBasemapLayer(this.checked)"><span class="toggle-track"></span></label>
+                <span class="layer-icon">🛰️</span><span class="layer-name">Imagem de fundo</span>
+            </div>
+            <div class="opacity-row">
+                <span class="opacity-label" id="op-base-val">65%</span>
+                <input type="range" min="0" max="100" value="65" oninput="setBasemapOpacity(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Legenda -->
+    <div class="panel-section">
+        <p class="section-label">Legenda</p>
+        <div class="legend-items">
+
+            <div class="lg-group">
+                <div class="lg-title open" onclick="toggleLegendGroup('lg0',this)"><span>Unidades de Conservação</span><span class="lg-arrow">▼</span></div>
+                <div class="lg-body open" id="lg0">
+                    <div class="legend-row"><div class="legend-poly" style="background:rgba(144,50,221,0.6);border:1.5px solid rgba(144,50,221,1)"></div>ARIE Bosque das Araucárias</div>
+                    <div class="legend-row"><div class="legend-poly" style="background:rgba(104,222,141,0.6);border:1.5px solid rgba(104,222,141,1)"></div>ARIE Mata e Lago dos Padres</div>
+                    <div class="legend-row"><div class="legend-poly" style="background:rgba(112,203,210,0.6);border:1.5px solid rgba(112,203,210,1)"></div>Monumento do Leite Sol</div>
+                    <div class="legend-row"><div class="legend-poly" style="background:rgba(209,49,158,0.6);border:1.5px solid rgba(209,49,158,1)"></div>Parque do Caetê</div>
+                    <div class="legend-row"><div class="legend-poly" style="background:rgba(115,201,49,0.6);border:1.5px solid rgba(115,201,49,1)"></div>Parque Lago dos Padres</div>
+                    <div class="legend-row"><div class="legend-poly" style="background:rgba(216,199,124,0.6);border:1.5px solid rgba(216,199,124,1)"></div>Parque Petronilla Marckowitz</div>
+                    <div class="legend-row"><div class="legend-poly" style="background:rgba(211,101,94,0.6);border:1.5px solid rgba(211,101,94,1)"></div>Parque Refúgio das Aves</div>
+                    <div class="legend-row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.08)">
+                        <div class="legend-poly" style="background:rgba(150,150,220,0.18);border:1.5px dashed rgba(150,150,220,0.7)"></div>
+                        <span>Área de Influência 2km (cor da UC)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg-group">
+                <div class="lg-title open" onclick="toggleLegendGroup('lg1',this)"><span>Hidrografia & APP</span><span class="lg-arrow">▼</span></div>
+                <div class="lg-body open" id="lg1">
+                    <div class="legend-row"><div class="legend-line" style="background:rgba(70,130,180,1);height:2px"></div>Cursos d'água (ANA)</div>
+                    <div class="legend-row"><div class="legend-dot-wrap"><div style="width:8px;height:8px;border-radius:50%;background:rgba(0,191,255,1);border:1.5px solid #fff"></div></div>Nascentes</div>
+                    <div class="legend-row"><div class="legend-poly" style="background:rgba(34,139,34,0.25);border:2px solid rgba(34,139,34,0.9)"></div>APP — Preservação Permanente</div>
+                    <div class="legend-row"><div class="legend-line" style="background:rgba(100,160,220,0.8);height:2px;border-top:1px dashed rgba(100,160,220,1)"></div>Bacias Hidrográficas</div>
+                </div>
+            </div>
+
+            <div class="lg-group">
+                <div class="lg-title" onclick="toggleLegendGroup('lg2',this)"><span>Relevo & Vegetação</span><span class="lg-arrow">▼</span></div>
+                <div class="lg-body" id="lg2">
+                    <div class="legend-row"><div class="legend-line" style="background:rgba(180,150,80,0.8);height:1px"></div>Curvas de nível (5m)</div>
+                    <div class="legend-row"><div class="legend-poly" style="background:rgba(200,100,50,0.5);border:1px solid rgba(200,100,50,0.8)"></div>Declividade &gt;25°</div>
+                    <div class="legend-row"><div class="legend-poly" style="background:linear-gradient(90deg,#1a5c1a,#4caf50,#cddc39);border:1px solid rgba(255,255,255,0.15)"></div>Cobertura Vegetal</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Info -->
+    <div id="info-panel" class="panel-section">
+        <p class="section-label">Dados do ponto selecionado</p>
+        <div id="info-content">
+            <div class="placeholder"><span class="ph-icon">🌿</span><p>Clique sobre uma feição para ver os detalhes</p></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MAP -->
+<div id="map-wrap">
+    <div id="map"></div>
+    <div id="map-search">
+        <i class="fas fa-search" id="map-search-icon"></i>
+        <input type="text" id="addr-input" placeholder="Buscar endereço em Bragança Paulista…" autocomplete="off" oninput="onAddrInput()" onkeydown="if(event.key==='Enter') doAddrSearch()">
+        <button id="addr-clear-btn" onclick="clearAddrSearch()" style="display:none"><i class="fas fa-times"></i></button>
+        <div id="addr-suggestions"></div>
+    </div>
+    <div id="bottom-bar"><span id="coords-display">—</span><span id="zoom-display">Zoom: —</span></div>
+</div>
+</div><!-- /app -->
+
+<!-- EXPORT MODAL -->
+<div id="export-modal" style="display:none">
+    <div id="export-box">
+        <div id="export-title"><i class="fas fa-download"></i> Exportar mapa</div>
+        <p id="export-desc">Escolha o formato. O mapa será capturado na visualização atual.</p>
+        <div id="export-btns">
+            <button class="exp-btn" onclick="doExport('jpeg')"><i class="fas fa-image"></i> JPEG</button>
+            <button class="exp-btn" onclick="doExport('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+        </div>
+        <div id="export-status"></div>
+        <button id="export-close" onclick="closeExportModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding-overlay">
+    <div id="onboarding-backdrop" onclick="obNext()"></div>
+    <div id="onboarding-box">
+        <div class="ob-step active" id="ob-step-1">
+            <div class="ob-eyebrow">Bem-vindo ao WebGIS · Passo 1 de 4</div>
+            <div class="ob-title"><span class="ob-icon">🌿</span> Recursos Naturais & Meio Ambiente</div>
+            <div class="ob-desc">Este mapa reúne as principais informações ambientais de Bragança Paulista: <strong style="color:var(--text)">Unidades de Conservação</strong>, APPs, hidrografia, bacias hidrográficas, relevo e cobertura vegetal.</div>
+            <div class="ob-footer"><div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><button class="ob-skip" onclick="obSkip()">Pular tutorial</button><button class="ob-next" onclick="obNext()">Próximo →</button></div>
+        </div>
+        <div class="ob-step" id="ob-step-2">
+            <div class="ob-eyebrow">Simbologia · Passo 2 de 4</div>
+            <div class="ob-title"><span class="ob-icon">🎨</span> Como ler as cores</div>
+            <div class="ob-desc">As <strong style="color:var(--text)">UCs</strong> têm cor própria por unidade. A <strong style="color:rgba(34,139,34,0.9)">APP</strong> aparece em verde translúcido com contorno escuro. A hidrografia é <strong style="color:rgba(70,130,180,1)">azul</strong>. As nascentes são pontos azul-ciano.</div>
+            <div class="ob-footer"><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><button class="ob-skip" onclick="obSkip()">Pular</button><button class="ob-next" onclick="obNext()">Próximo →</button></div>
+        </div>
+        <div class="ob-step" id="ob-step-3">
+            <div class="ob-eyebrow">Painel · Passo 3 de 4</div>
+            <div class="ob-title"><span class="ob-icon">🎛️</span> Painel de controles</div>
+            <div class="ob-desc">As camadas de <strong style="color:var(--text)">Curvas de Nível</strong>, <strong style="color:var(--text)">Declividade</strong> e <strong style="color:var(--text)">Cobertura Vegetal</strong> iniciam desligadas por terem grande volume de dados. Ative-as conforme necessário.</div>
+            <div class="ob-footer"><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div><button class="ob-skip" onclick="obSkip()">Pular</button><button class="ob-next" onclick="obNext()">Próximo →</button></div>
+        </div>
+        <div class="ob-step" id="ob-step-4">
+            <div class="ob-eyebrow">Interação · Passo 4 de 4</div>
+            <div class="ob-title"><span class="ob-icon">🖱️</span> Clique e explore</div>
+            <div class="ob-desc"><strong style="color:var(--text)">Clique</strong> em qualquer UC, bacia ou APP para ver os detalhes. Use a <strong style="color:var(--text)">busca</strong> para localizar um endereço. Exporte o mapa em JPEG ou PDF pelo botão <strong style="color:var(--text)">"Exportar"</strong>.</div>
+            <div class="ob-footer"><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div></div><button class="ob-skip" onclick="obSkip()">Fechar</button><button class="ob-next" onclick="obSkip()" style="background:var(--blue)">Entendido! ✓</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="js/qgis2web_expressions.js"></script>
+<script src="js/leaflet.js"></script>
+<script src="js/multi-style-layer.js"></script>
+<script src="js/leaflet.rotatedMarker.js"></script>
+<script src="js/leaflet.pattern.js"></script>
+<script src="js/leaflet-hash.js"></script>
+<script src="js/Autolinker.min.js"></script>
+<script src="js/leaflet-measure.js"></script>
+<script src="data/FISICO_ANA_HIDROGRAFIA_LINHAS_2.js"></script>
+<script src="data/FISICO_ANA_HIDROGRAFIA_NASCENTES_3.js"></script>
+<script src="data/FISICO_ANAPMBPHIDROGRAFIAAPP_4.js"></script>
+<script src="data/geo_curva_5m_6.js"></script>
+<script src="data/BACIAS_HIDROGRAFICAS_8.js"></script>
+<script src="data/IBGE_SP_Municipios_9.js"></script>
+<script src="data/UC_AREADERELEVANTEINTERESSEECOLGICO_10.js"></script>
+<script>
+'use strict';
+
+// ── UTILITÁRIOS ──────────────────────────────────────────
+var autolinker = new Autolinker({truncate:{length:30,location:'smart'}});
+function removeEmptyRowsFromPopupContent(content,feature){
+    var d=document.createElement('div');d.innerHTML=content;
+    var rows=d.querySelectorAll('tr');
+    for(var i=0;i<rows.length;i++){var td=rows[i].querySelector('td.visible-with-data');if(td&&feature.properties[td.id]==null)rows[i].parentNode.removeChild(rows[i]);}
+    return d.innerHTML;
+}
+function addClassToPopupIfMedia(content,popup){
+    var d=document.createElement('div');d.innerHTML=content;
+    if(d.querySelector('td img'))popup._contentNode.classList.add('media');
+    else popup._contentNode.classList.remove('media');
+}
+
+// ── SIDEBAR ──────────────────────────────────────────────
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}
+
+// ── OPACIDADES ────────────────────────────────────────────
+var layerOpacityUC=0.70, layerOpacityApp=0.70;
+var layerOpacityMap={declividade:0.80,vegetacao:0.80};
+
+// ── MAPA ─────────────────────────────────────────────────
+var map = L.map('map',{zoomControl:false,maxZoom:28,minZoom:1})
+    .fitBounds([[-23.031884,-46.592774],[-22.994393,-46.572621]]);
+var hash = new L.Hash(map);
+map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web">qgis2web</a> &middot; <a href="https://leafletjs.com">Leaflet</a>');
+var bounds_group = new L.featureGroup([]);
+
+L.control.scale({position:'bottomleft',imperial:false}).addTo(map);
+L.control.zoom({position:'topright'}).addTo(map);
+
+var mc = new L.Control.Measure({position:'topright',primaryLengthUnit:'meters',secondaryLengthUnit:'kilometers',primaryAreaUnit:'sqmeters',secondaryAreaUnit:'hectares'});
+mc.addTo(map);
+var _mt = document.getElementsByClassName('leaflet-control-measure-toggle')[0];
+if(_mt){_mt.innerHTML='';_mt.className+=' fas fa-ruler';}
+
+var GLC=L.Control.extend({options:{position:'topright'},onAdd:function(){
+    var b=L.DomUtil.create('div','leaflet-control-geolocate');
+    b.innerHTML='<i class="fas fa-location-arrow"></i>';b.title='Minha localização';
+    L.DomEvent.on(b,'click',function(e){L.DomEvent.stopPropagation(e);map.locate({setView:true,maxZoom:17});});
+    return b;
+}});
+new GLC().addTo(map);
+map.on('locationfound',function(e){L.circleMarker(e.latlng,{radius:8,color:'#FFEF00',fillColor:'#0175bc',fillOpacity:0.8,weight:2}).addTo(map).bindPopup('Você está aqui').openPopup();});
+map.on('mousemove',function(e){document.getElementById('coords-display').textContent='Lat: '+e.latlng.lat.toFixed(5)+'  Lng: '+e.latlng.lng.toFixed(5);});
+map.on('zoomend',function(){document.getElementById('zoom-display').textContent='Zoom: '+map.getZoom();});
+document.getElementById('zoom-display').textContent='Zoom: '+map.getZoom();
+
+// ── BASEMAPS ──────────────────────────────────────────────
+map.createPane('pane_base'); map.getPane('pane_base').style.zIndex=200;
+var BASEMAP_CONFIGS={
+    satellite:{url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',opts:{attribution:'Esri, Maxar, Earthstar Geographics',maxZoom:28,maxNativeZoom:17,pane:'pane_base'}},
+    osm:{url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',opts:{attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:28,maxNativeZoom:17,pane:'pane_base'}},
+    dark:{url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',opts:{attribution:'Esri, HERE, Garmin, © OpenStreetMap',maxZoom:28,maxNativeZoom:16,pane:'pane_base'}}
+};
+var curBM=null;
+function setBasemap(n){
+    var op=document.getElementById('op-base')?parseFloat(document.getElementById('op-base').value)/100:0.65;
+    if(curBM)map.removeLayer(curBM);
+    var cfg=BASEMAP_CONFIGS[n]; curBM=L.tileLayer(cfg.url,cfg.opts); curBM.setOpacity(op); map.addLayer(curBM);
+    ['satellite','osm','dark'].forEach(function(b){document.getElementById('bm-'+b).classList.toggle('active',b===n);});
+}
+function setBasemapOpacity(v){if(curBM)curBM.setOpacity(v/100);document.getElementById('op-base-val').textContent=v+'%';}
+function toggleBasemapLayer(on){if(on)map.addLayer(curBM);else map.removeLayer(curBM);}
+setBasemap('satellite');
+
+
+// ── HIDROGRAFIA — LINHAS (cor azul, não marrom) ──────────
+function style_FISICO_ANA_HIDROGRAFIA_LINHAS_2_0(){
+    return{pane:'pane_FISICO_ANA_HIDROGRAFIA_LINHAS_2',opacity:1,color:'rgba(70,130,180,1.0)',dashArray:'',lineCap:'square',lineJoin:'bevel',weight:1.5,fillOpacity:0,interactive:true};
+}
+function pop_FISICO_ANA_HIDROGRAFIA_LINHAS_2(feature,layer){
+    layer.on({
+        mouseover:function(e){e.target.setStyle({color:'rgba(255,239,0,1)',weight:3});showInfoPanel('Curso d\'água','ANA',[{k:'Ordem',v:feature.properties['nuordemcda']},{k:'Comp. CDA (km)',v:feature.properties['nucompcda']},{k:'Área bacia (km²)',v:feature.properties['nuareabacc']},{k:'Dominialidade',v:feature.properties['dedominial']}]);},
+        mouseout:function(e){layer_FISICO_ANA_HIDROGRAFIA_LINHAS_2.resetStyle(e.target);clearInfoPanel();},
+        click:function(e){showInfoPanel('Curso d\'água','ANA',[{k:'Ordem',v:feature.properties['nuordemcda']},{k:'Comp. CDA (km)',v:feature.properties['nucompcda']},{k:'Área bacia (km²)',v:feature.properties['nuareabacc']},{k:'Dominialidade',v:feature.properties['dedominial']}]);L.DomEvent.stopPropagation(e);}
+    });
+}
+map.createPane('pane_FISICO_ANA_HIDROGRAFIA_LINHAS_2');
+map.getPane('pane_FISICO_ANA_HIDROGRAFIA_LINHAS_2').style.zIndex=402;
+map.getPane('pane_FISICO_ANA_HIDROGRAFIA_LINHAS_2').style['mix-blend-mode']='normal';
+var layer_FISICO_ANA_HIDROGRAFIA_LINHAS_2 = new L.geoJson(json_FISICO_ANA_HIDROGRAFIA_LINHAS_2,{
+    attribution:'',interactive:true,dataVar:'json_FISICO_ANA_HIDROGRAFIA_LINHAS_2',
+    layerName:'layer_FISICO_ANA_HIDROGRAFIA_LINHAS_2',pane:'pane_FISICO_ANA_HIDROGRAFIA_LINHAS_2',
+    onEachFeature:pop_FISICO_ANA_HIDROGRAFIA_LINHAS_2,style:style_FISICO_ANA_HIDROGRAFIA_LINHAS_2_0
+});
+bounds_group.addLayer(layer_FISICO_ANA_HIDROGRAFIA_LINHAS_2);
+map.addLayer(layer_FISICO_ANA_HIDROGRAFIA_LINHAS_2);
+
+// ── NASCENTES (azul ciano, não rosa) ────────────────────
+function pop_FISICO_ANA_HIDROGRAFIA_NASCENTES_3(feature,layer){
+    layer.on({
+        mouseover:function(e){e.target.setStyle({color:'rgba(255,239,0,1)',weight:3,radius:8});showInfoPanel('Nascente','ANA',[{k:'ID',v:feature.properties['id']}]);},
+        mouseout:function(e){e.target.setStyle({color:'rgba(255,255,255,0.8)',weight:1.5,radius:5});clearInfoPanel();},
+        click:function(e){showInfoPanel('Nascente','ANA',[{k:'ID',v:feature.properties['id']}]);L.DomEvent.stopPropagation(e);}
+    });
+    layer.bindPopup('<strong style="color:#fff">Nascente</strong><br><span style="color:#a8cce8;font-size:10px">ID: '+feature.properties['id']+'</span>',{maxHeight:200});
+}
+map.createPane('pane_FISICO_ANA_HIDROGRAFIA_NASCENTES_3');
+map.getPane('pane_FISICO_ANA_HIDROGRAFIA_NASCENTES_3').style.zIndex=403;
+map.getPane('pane_FISICO_ANA_HIDROGRAFIA_NASCENTES_3').style['mix-blend-mode']='normal';
+var layer_FISICO_ANA_HIDROGRAFIA_NASCENTES_3 = new L.geoJson(json_FISICO_ANA_HIDROGRAFIA_NASCENTES_3,{
+    attribution:'',interactive:true,dataVar:'json_FISICO_ANA_HIDROGRAFIA_NASCENTES_3',
+    layerName:'layer_FISICO_ANA_HIDROGRAFIA_NASCENTES_3',pane:'pane_FISICO_ANA_HIDROGRAFIA_NASCENTES_3',
+    onEachFeature:pop_FISICO_ANA_HIDROGRAFIA_NASCENTES_3,
+    pointToLayer:function(feature,latlng){
+        return L.circleMarker(latlng,{
+            pane:'pane_FISICO_ANA_HIDROGRAFIA_NASCENTES_3',
+            radius:5,opacity:1,color:'rgba(255,255,255,0.8)',weight:1.5,
+            fill:true,fillOpacity:1,fillColor:'rgba(0,191,255,1.0)',interactive:true
+        });
+    }
+});
+bounds_group.addLayer(layer_FISICO_ANA_HIDROGRAFIA_NASCENTES_3);
+map.addLayer(layer_FISICO_ANA_HIDROGRAFIA_NASCENTES_3);
+
+// ── APP (verde translúcido com contorno, não laranja sólido) ─
+function style_FISICO_ANAPMBPHIDROGRAFIAAPP_4_0(){
+    return{pane:'pane_FISICO_ANAPMBPHIDROGRAFIAAPP_4',opacity:1,
+        color:'rgba(34,100,34,0.9)',dashArray:'',lineCap:'butt',lineJoin:'miter',weight:1.5,
+        fill:true,fillOpacity:layerOpacityApp,fillColor:'rgba(34,139,34,0.35)',interactive:true};
+}
+function pop_FISICO_ANAPMBPHIDROGRAFIAAPP_4(feature,layer){
+    layer.on({
+        mouseover:function(e){e.target.setStyle({fillColor:'rgba(255,239,0,0.3)',fillOpacity:0.5,color:'rgba(255,239,0,1)'});showInfoPanel('APP','Código Florestal',[{k:'ID',v:feature.properties['id']}]);},
+        mouseout:function(e){layer_FISICO_ANAPMBPHIDROGRAFIAAPP_4.resetStyle(e.target);clearInfoPanel();},
+        click:function(e){showInfoPanel('APP','Código Florestal',[{k:'ID',v:feature.properties['id']}]);L.DomEvent.stopPropagation(e);}
+    });
+    layer.bindPopup('<strong style="color:#fff">Área de Preservação Permanente</strong><br><span style="color:#a8cce8;font-size:10px">Código Florestal — Lei 12.651/2012</span>',{maxHeight:200});
+}
+map.createPane('pane_FISICO_ANAPMBPHIDROGRAFIAAPP_4');
+map.getPane('pane_FISICO_ANAPMBPHIDROGRAFIAAPP_4').style.zIndex=404;
+map.getPane('pane_FISICO_ANAPMBPHIDROGRAFIAAPP_4').style['mix-blend-mode']='normal';
+var layer_FISICO_ANAPMBPHIDROGRAFIAAPP_4 = new L.geoJson(json_FISICO_ANAPMBPHIDROGRAFIAAPP_4,{
+    attribution:'',interactive:true,dataVar:'json_FISICO_ANAPMBPHIDROGRAFIAAPP_4',
+    layerName:'layer_FISICO_ANAPMBPHIDROGRAFIAAPP_4',pane:'pane_FISICO_ANAPMBPHIDROGRAFIAAPP_4',
+    onEachFeature:pop_FISICO_ANAPMBPHIDROGRAFIAAPP_4,style:style_FISICO_ANAPMBPHIDROGRAFIAAPP_4_0
+});
+bounds_group.addLayer(layer_FISICO_ANAPMBPHIDROGRAFIAAPP_4);
+map.addLayer(layer_FISICO_ANAPMBPHIDROGRAFIAAPP_4);
+
+// ── DECLIVIDADE (PNG, desligado) ─────────────────────────
+map.createPane('pane_FISICO_PMBP_DECLIVIDADE_5M_5');
+map.getPane('pane_FISICO_PMBP_DECLIVIDADE_5M_5').style.zIndex=405;
+var layer_FISICO_PMBP_DECLIVIDADE_5M_5 = new L.imageOverlay(
+    'data/FISICO_PMBP_DECLIVIDADE_5M_5.png',
+    [[-23.052750,-46.722273],[-22.818361,-46.408316]],
+    {pane:'pane_FISICO_PMBP_DECLIVIDADE_5M_5',opacity:0.80}
+);
+
+// ── CURVAS DE NÍVEL (bege-dourado, desligado) ────────────
+function style_geo_curva_5m_6_0(){
+    return{pane:'pane_geo_curva_5m_6',opacity:0.7,color:'rgba(180,150,80,1.0)',dashArray:'',lineCap:'square',lineJoin:'bevel',weight:0.8,fillOpacity:0,interactive:false};
+}
+map.createPane('pane_geo_curva_5m_6');
+map.getPane('pane_geo_curva_5m_6').style.zIndex=406;
+map.getPane('pane_geo_curva_5m_6').style['mix-blend-mode']='normal';
+var layer_geo_curva_5m_6 = new L.geoJson(json_geo_curva_5m_6,{
+    attribution:'',interactive:false,dataVar:'json_geo_curva_5m_6',
+    layerName:'layer_geo_curva_5m_6',pane:'pane_geo_curva_5m_6',style:style_geo_curva_5m_6_0
+});
+
+// ── MAPBIOMAS (PNG, desligado) ───────────────────────────
+map.createPane('pane_FISICO_MAPBIOMAS_VEGETAOMUNICIPAL_7');
+map.getPane('pane_FISICO_MAPBIOMAS_VEGETAOMUNICIPAL_7').style.zIndex=407;
+var layer_FISICO_MAPBIOMAS_VEGETAOMUNICIPAL_7 = new L.imageOverlay(
+    'data/FISICO_MAPBIOMAS_VEGETAOMUNICIPAL_7.png',
+    [[-23.052256,-46.721904],[-22.819444,-46.403221]],
+    {pane:'pane_FISICO_MAPBIOMAS_VEGETAOMUNICIPAL_7',opacity:0.80}
+);
+
+// ── BACIAS HIDROGRÁFICAS (tracejado azul, não azul sólido grosso) ─
+function style_BACIAS_HIDROGRAFICAS_8_0(){
+    return{pane:'pane_BACIAS_HIDROGRAFICAS_8',opacity:0.8,color:'rgba(100,160,220,1.0)',dashArray:'6,4',lineCap:'square',lineJoin:'bevel',weight:2.0,fillOpacity:0,interactive:true};
+}
+function pop_BACIAS_HIDROGRAFICAS_8(feature,layer){
+    layer.on({
+        mouseover:function(e){e.target.setStyle({color:'rgba(255,239,0,1)',weight:3,dashArray:''});showInfoPanel('Bacia Hidrográfica','PMBP',[{k:'Nome',v:feature.properties['NOME DA BACIA']}]);},
+        mouseout:function(e){layer_BACIAS_HIDROGRAFICAS_8.resetStyle(e.target);clearInfoPanel();},
+        click:function(e){showInfoPanel('Bacia Hidrográfica','PMBP',[{k:'Nome',v:feature.properties['NOME DA BACIA']}]);L.DomEvent.stopPropagation(e);}
+    });
+    var nm=feature.properties['NOME DA BACIA']||'Bacia';
+    layer.bindPopup('<strong style="color:#fff">'+nm+'</strong>',{maxHeight:200});
+}
+map.createPane('pane_BACIAS_HIDROGRAFICAS_8');
+map.getPane('pane_BACIAS_HIDROGRAFICAS_8').style.zIndex=408;
+map.getPane('pane_BACIAS_HIDROGRAFICAS_8').style['mix-blend-mode']='normal';
+var layer_BACIAS_HIDROGRAFICAS_8 = new L.geoJson(json_BACIAS_HIDROGRAFICAS_8,{
+    attribution:'',interactive:true,dataVar:'json_BACIAS_HIDROGRAFICAS_8',
+    layerName:'layer_BACIAS_HIDROGRAFICAS_8',pane:'pane_BACIAS_HIDROGRAFICAS_8',
+    onEachFeature:pop_BACIAS_HIDROGRAFICAS_8,style:style_BACIAS_HIDROGRAFICAS_8_0
+});
+bounds_group.addLayer(layer_BACIAS_HIDROGRAFICAS_8);
+map.addLayer(layer_BACIAS_HIDROGRAFICAS_8);
+
+// ── MUNICÍPIOS IBGE (cinza tracejado suave) ──────────────
+function style_IBGE_SP_Municipios_9_0(){
+    return{pane:'pane_IBGE_SP_Municipios_9',opacity:0.6,color:'rgba(180,180,180,0.7)',dashArray:'3,5',lineCap:'butt',lineJoin:'miter',weight:0.8,fillOpacity:0,interactive:false};
+}
+map.createPane('pane_IBGE_SP_Municipios_9');
+map.getPane('pane_IBGE_SP_Municipios_9').style.zIndex=409;
+map.getPane('pane_IBGE_SP_Municipios_9').style['mix-blend-mode']='normal';
+var layer_IBGE_SP_Municipios_9 = new L.geoJson(json_IBGE_SP_Municipios_9,{
+    attribution:'',interactive:false,dataVar:'json_IBGE_SP_Municipios_9',
+    layerName:'layer_IBGE_SP_Municipios_9',pane:'pane_IBGE_SP_Municipios_9',
+    style:style_IBGE_SP_Municipios_9_0
+});
+bounds_group.addLayer(layer_IBGE_SP_Municipios_9);
+map.addLayer(layer_IBGE_SP_Municipios_9);
+
+// ── UCs (fillOpacity 0.70, borda mais espessa) ───────────
+var UC_COLORS={
+    'ARIE Bosque das Araucárias':'rgba(144,50,221,1.0)',
+    'ARIE Mata e Lago dos Padres':'rgba(104,222,141,1.0)',
+    'Monumento do Leite Sol':'rgba(112,203,210,1.0)',
+    'Parque do Caetê':'rgba(209,49,158,1.0)',
+    'Parque Lago dos Padres':'rgba(115,201,49,1.0)',
+    'Parque Petronilla Marckowitz':'rgba(216,199,124,1.0)',
+    'Parque Refúgio das Aves':'rgba(211,101,94,1.0)',
+};
+function styleUC(feature){
+    var c=UC_COLORS[feature.properties['Name']]||'rgba(150,150,150,0.5)';
+    return{pane:'pane_UC_AREADERELEVANTEINTERESSEECOLGICO_10',opacity:1,color:'rgba(30,30,30,0.8)',
+        dashArray:'',lineCap:'butt',lineJoin:'miter',weight:1.5,
+        fill:true,fillOpacity:layerOpacityUC,fillColor:c,interactive:true};
+}
+function pop_UC_AREADERELEVANTEINTERESSEECOLGICO_10(feature,layer){
+    var nome=feature.properties['Name']||'UC';
+    var cor=UC_COLORS[nome]||'rgba(150,150,150,1)';
+    layer.on({
+        mouseover:function(e){e.target.setStyle({fillOpacity:0.9,weight:2.5,color:'rgba(255,239,0,1)'});showInfoPanel(nome,'SMMA',[{k:'Nome',v:nome}]);},
+        mouseout:function(e){layer_UC_AREADERELEVANTEINTERESSEECOLGICO_10.resetStyle(e.target);clearInfoPanel();},
+        click:function(e){showInfoPanel(nome,'SMMA',[{k:'Nome',v:nome}]);L.DomEvent.stopPropagation(e);}
+    });
+    layer.bindPopup(
+        '<div style="font-family:\'Outfit\',sans-serif;font-weight:700;color:#fff;font-size:12px;margin-bottom:4px">'+nome+'</div>'+
+        '<span style="display:inline-flex;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;background:'+cor+';color:#01305a">Unidade de Conservação</span>',
+        {maxWidth:260}
+    );
+}
+map.createPane('pane_UC_AREADERELEVANTEINTERESSEECOLGICO_10');
+map.getPane('pane_UC_AREADERELEVANTEINTERESSEECOLGICO_10').style.zIndex=410;
+map.getPane('pane_UC_AREADERELEVANTEINTERESSEECOLGICO_10').style['mix-blend-mode']='normal';
+var layer_UC_AREADERELEVANTEINTERESSEECOLGICO_10 = new L.geoJson.multiStyle(json_UC_AREADERELEVANTEINTERESSEECOLGICO_10,{
+    attribution:'',interactive:true,
+    dataVar:'json_UC_AREADERELEVANTEINTERESSEECOLGICO_10',
+    layerName:'layer_UC_AREADERELEVANTEINTERESSEECOLGICO_10',
+    pane:'pane_UC_AREADERELEVANTEINTERESSEECOLGICO_10',
+    onEachFeature:pop_UC_AREADERELEVANTEINTERESSEECOLGICO_10,
+    styles:[styleUC,styleUC]
+});
+bounds_group.addLayer(layer_UC_AREADERELEVANTEINTERESSEECOLGICO_10);
+map.addLayer(layer_UC_AREADERELEVANTEINTERESSEECOLGICO_10);
+
+// ── BUFFER 2KM DAS UCs (Turf.js) ─────────────────────────
+var layerOpacityBuffer = 0.30;
+map.createPane('pane_buffer_uc');
+map.getPane('pane_buffer_uc').style.zIndex = 409; // abaixo das UCs
+
+var layer_buffer_uc = null; // será criado após turf.js carregar
+
+function buildUCBuffers() {
+    // Remove camada anterior se existir
+    if (layer_buffer_uc) {
+        map.removeLayer(layer_buffer_uc);
+        layer_buffer_uc = null;
+    }
+
+    var bufferFeatures = [];
+
+    json_UC_AREADERELEVANTEINTERESSEECOLGICO_10.features.forEach(function(feature) {
+        try {
+            // Calcula buffer de 2km individualmente para cada UC
+            var buffered = turf.buffer(feature, 2, { units: 'kilometers' });
+            if (buffered) {
+                // Herda o Name da UC para manter a cor correspondente
+                buffered.properties = { Name: feature.properties['Name'] };
+                bufferFeatures.push(buffered);
+            }
+        } catch(e) {
+            console.warn('Buffer error for', feature.properties['Name'], e);
+        }
+    });
+
+    var bufferCollection = {
+        type: 'FeatureCollection',
+        features: bufferFeatures
+    };
+
+    layer_buffer_uc = new L.geoJson(bufferCollection, {
+        pane: 'pane_buffer_uc',
+        interactive: false,
+        style: function(feature) {
+            var nome = feature.properties['Name'];
+            var cor = UC_COLORS[nome] || 'rgba(150,150,220,1.0)';
+            // Extrai os valores RGB para usar com opacidade variável
+            var rgb = cor.replace('rgba(','').replace(')','').split(',');
+            var fillColor = 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + layerOpacityBuffer + ')';
+            var strokeColor = 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.7)';
+            return {
+                pane: 'pane_buffer_uc',
+                opacity: 0.7,
+                color: strokeColor,
+                dashArray: '6,4',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 1.5,
+                fill: true,
+                fillOpacity: layerOpacityBuffer,
+                fillColor: fillColor,
+            };
+        }
+    });
+    map.addLayer(layer_buffer_uc);
+}
+
+// Aguarda turf.js carregar antes de calcular os buffers
+function tryBuildBuffers(attempts) {
+    attempts = attempts || 0;
+    if (typeof turf !== 'undefined' && typeof turf.buffer === 'function') {
+        buildUCBuffers();
+    } else if (attempts < 30) {
+        setTimeout(function() { tryBuildBuffers(attempts + 1); }, 200);
+    } else {
+        console.warn('Turf.js não carregou — buffers das UCs não serão exibidos.');
+        var el = document.getElementById('tog-buffer');
+        if (el) el.closest('.layer-item').style.opacity = '0.4';
+    }
+}
+setTimeout(tryBuildBuffers, 500);
+
+// ── INFO PANEL ────────────────────────────────────────────
+function showInfoPanel(title,tag,fields){
+    var ic=document.getElementById('info-content');
+    var html='<div class="info-title">'+title+' <span class="tag">'+tag+'</span></div>';
+    fields.forEach(function(f){
+        if(f.v==null||f.v===''||f.v==='null')return;
+        html+='<div class="info-field"><span class="info-key">'+f.k+'</span><span class="info-val">'+String(f.v)+'</span></div>';
+    });
+    ic.innerHTML=html;
+}
+function clearInfoPanel(){
+    document.getElementById('info-content').innerHTML='<div class="placeholder"><span class="ph-icon">🌿</span><p>Clique sobre uma feição para ver os detalhes</p></div>';
+}
+map.on('click',clearInfoPanel);
+
+// ── TOGGLE / OPACIDADE ────────────────────────────────────
+var paneMap={
+    uc:'pane_UC_AREADERELEVANTEINTERESSEECOLGICO_10',
+    buffer:'pane_buffer_uc',
+    app:'pane_FISICO_ANAPMBPHIDROGRAFIAAPP_4',
+    hidro:'pane_FISICO_ANA_HIDROGRAFIA_LINHAS_2',
+    nascentes:'pane_FISICO_ANA_HIDROGRAFIA_NASCENTES_3',
+    bacias:'pane_BACIAS_HIDROGRAFICAS_8',
+    municipios:'pane_IBGE_SP_Municipios_9',
+};
+var overlayMap={
+    curvas:layer_geo_curva_5m_6,
+    declividade:layer_FISICO_PMBP_DECLIVIDADE_5M_5,
+    vegetacao:layer_FISICO_MAPBIOMAS_VEGETAOMUNICIPAL_7,
+};
+function toggleLayer(name,on){
+    if(paneMap[name]){map.getPane(paneMap[name]).style.display=on?'':'none';return;}
+    if(overlayMap[name]){if(on)map.addLayer(overlayMap[name]);else map.removeLayer(overlayMap[name]);}
+}
+function setOpacityUC(val){
+    layerOpacityUC=parseInt(val)/100;
+    document.getElementById('op-uc-val').textContent=val+'%';
+    layer_UC_AREADERELEVANTEINTERESSEECOLGICO_10.setStyle(styleUC);
+}
+function setOpacityBuffer(val){
+    layerOpacityBuffer=parseInt(val)/100;
+    document.getElementById('op-buffer-val').textContent=val+'%';
+    // Recria o estilo com a nova opacidade
+    if(layer_buffer_uc){
+        layer_buffer_uc.setStyle(function(feature){
+            var nome=feature.properties['Name'];
+            var cor=UC_COLORS[nome]||'rgba(150,150,220,1.0)';
+            var rgb=cor.replace('rgba(','').replace(')','').split(',');
+            return{
+                pane:'pane_buffer_uc',
+                opacity:0.7,
+                color:'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0.7)',
+                dashArray:'6,4',lineCap:'round',lineJoin:'round',weight:1.5,
+                fill:true,
+                fillOpacity:layerOpacityBuffer,
+                fillColor:'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+layerOpacityBuffer+')',
+            };
+        });
+    }
+}
+function setOpacity(name,val){
+    val=parseInt(val);
+    var el=document.getElementById('op-'+name+'-val');
+    if(el)el.textContent=val+'%';
+    if(name==='app'){layerOpacityApp=val/100;layer_FISICO_ANAPMBPHIDROGRAFIAAPP_4.setStyle(style_FISICO_ANAPMBPHIDROGRAFIAAPP_4_0);}
+    else if(name==='declividade'){layerOpacityMap.declividade=val/100;layer_FISICO_PMBP_DECLIVIDADE_5M_5.setOpacity(val/100);}
+    else if(name==='vegetacao'){layerOpacityMap.vegetacao=val/100;layer_FISICO_MAPBIOMAS_VEGETAOMUNICIPAL_7.setOpacity(val/100);}
+}
+
+// ── LEGENDA COLAPSÁVEL ────────────────────────────────────
+function toggleLegendGroup(id,titleEl){
+    var body=document.getElementById(id);
+    var isOpen=body.classList.contains('open');
+    body.classList.toggle('open',!isOpen);
+    titleEl.classList.toggle('open',!isOpen);
+}
+
+// ── TOOLTIP ⓘ ─────────────────────────────────────────────
+function toggleLayerTooltip(id){
+    var el=document.getElementById(id);if(!el)return;
+    var was=el.classList.contains('visible');
+    document.querySelectorAll('.layer-tooltip').forEach(function(t){t.classList.remove('visible');});
+    if(!was)el.classList.add('visible');
+}
+document.addEventListener('click',function(e){if(!e.target.closest('.layer-item'))document.querySelectorAll('.layer-tooltip').forEach(function(t){t.classList.remove('visible');});});
+
+// ── BUSCA NOMINATIM ───────────────────────────────────────
+var addrDebounce=null,addrMarker=null;
+function onAddrInput(){
+    clearTimeout(addrDebounce);
+    var q=document.getElementById('addr-input').value.trim();
+    document.getElementById('addr-clear-btn').style.display=q?'flex':'none';
+    if(q.length<3){document.getElementById('addr-suggestions').innerHTML='';return;}
+    addrDebounce=setTimeout(function(){fetchSuggestions(q);},350);
+}
+function fetchSuggestions(q){
+    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&q='+encodeURIComponent(q+', Bragança Paulista, SP, Brasil'))
+        .then(function(r){return r.json();}).then(function(data){
+            var box=document.getElementById('addr-suggestions');box.innerHTML='';
+            data.forEach(function(item){var d=document.createElement('div');d.className='addr-item';d.textContent=item.display_name;d.onclick=function(){selectAddr(item);};box.appendChild(d);});
+        }).catch(function(){});
+}
+function selectAddr(item){
+    document.getElementById('addr-input').value=item.display_name;
+    document.getElementById('addr-suggestions').innerHTML='';
+    if(addrMarker)map.removeLayer(addrMarker);
+    var ll=L.latLng(parseFloat(item.lat),parseFloat(item.lon));
+    addrMarker=L.circleMarker(ll,{radius:8,color:'#FFEF00',fillColor:'#0175bc',fillOpacity:0.8,weight:2}).addTo(map).bindPopup(item.display_name.split(',')[0]).openPopup();
+    map.setView(ll,16);
+}
+function doAddrSearch(){var q=document.getElementById('addr-input').value.trim();if(q)fetchSuggestions(q);}
+function clearAddrSearch(){document.getElementById('addr-input').value='';document.getElementById('addr-suggestions').innerHTML='';document.getElementById('addr-clear-btn').style.display='none';if(addrMarker){map.removeLayer(addrMarker);addrMarker=null;}}
+
+// ── EXPORTAÇÃO ────────────────────────────────────────────
+function openExportModal(){document.getElementById('export-modal').style.display='flex';}
+function closeExportModal(){document.getElementById('export-modal').style.display='none';}
+function doExport(fmt){
+    var st=document.getElementById('export-status');st.textContent='Capturando mapa…';
+    leafletImage(map,function(err,canvas){
+        if(err){st.textContent='Erro ao capturar.';return;}
+        var W=canvas.width,H=canvas.height;
+        var out=document.createElement('canvas');out.width=W;out.height=H;
+        var ctx=out.getContext('2d');ctx.drawImage(canvas,0,0);
+        // Legenda UC
+        var UC_LEG=Object.entries(UC_COLORS);
+        var PAD=12,LH=16,legW=248,legH=PAD*2+14+(UC_LEG.length+4)*LH;
+        var lx=W-legW-12,ly=H-legH-40;
+        ctx.fillStyle='rgba(1,48,90,0.93)';rr(ctx,lx,ly,legW,legH,8);ctx.fill();
+        ctx.strokeStyle='rgba(255,239,0,0.35)';ctx.lineWidth=1;rr(ctx,lx,ly,legW,legH,8);ctx.stroke();
+        ctx.fillStyle='#a8cce8';ctx.font='bold 10px Arial';ctx.textAlign='left';
+        ctx.fillText('Recursos Naturais & Meio Ambiente',lx+PAD,ly+PAD+10);
+        var iy=ly+PAD+22;
+        UC_LEG.forEach(function(e){
+            ctx.fillStyle=e[1];ctx.fillRect(lx+PAD,iy,12,10);
+            ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=0.5;ctx.strokeRect(lx+PAD,iy,12,10);
+            ctx.fillStyle='#e8eaf0';ctx.font='9px Arial';ctx.fillText(e[0],lx+PAD+16,iy+9);iy+=LH;
+        });
+        ctx.fillStyle='rgba(34,139,34,0.5)';ctx.fillRect(lx+PAD,iy,12,10);
+        ctx.strokeStyle='rgba(34,100,34,0.9)';ctx.lineWidth=1.5;ctx.strokeRect(lx+PAD,iy,12,10);
+        ctx.fillStyle='#e8eaf0';ctx.font='9px Arial';ctx.fillText('APP — Preservação Permanente',lx+PAD+16,iy+9);iy+=LH;
+        ctx.strokeStyle='rgba(70,130,180,1)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(lx+PAD,iy+5);ctx.lineTo(lx+PAD+12,iy+5);ctx.stroke();
+        ctx.fillText('Cursos d\'água (ANA)',lx+PAD+16,iy+9);iy+=LH;
+        ctx.fillStyle='rgba(0,191,255,1)';ctx.beginPath();ctx.arc(lx+PAD+6,iy+5,4,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#e8eaf0';ctx.fillText('Nascentes',lx+PAD+16,iy+9);iy+=LH;
+        ctx.strokeStyle='rgba(100,160,220,0.8)';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(lx+PAD,iy+5);ctx.lineTo(lx+PAD+12,iy+5);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='#e8eaf0';ctx.fillText('Bacias Hidrográficas',lx+PAD+16,iy+9);
+        ctx.fillStyle='rgba(1,117,188,0.96)';rr(ctx,12,12,320,44,8);ctx.fill();
+        ctx.fillStyle='#FFEF00';ctx.fillRect(12,12+44-3,320,3);
+        ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.textAlign='left';
+        ctx.fillText('WebGIS — Recursos Naturais & Meio Ambiente',22,31);
+        ctx.fillStyle='#FFEF00';ctx.font='10px Arial';
+        ctx.fillText('Bragança Paulista · SMMA · 2025',22,46);
+        north(ctx,W-38,56,20);
+        var fname='mapa_meioambiente.'+(fmt==='pdf'?'pdf':'jpg');
+        if(fmt==='jpeg'){
+            st.textContent='Gerando JPEG…';
+            out.toBlob(function(b){dl(URL.createObjectURL(b),fname);st.textContent='✓ Download iniciado!';setTimeout(closeExportModal,1500);},'image/jpeg',0.93);
+        }else{
+            st.textContent='Gerando PDF…';
+            var img=out.toDataURL('image/jpeg',0.93),ori=W>H?'landscape':'portrait',mmW=W*0.2646,mmH=H*0.2646;
+            var pdf=new jspdf.jsPDF({orientation:ori,unit:'mm',format:[mmW,mmH]});
+            pdf.addImage(img,'JPEG',0,0,mmW,mmH);pdf.save(fname);
+            st.textContent='✓ Download iniciado!';setTimeout(closeExportModal,1500);
+        }
+    });
+}
+function dl(href,name){var a=document.createElement('a');a.href=href;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+function north(ctx,cx,cy,s){ctx.save();ctx.fillStyle='rgba(1,48,90,0.88)';ctx.beginPath();ctx.arc(cx,cy,s+6,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(cx,cy-s);ctx.lineTo(cx+s*.35,cy+s*.5);ctx.lineTo(cx,cy+s*.15);ctx.closePath();ctx.fill();ctx.fillStyle='#a8cce8';ctx.beginPath();ctx.moveTo(cx,cy-s);ctx.lineTo(cx-s*.35,cy+s*.5);ctx.lineTo(cx,cy+s*.15);ctx.closePath();ctx.fill();ctx.fillStyle='#FFEF00';ctx.font='bold '+Math.round(s*.65)+'px Arial';ctx.textAlign='center';ctx.fillText('N',cx,cy-s-4);ctx.restore();}
+
+// ── ONBOARDING ────────────────────────────────────────────
+var obS=1, OBK='bp_webgis_meioambiente_ob_done';
+function obInit(){try{if(localStorage.getItem(OBK)){document.getElementById('onboarding-overlay').classList.add('hidden');return;}}catch(e){}obShowStep(1);}
+function obShowStep(n){obS=n;for(var i=1;i<=4;i++){var el=document.getElementById('ob-step-'+i);if(el)el.classList.toggle('active',i===n);}}
+function obNext(){if(obS<4)obShowStep(obS+1);else obSkip();}
+function obSkip(){document.getElementById('onboarding-overlay').classList.add('hidden');try{localStorage.setItem(OBK,'1');}catch(e){}}
+if(document.readyState==='complete'){setTimeout(obInit,900);}
+else{window.addEventListener('load',function(){setTimeout(obInit,900);});}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"></script>
+</body>
+</html>
