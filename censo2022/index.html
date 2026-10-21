@@ -8,7 +8,7 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="css/leaflet.css">
         <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
         <link rel="stylesheet" href="css/qgis2web.css">
@@ -16,6 +16,30 @@
         <link rel="stylesheet" href="css/leaflet-measure.css">
         <title>WebGIS — Censo 2022</title>
         <style>
+/* CABECALHO - padrao do portal */
+#pd-header{position:fixed;top:0;left:0;right:0;height:var(--header-h);
+  background:var(--blue);border-bottom:3px solid var(--accent);
+  display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+#pd-header .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;
+  box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+#pd-header h1{font-family:'Outfit',sans-serif;font-weight:700;font-size:15px;color:#fff;
+  text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin:0;}
+#pd-header h1 span{color:var(--accent);}
+#pd-header .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;margin:0;}
+#pd-header .sep{flex:1;}
+.hbadge{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
+  border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+#pd-back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);
+  color:rgba(255,255,255,.8);font-family:'Raleway',sans-serif;font-size:12px;
+  padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .15s;
+  text-decoration:none;display:flex;align-items:center;gap:6px;}
+#pd-back:hover{color:var(--accent);border-color:rgba(255,239,0,.6);}
+#pd-export,#pd-panel,#pd-legenda{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);
+  color:var(--accent);font-family:'Raleway',sans-serif;font-size:12px;font-weight:500;
+  padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;
+  white-space:nowrap;display:flex;align-items:center;gap:6px;}
+#pd-export:hover,#pd-panel:hover,#pd-legenda:hover{background:rgba(255,239,0,.18);}
+
         :root {
             /* Identidade institucional */
             --blue: #0175bc;
@@ -32,6 +56,9 @@
             --border: rgba(255,255,255,0.10);
             --sidebar-w: 300px;
             --header-h: 52px;
+            /* aliases para os componentes compartilhados com os demais mapas */
+            --muted: #7a9ab5;
+            --rw: 296px;
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -39,63 +66,12 @@
         html, body {
             width: 100%; height: 100%;
             padding: 0; margin: 0;
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Raleway',sans-serif;
             background: var(--bg);
             overflow: hidden;
         }
 
         /* ─── HEADER ─────────────────────────────────── */
-        #header-var-select {
-            display: flex;
-            align-items: center;
-            margin-left: 12px;
-        }
-        #header-var-select #var-selector {
-            background: rgba(255,255,255,0.10);
-            border: 1px solid rgba(255,255,255,0.25);
-            color: #fff;
-            font-family: 'Syne', sans-serif;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 5px 28px 5px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            outline: none;
-            width: 260px;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23FFEF00'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            transition: border-color .2s, background-color .2s;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        #header-var-select #var-selector:hover,
-        #header-var-select #var-selector:focus {
-            background-color: rgba(255,239,0,0.12);
-            border-color: rgba(255,239,0,0.6);
-        }
-        #header-var-select #header-var-select #var-selector optgroup {
-            font-family: 'Syne', sans-serif;
-            font-weight: 700;
-            font-size: 11px;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            color: #ffffff;
-            background-color: #132b42;
-        }
-        #header-var-select #var-selector option {
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 400;
-            text-transform: none;
-            letter-spacing: 0;
-            padding-left: 6px;
-            color: #ffffff;
-            background-color: #132b42;
-            color: #fff;
-        }
         #header {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -108,23 +84,9 @@
             z-index: 9000;
             gap: 12px;
         }
-        #header .logo-dot {
-            width: 8px; height: 8px;
-            background: var(--accent);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent);
-            flex-shrink: 0;
-        }
-        #header .sub {
-            font-size: 11px;
-            color: rgba(255,255,255,.65);
-            font-weight: 300;
-            white-space: nowrap;
-            margin: 0;
-        }
         /* Botões do cabeçalho — padrão do GeoPortal */
-        #portal-back-btn, #export-btn, #sidebar-toggle {
-            font-family: 'DM Sans', sans-serif;
+        #portal-back-btn, #export-btn, #sidebar-toggle, #legend-toggle {
+            font-family: 'Raleway',sans-serif;
             font-size: 12px;
             font-weight: 500;
             padding: 6px 12px;
@@ -136,78 +98,6 @@
             display: inline-flex;
             align-items: center;
         }
-        #portal-back-btn {
-            background: rgba(255,239,0,.08);
-            border: 1px solid rgba(255,239,0,.25);
-            color: rgba(255,255,255,.8);
-            padding: 6px 10px;
-        }
-        #portal-back-btn:hover { color: var(--accent); border-color: rgba(255,239,0,.6); }
-        #export-btn, #sidebar-toggle {
-            background: rgba(255,239,0,.1);
-            border: 1px solid rgba(255,239,0,.4);
-            color: var(--accent);
-        }
-        #export-btn:hover, #sidebar-toggle:hover { background: rgba(255,239,0,.18); }
-        #header h1 {
-            font-family: 'Syne', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text);
-            letter-spacing: 0.04em;
-            margin: 0;
-            text-transform: uppercase;
-        }
-        #header h1 span {
-            color: var(--accent);
-        }
-        #header .subtitle {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin: 0;
-            font-weight: 300;
-            letter-spacing: 0.02em;
-        }
-        #header .sep { flex: 1; }
-        #header .header-badge {
-            font-size: 10px;
-            font-family: 'Syne', sans-serif;
-            font-weight: 600;
-            color: var(--accent);
-            border: 1px solid rgba(255,239,0,0.4);
-            border-radius: 4px;
-            padding: 2px 8px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-        #portal-back-btn {
-            background: rgba(255,239,0,0.08);
-            border: 1px solid rgba(255,239,0,0.25);
-            border-radius: 6px;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px 8px;
-            transition: all 0.2s;
-            display: flex; align-items: center; gap: 5px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 11px;
-            text-decoration: none;
-        }
-        #portal-back-btn:hover { color: var(--accent); border-color: rgba(255,239,0,0.5); background: rgba(255,239,0,0.14); }
-
-        #sidebar-toggle {
-            background: rgba(255,239,0,0.1);
-            border: 1px solid rgba(255,239,0,0.4);
-            border-radius: 6px;
-            color: var(--accent);
-            cursor: pointer;
-            padding: 4px 8px;
-            transition: all 0.2s;
-            display: flex; align-items: center; gap: 5px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 12px;
-        }
-        #sidebar-toggle:hover { background: rgba(255,239,0,0.2); border-color: var(--accent); }
 
         /* ─── LAYOUT ──────────────────────────────────── */
         #app {
@@ -243,7 +133,7 @@
         .panel-section:last-child { border-bottom: none; }
 
         .section-label {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit',sans-serif;
             font-size: 9px;
             font-weight: 700;
             letter-spacing: 0.12em;
@@ -267,7 +157,7 @@
             text-align: center;
             transition: all 0.15s;
             color: var(--text-muted);
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Raleway',sans-serif;
             font-size: 11px;
         }
         .basemap-btn 
@@ -372,7 +262,7 @@
         .lgd-bar-labels {
             display:flex; justify-content:space-between;
             font-size:9px; color:var(--text-muted); margin-top:3px;
-            font-family:'Syne',sans-serif; font-weight:600;
+            font-family:'Outfit',sans-serif; font-weight:600;
         }
         .lgd-indicator {
             position:absolute; top:-5px; width:2px; height:24px;
@@ -387,7 +277,7 @@
             background:var(--bg-panel2); border:1px solid rgba(255,239,0,0.5);
             border-radius:3px; padding:2px 5px; font-size:9px;
             color:var(--accent); white-space:nowrap; pointer-events:none;
-            font-family:'Syne',sans-serif; font-weight:700; display:none;
+            font-family:'Outfit',sans-serif; font-weight:700; display:none;
         }
         .lgd-nodata {
             display:flex; align-items:center; gap:6px;
@@ -466,10 +356,10 @@
             font-size: 12px;
             color: var(--accent);
             font-weight: 500;
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit',sans-serif;
         }
         .info-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit',sans-serif;
             font-size: 12px;
             font-weight: 700;
             color: var(--text);
@@ -516,7 +406,7 @@
             z-index: 1000;
             font-size: 10px;
             color: var(--text-muted);
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Raleway',sans-serif;
         }
         #coords-display { font-variant-numeric: tabular-nums; }
         #zoom-display { margin-left: auto; }
@@ -585,7 +475,7 @@
         .leaflet-popup-content td {
             color: var(--accent);
             font-weight: 600;
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit',sans-serif;
             text-align: right;
             padding: 3px 0;
         }
@@ -601,7 +491,7 @@
             border-color: var(--text-muted) !important;
             color: var(--text-muted) !important;
             font-size: 9px !important;
-            font-family: 'DM Sans', sans-serif !important;
+            font-family: 'Raleway',sans-serif !important;
         }
 
         /* Geolocate button */
@@ -663,7 +553,7 @@
             background: transparent;
             border: none;
             color: var(--text);
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Raleway',sans-serif;
             font-size: 13px;
             outline: none;
             min-width: 0;
@@ -719,10 +609,9 @@
             padding: 4px 10px;
             transition: all 0.2s;
             display: flex; align-items: center; gap: 5px;
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Raleway',sans-serif;
             font-size: 12px;
         }
-        #export-btn:hover { background: rgba(255,239,0,0.22); }
 
         /* ─── EXPORT MODAL ────────────────────────────────── */
         #export-modal {
@@ -747,7 +636,7 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.6);
         }
         #export-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit',sans-serif;
             font-size: 16px;
             font-weight: 700;
             color: var(--text);
@@ -769,7 +658,7 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text);
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Raleway',sans-serif;
             font-size: 13px;
             padding: 12px;
             cursor: pointer;
@@ -790,7 +679,7 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             color: var(--text-muted);
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Raleway',sans-serif;
             font-size: 12px;
             padding: 8px;
             cursor: pointer;
@@ -809,7 +698,7 @@
             color: #000 !important;
             font-weight: 600 !important;
             font-size: 8.5pt !important;
-            font-family: 'Nunito Sans', 'Frutiger', 'Calibri', Arial, sans-serif !important;
+            font-family: 'Raleway', 'Frutiger', 'Calibri', Arial, sans-serif !important;
             letter-spacing: 0.01em !important;
             text-shadow:
                 -1px -1px 0 #fff,
@@ -840,7 +729,7 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             color: var(--text);
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Raleway',sans-serif;
             font-size: 11px;
             padding: 6px 28px 6px 8px;
             appearance: none;
@@ -888,11 +777,11 @@
         }
         .popup-censo .leaflet-popup-content {
             margin: 14px 16px !important;
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Raleway',sans-serif;
         }
         .popup-censo .leaflet-popup-tip { background: var(--bg-panel2) !important; }
         .pc-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit',sans-serif;
             font-size: 12px; font-weight: 700;
             color: var(--text);
             padding-bottom: 8px;
@@ -916,9 +805,9 @@
         }
         .pc-field { display: flex; flex-direction: column; }
         .pc-key { font-size: 9px; color: var(--text-muted); }
-        .pc-val { font-size: 12px; font-weight: 600; color: var(--accent); font-family: 'Syne', sans-serif; }
+        .pc-val { font-size: 12px; font-weight: 600; color: var(--accent); font-family: 'Outfit',sans-serif; }
         .pc-section {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit',sans-serif;
             font-size: 9px; font-weight: 700;
             letter-spacing: 0.1em; text-transform: uppercase;
             color: var(--text-muted);
@@ -932,38 +821,6 @@
         .pc-legend-row { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 5px; }
         .pc-leg-item { font-size: 9px; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
         .pc-swatch { width: 8px; height: 8px; display: inline-block; flex-shrink: 0; }
-
-        /* ─── ONBOARDING ──────────────────────────────── */
-        #onboarding-overlay { position: fixed; inset: 0; z-index: 99999; pointer-events: none; }
-        #onboarding-overlay.hidden { display: none; }
-        #onboarding-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.55); pointer-events: all; }
-        #onboarding-box {
-            position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
-            width: min(420px, calc(100% - 32px)); background: var(--bg-panel2);
-            border: 1px solid rgba(255,239,0,0.35); border-radius: 16px;
-            padding: 24px 24px 20px; pointer-events: all;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.7);
-            animation: slideUp 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
-        }
-        @keyframes slideUp {
-            from { opacity:0; transform: translateX(-50%) translateY(32px); }
-            to   { opacity:1; transform: translateX(-50%) translateY(0); }
-        }
-        .ob-step { display: none; }
-        .ob-step.active { display: block; }
-        .ob-eyebrow { font-size: 10px; font-weight: 600; font-family: 'Syne', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
-        .ob-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
-        .ob-title .ob-icon { font-size: 22px; flex-shrink: 0; }
-        .ob-desc { font-size: 12px; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px; }
-        .ob-footer { display: flex; align-items: center; gap: 10px; }
-        .ob-dots { display: flex; gap: 5px; flex: 1; }
-        .ob-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); transition: all 0.2s; }
-        .ob-dot.active { background: var(--accent); border-color: var(--accent); width: 18px; border-radius: 3px; }
-        .ob-skip { background: none; border: none; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 11px; cursor: pointer; padding: 4px 0; transition: color 0.15s; }
-        .ob-skip:hover { color: var(--text); }
-        .ob-next { background: var(--accent); border: none; border-radius: 8px; color: var(--bg-panel); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; padding: 8px 20px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-        .ob-next:hover { background: var(--accent2); }
-        .ob-arrow-hint { position: absolute; background: rgba(255,239,0,0.08); border: 2px solid var(--accent); border-radius: 10px; pointer-events: none; animation: pulseBorder 1.5s ease-in-out infinite; }
         @keyframes pulseBorder { 0%,100%{box-shadow:0 0 0 0 rgba(255,239,0,0.4);}50%{box-shadow:0 0 0 8px rgba(255,239,0,0);} }
         
         /* ─── SCROLLBAR — identidade escura ─────────────── */
@@ -989,77 +846,73 @@
             font-size: 10.5px; color: var(--text);
             font-variant-numeric: tabular-nums; line-height: 1.3;
         }
-
-        
-        .badge {
-            font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
-            color: var(--accent); border: 1px solid rgba(255,239,0,.4);
-            padding: 3px 8px; border-radius: 4px; white-space: nowrap;
-        }
         .hdr-sep { flex: 1; }
         
 /* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
 #hd h1, #header h1, #pd-header h1 {
-  font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:#fff;
+  font-family:'Outfit',sans-serif; font-weight:700; font-size:14px; color:#fff;
   text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
 }
-#hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
-#hd .sub, #header .sub, #pd-header .sub,
-#hd .subtitle, #header .subtitle, #pd-header .subtitle {
-  font-size:11px; color:rgba(255,255,255,.65); font-weight:300;
-  white-space:nowrap; margin:0; line-height:1.3;
+
+/* ── tipografia e cor: textos longos e valores numéricos ──────────────── */
+/* Prosa explicativa em branco: popups, onboarding e notas de rodapé de
+   painel. Cabeçalhos e apontamentos de legenda mantêm o azul claro. */
+.pexp, .nota, .sel-vazio, .pc-note, #pnl-hint, .bar-sub-long {
+  color: var(--text) !important;
 }
-#hd .badge, #header .badge, #pd-header .badge,
-#hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
-  font-family:'Syne',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
-  border:1px solid rgba(255,239,0,.4); background:transparent;
-  padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
+/* Valores numéricos em legenda: cor fixa de alta legibilidade.
+   A cor da categoria fica no quadradinho e na barra, nunca no número. */
+.bar-lb .v, .rk .p, .li .cnt, .sel-v, .pt td, .pc-v {
+  color: var(--text) !important;
+  font-variant-numeric: tabular-nums;
 }
+
+/* ── painel direito: legenda e informações ────────────────────────────── */
+#rb{width:var(--rw,296px);background:var(--bg-panel);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;transition:width .25s,opacity .2s;flex-shrink:0;}
+#rb.hidden{width:0;opacity:0;border-left:none;}
+.rb-head{padding:12px 15px 9px;border-bottom:1px solid var(--border);flex-shrink:0;
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.07em;}
+.rb-body{flex:1;overflow-y:auto;min-height:0;
+  scrollbar-width:thin;scrollbar-color:var(--bg-card) transparent;}
+#rb #info-panel{padding:14px 16px;flex:none;overflow:visible;}
+#rb .panel-section{padding:14px 16px 0;}
+@media(max-width:1100px){#rb{position:absolute;right:0;top:0;bottom:0;z-index:900;
+  box-shadow:-6px 0 20px rgba(0,0,0,.4);}}
+
+/* ── seletor de variável em botões ─────────────────────────────────────── */
+#var-section{padding-bottom:4px;}
+.var-grupo{font-family:'Outfit',sans-serif;font-size:9.5px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  margin:12px 0 6px;}
+.var-grupo:first-of-type{margin-top:6px;}
+.var-btns{display:flex;flex-wrap:wrap;gap:5px;}
+.var-b{background:var(--bg-card);border:1px solid var(--border);color:var(--muted);
+  font-family:'Raleway',sans-serif;font-size:11px;font-weight:500;
+  padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .15s;
+  flex:1 1 auto;min-width:0;white-space:nowrap;}
+.var-b:hover:not(.on){color:var(--text);border-color:rgba(255,255,255,.22);}
+.var-b.on{border-color:var(--accent);color:var(--accent);
+  background:rgba(255,239,0,.09);font-weight:600;}
 </style>
     </head>
     <body>
         <!-- ─── HEADER ──────────────────────────────────── -->
-        <div id="header">
-            <div class="logo-dot"></div>
-            <div>
-                <h1>Censo <span>2022</span></h1>
-                <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
-            </div>
-            <div id="header-var-select">
-                <select id="var-selector" onchange="changeVariable(this.value)">
-                            <optgroup label="Localização">
-                                <option value="BAIRRO" selected>Bairros</option>
-                            </optgroup>
-                            <optgroup label="Domicílios">
-                                <option value="V00001">Residências (Dom. Part. Perm. Ocupados)</option>
-                                <option value="V00047">Espécie: Casa</option>
-                                <option value="V00049">Espécie: Apartamento</option>
-                                <option value="V01006">Total de moradores</option>
-                            </optgroup>
-                            <optgroup label="Faixa etária">
-                                <option value="PCT_0_9">% Crianças (0–9 anos)</option>
-                                <option value="PCT_10_24">% Jovens (10–24 anos)</option>
-                                <option value="PCT_25_59">% Adultos (25–59 anos)</option>
-                                <option value="PCT_60MAIS">% Idosos (60+ anos)</option>
-                                <option value="IDX_ENV">Índice de Envelhecimento</option>
-                            </optgroup>
-                            <optgroup label="Raça e cor">
-                                <option value="PCT_BRANCOS">% População Branca</option>
-                                <option value="PCT_PRETOS">% População Preta</option>
-                                <option value="PCT_PARDOS">% População Parda</option>
-                                <option value="PCT_PRETOS_PARDOS">% Pretos + Pardos</option>
-                            </optgroup>
-                            <optgroup label="Alfabetização">
-                                <option value="PCT_ALFAB">Taxa de Alfabetização (15+ anos)</option>
-                            </optgroup>
-                        </select>
-            </div>
-            <div style="flex:1"></div>
-            <span class="header-badge">IBGE · 2022</span>
-            <a id="portal-back-btn" href="../portal.html">&#8592; Portal</a>
-            <button id="export-btn" onclick="openExportModal()" title="Exportar mapa">&#8595; Exportar</button>
-            <button id="sidebar-toggle" onclick="toggleSidebar()">&#9776; Controles</button>
-        </div>
+        <div id="pd-header">
+  <div class="logo-dot"></div>
+  <div>
+    <h1>Censo <span>2022</span></h1>
+    <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
+  </div>
+  <div class="sep"></div>
+  <span class="hbadge">IBGE · 2022</span>
+  <a id="pd-back" href="../portal.html">&#8592; Portal</a>
+  <button id="pd-export" onclick="openExportModal()">&#8595; Exportar</button>
+  <button id="pd-panel" onclick="toggleSidebar()">&#9776; Painel</button>
+  <button id="pd-legenda" onclick="toggleLegenda()">&#9636; Legenda</button>
+</div>
 
         <!-- ─── APP ────────────────────────────────────── -->
         <div id="app">
@@ -1067,6 +920,40 @@
             <div id="sidebar">
 
                 <!-- Basemap -->
+                                <div class="panel-section" id="var-section">
+                    <p class="section-label">Variável do mapa</p>
+                    <div class="var-grupo">Localização</div>
+                    <div class="var-btns">
+                        <button class="var-b on" id="vb-BAIRRO" onclick="changeVariable('BAIRRO')">Bairros</button>
+                    </div>
+                    <div class="var-grupo">Domicílios</div>
+                    <div class="var-btns">
+                        <button class="var-b" id="vb-V00001" onclick="changeVariable('V00001')">Residências</button>
+                        <button class="var-b" id="vb-V00047" onclick="changeVariable('V00047')">Casas</button>
+                        <button class="var-b" id="vb-V00049" onclick="changeVariable('V00049')">Apartamentos</button>
+                        <button class="var-b" id="vb-V01006" onclick="changeVariable('V01006')">Moradores</button>
+                    </div>
+                    <div class="var-grupo">Faixa etária</div>
+                    <div class="var-btns">
+                        <button class="var-b" id="vb-PCT_0_9" onclick="changeVariable('PCT_0_9')">0 a 9 anos</button>
+                        <button class="var-b" id="vb-PCT_10_24" onclick="changeVariable('PCT_10_24')">10 a 24</button>
+                        <button class="var-b" id="vb-PCT_25_59" onclick="changeVariable('PCT_25_59')">25 a 59</button>
+                        <button class="var-b" id="vb-PCT_60MAIS" onclick="changeVariable('PCT_60MAIS')">60 ou mais</button>
+                        <button class="var-b" id="vb-IDX_ENV" onclick="changeVariable('IDX_ENV')">Envelhecimento</button>
+                    </div>
+                    <div class="var-grupo">Raça e cor</div>
+                    <div class="var-btns">
+                        <button class="var-b" id="vb-PCT_BRANCOS" onclick="changeVariable('PCT_BRANCOS')">Branca</button>
+                        <button class="var-b" id="vb-PCT_PRETOS" onclick="changeVariable('PCT_PRETOS')">Preta</button>
+                        <button class="var-b" id="vb-PCT_PARDOS" onclick="changeVariable('PCT_PARDOS')">Parda</button>
+                        <button class="var-b" id="vb-PCT_PRETOS_PARDOS" onclick="changeVariable('PCT_PRETOS_PARDOS')">Pretos e pardos</button>
+                    </div>
+                    <div class="var-grupo">Alfabetização</div>
+                    <div class="var-btns">
+                        <button class="var-b" id="vb-PCT_ALFAB" onclick="changeVariable('PCT_ALFAB')">Alfabetização 15+</button>
+                    </div>
+                </div>
+
                 <div class="panel-section">
                     <p class="section-label">Mapa base</p>
                     <div class="basemap-grid">
@@ -1136,23 +1023,7 @@
 
                 <span class="active-var-label" id="active-var-label" style="display:none">Dom. Particulares Perm. Ocupados</span>
 
-                <!-- Legenda dinâmica -->
-                <div class="panel-section">
-                    <p class="section-label">Legenda</p>
-                    <span id="legend-var-label" style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;display:block"></span>
-                    <div class="legend-items" id="dynamic-legend"></div>
-                </div>
-
-                <!-- Info / Hover -->
-                <div id="info-panel">
-                    <p class="section-label">Informações do setor</p>
-                    <div id="info-content">
-                        <div class="placeholder">
-                            <span class="ph-icon">🗺️</span>
-                            <p>Passe o mouse sobre um setor para ver os dados do Censo 2022</p>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
 
             <!-- ─── MAP WRAPPER ─────────────────────────── -->
@@ -1175,6 +1046,30 @@
                     <span id="zoom-display">Zoom: —</span>
                 </div>
             </div>
+            <!-- ─── PAINEL DE LEGENDA ──────────────────────── -->
+            <div id="rb">
+                <div class="rb-head">Legenda e informações</div>
+                <div class="rb-body">
+<!-- Legenda dinâmica -->
+                <div class="panel-section">
+                    <p class="section-label">Legenda</p>
+                    <span id="legend-var-label" style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;display:block"></span>
+                    <div class="legend-items" id="dynamic-legend"></div>
+                </div>
+
+                <!-- Info / Hover -->
+                <div id="info-panel">
+                    <p class="section-label">Informações do setor</p>
+                    <div id="info-content">
+                        <div class="placeholder">
+                            <span class="ph-icon">🗺️</span>
+                            <p>Passe o mouse sobre um setor para ver os dados do Censo 2022</p>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- ─── MODAL EXPORTAR ─────────────────────────── -->
@@ -1206,6 +1101,27 @@
         <script src="data/FacesdeLogradouros2022_2.js"></script>
         <script>
         // ─── SIDEBAR TOGGLE ────────────────────────────────
+        // limpeza garantida: o mouseout nem sempre dispara ao sair do mapa pela
+        // borda, ao arrastar ou ao dar zoom
+        if (typeof map !== 'undefined' && map.on) {
+            ['mouseout','dragstart','zoomstart','movestart'].forEach(function(ev){
+                map.on(ev, function(){
+                    if (_travado) return;      // popup aberto: preserva o painel
+                    if (_travLayer) { _restaura(_travLayer); _travLayer = null; }
+                    _limpaInfo();
+                });
+            });
+            map.on('popupclose', function(){
+                _travado = false;
+                if (_travLayer) { _restaura(_travLayer); _travLayer = null; }
+                _limpaInfo();
+            });
+        }
+
+        function toggleLegenda(){
+            document.getElementById('rb').classList.toggle('hidden');
+            setTimeout(function(){ if(typeof map!=='undefined'&&map.invalidateSize) map.invalidateSize(); },260);
+        }
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
         }
@@ -1482,7 +1398,7 @@
                     var mx=0;
                     fx.forEach(function(r){mx=Math.max(mx,n(r.m),r.f?n(r.f):0);});
                     if(mx<1)mx=1;
-                    html+='<div style="margin:10px 0 4px;font-family:Syne,sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Pirâmide Etária</div>';
+                    html+='<div style="margin:10px 0 4px;font-family:Outfit,sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Pirâmide Etária</div>';
                     html+='<div style="font-size:9px;color:var(--text-muted);display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#60aee0">◀ Homens</span><span style="color:#f472b6">Mulheres ▶</span></div>';
                     html+='<div style="display:flex;flex-direction:column;gap:2px">';
                     fx.slice().reverse().forEach(function(r){
@@ -1507,7 +1423,7 @@
                     if(tAge>0){
                         var ag=[{l:'Crianças 0–14',v:criancas,c:'#60aee0'},{l:'Jovens 15–29',v:jovens,c:'#34d399'},
                                 {l:'Adultos 30–59',v:adultos,c:'#f59e0b'},{l:'Idosos 60–79',v:idosos,c:'#f87171'}];
-                        html+='<div style="margin:10px 0 4px;font-family:Syne,sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Composição Etária</div>';
+                        html+='<div style="margin:10px 0 4px;font-family:Outfit,sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Composição Etária</div>';
                         html+='<div style="display:flex;height:12px;border-radius:3px;overflow:hidden;margin-bottom:6px">';
                         ag.forEach(function(g){var p=tAge>0?g.v/tAge*100:0;if(p>0.5)html+='<div title="'+g.l+': '+g.v+' ('+p.toFixed(1)+'%)" style="width:'+p+'%;background:'+g.c+'"></div>';});
                         html+='</div><div style="display:flex;flex-wrap:wrap;gap:4px 10px">';
@@ -1523,7 +1439,7 @@
                             {l:'Preta',v:n('V01318'),c:'#756BB1'},{l:'Amarela',v:n('V01319'),c:'#F0B429'},
                             {l:'Indígena',v:n('V01321'),c:'#31A354'}];
                     var tr=n('V01317')+n('V01318')+n('V01319')+n('V01320')+n('V01321');
-                    html+='<div style="margin:10px 0 4px;font-family:Syne,sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Composição Racial</div>';
+                    html+='<div style="margin:10px 0 4px;font-family:Outfit,sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Composição Racial</div>';
                     html+='<div style="display:flex;height:12px;border-radius:3px;overflow:hidden;margin-bottom:6px">';
                     rc.forEach(function(r){var p=tr>0?r.v/tr*100:0;if(p>0.5)html+='<div title="'+r.l+': '+r.v+' ('+p.toFixed(1)+'%)" style="width:'+p+'%;background:'+r.c+'"></div>';});
                     html+='</div><div style="display:flex;flex-wrap:wrap;gap:4px 10px">';
@@ -1536,7 +1452,7 @@
                   var _sto=_sal+_sna;
                   if(_sto>0){
                     var _spa=_sal/_sto*100, _spn=_sna/_sto*100;
-                    html+='<div style="margin:10px 0 4px;font-family:Syne,sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Alfabetização (15+ anos)</div>';
+                    html+='<div style="margin:10px 0 4px;font-family:Outfit,sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Alfabetização (15+ anos)</div>';
                     html+='<div style="display:flex;height:12px;border-radius:3px;overflow:hidden;margin-bottom:6px">';
                     html+='<div title="Alfab: '+_sal+' ('+_spa.toFixed(1)+'%)" style="width:'+_spa+'%;background:#3b82f6"></div>';
                     html+='<div title="Não alfab: '+_sna+' ('+_spn.toFixed(1)+'%)" style="width:'+_spn+'%;background:#ef4444"></div>';
@@ -1684,7 +1600,7 @@
             if (ehRuralVazio) {
                 p += '<div style="padding:12px 0;text-align:center">'
                     +'<div style="font-size:22px;margin-bottom:8px">🌿</div>'
-                    +'<div style="font-size:12px;font-weight:600;color:var(--text);font-family:Syne,sans-serif;margin-bottom:6px">Área Rural</div>'
+                    +'<div style="font-size:12px;font-weight:600;color:var(--text);font-family:Outfit,sans-serif;margin-bottom:6px">Área Rural</div>'
                     +'<div style="font-size:11px;color:var(--text-muted);line-height:1.6">'
                     +'Este setor corresponde a uma <strong style="color:var(--text)">área rural</strong> — campos, fazendas ou matas — '
                     +'sem população residente recenseada pelo IBGE no Censo 2022.'
@@ -1706,7 +1622,7 @@
                 var fmt2 = function(v){ return Number(v).toLocaleString('pt-BR'); };
                 p += '<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)">'
                     +'<span style="font-size:9px;color:var(--text-muted)">Bairro</span>'
-                    +'<span style="display:block;font-size:12px;font-weight:600;color:var(--text);font-family:Syne,sans-serif">'+bairro+'</span>'
+                    +'<span style="display:block;font-size:12px;font-weight:600;color:var(--text);font-family:Outfit,sans-serif">'+bairro+'</span>'
                     +'</div>';
                 p += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:10px">';
                 if(nMor) p+='<div class="pc-field"><span class="pc-key">Moradores</span><span class="pc-val">'+fmt2(nMor)+'</span></div>';
@@ -1733,7 +1649,7 @@
             // Bairro — linha inteira
             p += '<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)">'
                 +'<span style="font-size:9px;color:var(--text-muted)">Bairro</span>'
-                +'<span style="display:block;font-size:12px;font-weight:600;color:var(--text);font-family:Syne,sans-serif">'+bairro+'</span>'
+                +'<span style="display:block;font-size:12px;font-weight:600;color:var(--text);font-family:Outfit,sans-serif">'+bairro+'</span>'
                 +'</div>';
             // Grid 2×2 + média
             // Para setores urbanos sem V00070, usar V01006 como fallback de moradores
@@ -1937,27 +1853,57 @@
             return p;
         }
 
+        // Enquanto um popup está aberto, o painel direito fica travado nos dados
+        // daquele setor: mover o cursor não deve apagar o que se está lendo.
+        var _travado = false, _travLayer = null;
+
+        function _restaura(l){
+            if(!l) return;
+            for (var i in l._eventParents) {
+                if (typeof l._eventParents[i].resetStyle === 'function') {
+                    l._eventParents[i].resetStyle(l);
+                }
+            }
+        }
+        function _limpaInfo(){
+            clearInfoPanel();
+            if(typeof updateLegendIndicatorFromValue==='function') updateLegendIndicatorFromValue(0);
+        }
+
         function pop_SetoresCensitrios2022_1(feature, layer) {
             layer.on({
                 mouseout: function(e) {
-                    for (var i in e.target._eventParents) {
-                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
-                            e.target._eventParents[i].resetStyle(e.target);
-                        }
-                    }
-                    clearInfoPanel();
-                    if(typeof updateLegendIndicatorFromValue==='function') updateLegendIndicatorFromValue(0);
+                    if (_travado) return;
+                    _restaura(e.target);
+                    _limpaInfo();
                 },
                 mouseover: function(e) {
+                    if (_travado) return;
                     highlightFeature(e);
                     showInfoPanel(e.target.feature.properties, 'setor');
                 },
                 click: function(e) {
                     L.DomEvent.stopPropagation(e);
+                },
+                popupopen: function(e) {
+                    // trava no setor clicado
+                    _travado = false;
+                    if (_travLayer && _travLayer !== e.target) _restaura(_travLayer);
+                    _travLayer = e.target;
+                    highlightFeature(e);
+                    showInfoPanel(e.target.feature.properties, 'setor');
+                    _travado = true;
+                },
+                popupclose: function(e) {
+                    _travado = false;
+                    _restaura(e.target);
+                    _travLayer = null;
+                    _limpaInfo();
                 }
             });
-            var popupHtml = buildSetorPopup(feature.properties);
-            layer.bindPopup(popupHtml, {
+            // bindPopup com FUNÇÃO: recalculado a cada abertura, acompanha a
+            // troca de variável no painel. Como string, ficaria congelado.
+            layer.bindPopup(function(){ return buildSetorPopup(feature.properties); }, {
                 maxWidth: 520,
                 maxHeight: 600,
                 className: 'popup-censo',
@@ -2243,10 +2189,16 @@
             }
             // atualiza rótulos
             updateLabels();
-            // atualiza label da variável ativa
-            var sel = document.getElementById('var-selector');
-            var opt = sel.options[sel.selectedIndex];
-            document.getElementById('active-var-label').textContent = opt ? opt.text : varKey;
+            // marca o botão ativo e atualiza o rótulo
+            var btns = document.querySelectorAll('.var-b');
+            var rot = varKey;
+            for (var b = 0; b < btns.length; b++) {
+                var on = btns[b].id === ('vb-' + varKey);
+                btns[b].classList.toggle('on', on);
+                if (on) rot = btns[b].textContent;
+            }
+            var lab = document.getElementById('active-var-label');
+            if (lab) lab.textContent = rot;
         }
 
         map.createPane('pane_SetoresCensitrios2022_1');
@@ -2269,15 +2221,13 @@
         function pop_FacesdeLogradouros2022_2(feature, layer) {
             layer.on({
                 mouseout: function(e) {
-                    for (var i in e.target._eventParents) {
-                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
-                            e.target._eventParents[i].resetStyle(e.target);
-                        }
-                    }
+                    if (_travado) return;
+                    _restaura(e.target);
                 },
                 mouseover: function(e) {
+                    if (_travado) return;
                     showInfoPanel(e.target.feature.properties, 'face');
-                },
+                }
             });
             var popupContent = '<table>\
                     <tr><td colspan="2">' + (feature.properties['NM_TIP_LOG'] !== null ? autolinker.link(String(feature.properties['NM_TIP_LOG']).replace(/'/g, '\'').toLocaleString()) : '') + ' ' + (feature.properties['NM_LOG'] !== null ? autolinker.link(String(feature.properties['NM_LOG']).replace(/'/g, '\'').toLocaleString()) : '') + '</td></tr>\
@@ -2914,165 +2864,8 @@
             return dx * dx + dy * dy;
         }
     
-        // ─── ONBOARDING ────────────────────────────────────
-        var obCurrentStep = 1;
-        var OB_TOTAL = 5;
-        var OB_KEY = 'bp_censo2022_v3';
-
-        function obInit() {
-            try {
-                if (localStorage.getItem(OB_KEY)) {
-                    return; // already seen — stays hidden
-                }
-            } catch(e) {}
-            // First visit: show the overlay
-            document.getElementById('onboarding-overlay').classList.remove('hidden');
-            obShowStep(1);
-        }
-
-        function obShowStep(n) {
-            obCurrentStep = n;
-            for (var i = 1; i <= OB_TOTAL; i++) {
-                var el = document.getElementById('ob-step-' + i);
-                if (el) el.classList.toggle('active', i === n);
-            }
-            obPositionHints(n);
-        }
-
-        function obPositionHints(step) {
-            var h1 = document.getElementById('ob-hint-1');
-            var h2 = document.getElementById('ob-hint-2');
-            h1.style.display = 'none';
-            h2.style.display = 'none';
-
-            function highlight(hint, el, pad) {
-                pad = pad || 6;
-                if (!el) return;
-                var r = el.getBoundingClientRect();
-                hint.style.display = 'block';
-                hint.style.left   = (r.left - pad) + 'px';
-                hint.style.top    = (r.top  - pad) + 'px';
-                hint.style.width  = (r.width  + pad * 2) + 'px';
-                hint.style.height = (r.height + pad * 2) + 'px';
-            }
-
-            if (step === 2) highlight(h1, document.getElementById('var-selector'), 4);
-            if (step === 3) highlight(h1, document.getElementById('info-panel'), 0);
-            if (step === 4) highlight(h1, document.getElementById('dynamic-legend'), 6);
-            if (step === 5) highlight(h1, document.getElementById('map-search'), 4);
-        }
-
-        function obNext() {
-            if (obCurrentStep < OB_TOTAL) {
-                obShowStep(obCurrentStep + 1);
-            } else {
-                obSkip();
-            }
-        }
-
-        function obSkip() {
-            document.getElementById('onboarding-overlay').classList.add('hidden');
-            try { localStorage.setItem(OB_KEY, '1'); } catch(e) {}
-        }
-
-        // Inicia após o mapa carregar
-        setTimeout(obInit, 900);
 
     </script>
-        <!-- ─── ONBOARDING OVERLAY ─────────────────── -->
-        <div id="onboarding-overlay" class="hidden">
-            <div id="onboarding-backdrop" onclick="obNext()"></div>
-            <div class="ob-arrow-hint" id="ob-hint-1" style="display:none"></div>
-            <div class="ob-arrow-hint" id="ob-hint-2" style="display:none"></div>
-
-            <div id="onboarding-box">
-                <!-- Step 1 -->
-                <div class="ob-step active" id="ob-step-1">
-                    <div class="ob-eyebrow">Bem-vindo ao WebGIS · Passo 1 de 5</div>
-                    <div class="ob-title"><span class="ob-icon">👋</span> Bem-vindo ao Visualizador Censo 2022!</div>
-                    <div class="ob-desc">Este é o WebGIS da Prefeitura de Bragança Paulista. Aqui você pode explorar os dados do <strong style="color:var(--text)">Censo 2022 (IBGE)</strong> para todos os setores censitários do município de forma interativa.</div>
-                    <div class="ob-footer">
-                        <div class="ob-dots">
-                            <div class="ob-dot active" id="dot-1"></div>
-                            <div class="ob-dot" id="dot-2"></div>
-                            <div class="ob-dot" id="dot-3"></div>
-                            <div class="ob-dot" id="dot-4"></div>
-                            <div class="ob-dot" id="dot-5"></div>
-                        </div>
-                        <button class="ob-skip" onclick="obSkip()">Pular tutorial</button>
-                        <button class="ob-next" onclick="obNext()">Próximo →</button>
-                    </div>
-                </div>
-                <!-- Step 2 -->
-                <div class="ob-step" id="ob-step-2">
-                    <div class="ob-eyebrow">Seletor de visualizações · Passo 2 de 5</div>
-                    <div class="ob-title"><span class="ob-icon">🎨</span> Escolha o que visualizar</div>
-                    <div class="ob-desc">Use o seletor no <strong style="color:var(--text)">cabeçalho</strong> para alternar entre as visualizações disponíveis: Bairros, Domicílios, Faixa Etária, Raça/Cor e Alfabetização. A legenda e as cores do mapa se atualizam automaticamente.</div>
-                    <div class="ob-footer">
-                        <div class="ob-dots">
-                            <div class="ob-dot" id="dot-1b"></div>
-                            <div class="ob-dot active" id="dot-2b"></div>
-                            <div class="ob-dot" id="dot-3b"></div>
-                            <div class="ob-dot" id="dot-4b"></div>
-                            <div class="ob-dot" id="dot-5b"></div>
-                        </div>
-                        <button class="ob-skip" onclick="obSkip()">Pular</button>
-                        <button class="ob-next" onclick="obNext()">Próximo →</button>
-                    </div>
-                </div>
-                <!-- Step 3 -->
-                <div class="ob-step" id="ob-step-3">
-                    <div class="ob-eyebrow">Dados detalhados · Passo 3 de 5</div>
-                    <div class="ob-title"><span class="ob-icon">📊</span> Pirâmide etária e gráficos de barras</div>
-                    <div class="ob-desc">Passe o mouse sobre qualquer setor para ver no painel lateral: <strong style="color:var(--text)">pirâmide etária</strong>, composição por faixa etária, distribuição por cor/raça e taxa de alfabetização — todos com barras de comparação com a média municipal de Bragança Paulista.</div>
-                    <div class="ob-footer">
-                        <div class="ob-dots">
-                            <div class="ob-dot" id="dot-1c"></div>
-                            <div class="ob-dot" id="dot-2c"></div>
-                            <div class="ob-dot active" id="dot-3c"></div>
-                            <div class="ob-dot" id="dot-4c"></div>
-                            <div class="ob-dot" id="dot-5c"></div>
-                        </div>
-                        <button class="ob-skip" onclick="obSkip()">Pular</button>
-                        <button class="ob-next" onclick="obNext()">Próximo →</button>
-                    </div>
-                </div>
-                <!-- Step 4 -->
-                <div class="ob-step" id="ob-step-4">
-                    <div class="ob-eyebrow">Modo Bairros · Passo 4 de 5</div>
-                    <div class="ob-title"><span class="ob-icon">📍</span> Destaque setores por bairro</div>
-                    <div class="ob-desc">No modo <strong style="color:var(--text)">Bairros</strong>, a legenda lista os 60 bairros do município. Clique em qualquer bairro na legenda para destacar seus setores e esmaecer os demais. Clique novamente para desfazer o destaque.</div>
-                    <div class="ob-footer">
-                        <div class="ob-dots">
-                            <div class="ob-dot" id="dot-1d"></div>
-                            <div class="ob-dot" id="dot-2d"></div>
-                            <div class="ob-dot" id="dot-3d"></div>
-                            <div class="ob-dot active" id="dot-4d"></div>
-                            <div class="ob-dot" id="dot-5d"></div>
-                        </div>
-                        <button class="ob-skip" onclick="obSkip()">Pular</button>
-                        <button class="ob-next" onclick="obNext()">Próximo →</button>
-                    </div>
-                </div>
-                <!-- Step 5 -->
-                <div class="ob-step" id="ob-step-5">
-                    <div class="ob-eyebrow">Legenda interativa · Passo 5 de 5</div>
-                    <div class="ob-title"><span class="ob-icon">📏</span> Escala de cores em degradê</div>
-                    <div class="ob-desc">A barra de <strong style="color:var(--text)">degradê na legenda</strong> mostra a escala da variável ativa. Passe o mouse sobre a barra para ver os valores. Ao passar o mouse sobre um setor, um indicador amarelo mostra onde ele se posiciona na escala. Use a <strong style="color:var(--text)">barra de busca</strong> no topo do mapa para localizar endereços.</div>
-                    <div class="ob-footer">
-                        <div class="ob-dots">
-                            <div class="ob-dot" id="dot-1e"></div>
-                            <div class="ob-dot" id="dot-2e"></div>
-                            <div class="ob-dot" id="dot-3e"></div>
-                            <div class="ob-dot" id="dot-4e"></div>
-                            <div class="ob-dot active" id="dot-5e"></div>
-                        </div>
-                        <button class="ob-skip" onclick="obSkip()">Fechar</button>
-                        <button class="ob-next" onclick="obSkip()" style="background:var(--blue,#0175bc)">Entendido! ✓</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- ─── ONBOARDING ─────────────────────────────── -->
          </body>

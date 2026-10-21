@@ -13,6 +13,30 @@
     <link rel="stylesheet" href="css/leaflet-measure.css">
     <title>WebGIS — Infraestrutura & Vias</title>
     <style>
+/* CABECALHO - padrao do portal */
+#pd-header{position:fixed;top:0;left:0;right:0;height:var(--header-h);
+  background:var(--blue);border-bottom:3px solid var(--accent);
+  display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
+#pd-header .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;
+  box-shadow:0 0 10px var(--accent);flex-shrink:0;}
+#pd-header h1{font-family:'Outfit',sans-serif;font-weight:700;font-size:15px;color:#fff;
+  text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin:0;}
+#pd-header h1 span{color:var(--accent);}
+#pd-header .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;margin:0;}
+#pd-header .sep{flex:1;}
+.hbadge{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
+  border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+#pd-back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);
+  color:rgba(255,255,255,.8);font-family:'Raleway',sans-serif;font-size:12px;
+  padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .15s;
+  text-decoration:none;display:flex;align-items:center;gap:6px;}
+#pd-back:hover{color:var(--accent);border-color:rgba(255,239,0,.6);}
+#pd-export,#pd-panel,#pd-legenda{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);
+  color:var(--accent);font-family:'Raleway',sans-serif;font-size:12px;font-weight:500;
+  padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;
+  white-space:nowrap;display:flex;align-items:center;gap:6px;}
+#pd-export:hover,#pd-panel:hover,#pd-legenda:hover{background:rgba(255,239,0,.18);}
+
     :root{
         --blue:#0175bc;
         --accent:#FFEF00;
@@ -34,11 +58,6 @@
 
     /* HEADER */
     #header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--blue);border-bottom:3px solid var(--accent);display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
-    #header #header h1{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--text);letter-spacing:.04em;margin:0;text-transform:uppercase;}
-    #header h1 span{color:var(--accent);}
-    #header #header .sep{flex:1;}
-    #header /* LAYOUT */
-    #app{display:flex;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;}
 
     /* SIDEBAR */
     #sidebar{width:var(--sidebar-w);background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .3s cubic-bezier(.4,0,.2,1),opacity .3s;flex-shrink:0;z-index:8000;}
@@ -184,32 +203,6 @@
     #export-status{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:12px;text-align:center;}
     #export-close{width:100%;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:12px;padding:8px;cursor:pointer;transition:all .15s;}
     #export-close:hover{border-color:var(--text-muted);color:var(--text);}
-
-    /* ONBOARDING */
-    #onboarding-overlay{position:fixed;inset:0;z-index:99999;pointer-events:none;}
-    #onboarding-overlay.hidden{display:none;}
-    #onboarding-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.55);pointer-events:all;}
-    #onboarding-box{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 32px));background:var(--bg-panel2);border:1px solid rgba(255,239,0,0.35);border-radius:16px;padding:24px 24px 20px;pointer-events:all;box-shadow:0 24px 64px rgba(0,0,0,0.7);animation:slideUp .4s cubic-bezier(.34,1.4,.64,1) both;}
-    @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(32px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-    .ob-step{display:none;} .ob-step.active{display:block;}
-    .ob-eyebrow{font-size:10px;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
-    .ob-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
-    .ob-title .ob-icon{font-size:22px;flex-shrink:0;}
-    .ob-desc{font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:16px;}
-    .ob-footer{display:flex;align-items:center;gap:10px;}
-    .ob-dots{display:flex;gap:5px;flex:1;}
-    .ob-dot{width:6px;height:6px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border);transition:all .2s;}
-    .ob-dot.active{background:var(--accent);border-color:var(--accent);width:18px;border-radius:3px;}
-    .ob-skip{background:none;border:none;color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:11px;cursor:pointer;padding:4px 0;transition:color .15s;}
-    .ob-skip:hover{color:var(--text);}
-    .ob-next{background:var(--accent);border:none;border-radius:8px;color:var(--bg-panel);font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;padding:8px 20px;cursor:pointer;transition:all .15s;white-space:nowrap;}
-    .ob-next:hover{background:var(--accent2);}
-    
-        .badge {
-            font-family: 'Outfit',sans-serif; font-size: 10px; font-weight: 700;
-            color: var(--accent); border: 1px solid rgba(255,239,0,.4);
-            padding: 3px 8px; border-radius: 4px; white-space: nowrap;
-        }
         .hdr-sep { flex: 1; }
                 .sub {
             font-size: 11px; color: rgba(255,255,255,.65);
@@ -221,23 +214,11 @@
   font-family:'Outfit',sans-serif; font-weight:700; font-size:14px; color:#fff;
   text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
 }
-#hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
-#hd .sub, #header .sub, #pd-header .sub,
-#hd .subtitle, #header .subtitle, #pd-header .subtitle {
-  font-size:11px; color:rgba(255,255,255,.65); font-weight:300;
-  white-space:nowrap; margin:0; line-height:1.3;
-}
-#hd .badge, #header .badge, #pd-header .badge,
-#hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
-  font-family:'Outfit',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
-  border:1px solid rgba(255,239,0,.4); background:transparent;
-  padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
-}
 
 /* ── tipografia e cor: textos longos e valores numéricos ──────────────── */
 /* Prosa explicativa em branco: popups, onboarding e notas de rodapé de
    painel. Cabeçalhos e apontamentos de legenda mantêm o azul claro. */
-.pexp, #obd, .nota, .sel-vazio, .pc-note, #pnl-hint, .bar-sub-long {
+.pexp, .nota, .sel-vazio, .pc-note, #pnl-hint, .bar-sub-long {
   color: var(--text) !important;
 }
 /* Valores numéricos em legenda: cor fixa de alta legibilidade.
@@ -275,16 +256,6 @@
 
 /* ── cabeçalho: regras copiadas do padrão (mapa de habitação) ─────────── */
 #header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--blue); border-bottom:3px solid var(--accent);display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
-#header h1{font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin:0;}
-#header h1 span{color:var(--accent);}
-.badge{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--accent); border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
-#back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);color:rgba(255,255,255,.8); font-size:12px;padding:6px 10px;border-radius:6px;text-decoration:none;}
-#back:hover{color:var(--accent);}
-.hbtn{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);color:var(--accent); font-family:'Raleway',sans-serif;font-size:12px;font-weight:500;padding:6px 12px;border-radius:6px;cursor:pointer;}
-.hbtn:hover{background:rgba(255,239,0,.18);}
-#header .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);flex-shrink:0;}
-#header .sep{flex:1;}
-#header .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;margin:0;line-height:1.3;}
 
 /* ── painel de escola: infraestrutura e subtítulos ────────────────────── */
 .info-sub{font-family:'Outfit',sans-serif;font-size:9.5px;font-weight:700;color:var(--muted);
@@ -342,18 +313,18 @@
 <body>
 
 <!-- HEADER -->
-<div id="header">
-  <div class="dot"></div>
+<div id="pd-header">
+  <div class="logo-dot"></div>
   <div>
     <h1>Infraestrutura <span>e Vias</span></h1>
     <p class="sub">Revisão do Plano Diretor · Bragança Paulista</p>
   </div>
   <div class="sep"></div>
-  <span class="badge">EQUIPAMENTOS PÚBLICOS</span>
-  <a id="back" href="../portal.html">&#8592; Portal</a>
-  <button class="hbtn" onclick="openExportModal()">&#8595; Exportar</button>
-  <button class="hbtn" onclick="toggleSidebar()">&#9776; Painel</button>
-  <button class="hbtn" onclick="toggleLegenda()">&#9636; Legenda</button>
+  <span class="hbadge">EQUIPAMENTOS PÚBLICOS</span>
+  <a id="pd-back" href="../portal.html">&#8592; Portal</a>
+  <button id="pd-export" onclick="openExportModal()">&#8595; Exportar</button>
+  <button id="pd-panel" onclick="toggleSidebar()">&#9776; Painel</button>
+  <button id="pd-legenda" onclick="toggleLegenda()">&#9636; Legenda</button>
 </div>
 
 <!-- APP -->
@@ -617,36 +588,6 @@
     </div>
 </div>
 
-<!-- ONBOARDING -->
-<div id="onboarding-overlay">
-    <div id="onboarding-backdrop" onclick="obNext()"></div>
-    <div id="onboarding-box">
-        <div class="ob-step active" id="ob-step-1">
-            <div class="ob-eyebrow">Bem-vindo ao WebGIS · Passo 1 de 4</div>
-            <div class="ob-title"><span class="ob-icon">🛣️</span> Infraestrutura & Equipamentos</div>
-            <div class="ob-desc">Este mapa mostra os <strong style="color:var(--text)">eixos de logradouros</strong> classificados por hierarquia viária e os <strong style="color:var(--text)">equipamentos urbanos</strong> de Bragança Paulista: saúde, educação, esporte, cultura e assistência social.</div>
-            <div class="ob-footer"><div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><button class="ob-skip" onclick="obSkip()">Pular tutorial</button><button class="ob-next" onclick="obNext()">Próximo →</button></div>
-        </div>
-        <div class="ob-step" id="ob-step-2">
-            <div class="ob-eyebrow">Legenda · Passo 2 de 4</div>
-            <div class="ob-title"><span class="ob-icon">🎨</span> Cores e símbolos</div>
-            <div class="ob-desc">As vias são linhas mais grossas para vias arteriais e mais finas para vias locais. Os equipamentos de saúde e educação têm <strong style="color:var(--text)">cores por categoria</strong>. Esporte usa círculo amarelo, cultura usa <strong style="color:var(--text)">losango</strong>. A legenda completa fica no painel.</div>
-            <div class="ob-footer"><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><button class="ob-skip" onclick="obSkip()">Pular</button><button class="ob-next" onclick="obNext()">Próximo →</button></div>
-        </div>
-        <div class="ob-step" id="ob-step-3">
-            <div class="ob-eyebrow">Painel · Passo 3 de 4</div>
-            <div class="ob-title"><span class="ob-icon">🎛️</span> Painel de controles</div>
-            <div class="ob-desc">No painel à <strong style="color:var(--text)">esquerda</strong> você pode ligar e desligar cada camada individualmente, ajustar a transparência dos eixos de vias e alternar entre Satélite, OSM e mapa escuro.</div>
-            <div class="ob-footer"><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div><button class="ob-skip" onclick="obSkip()">Pular</button><button class="ob-next" onclick="obNext()">Próximo →</button></div>
-        </div>
-        <div class="ob-step" id="ob-step-4">
-            <div class="ob-eyebrow">Interação · Passo 4 de 4</div>
-            <div class="ob-title"><span class="ob-icon">🖱️</span> Clique e explore</div>
-            <div class="ob-desc"><strong style="color:var(--text)">Clique</strong> em qualquer equipamento ou via para ver os detalhes no painel lateral. Use a <strong style="color:var(--text)">barra de busca</strong> para localizar um endereço. Exporte o mapa em JPEG ou PDF pelo botão <strong style="color:var(--text)">"Exportar"</strong>.</div>
-            <div class="ob-footer"><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div></div><button class="ob-skip" onclick="obSkip()">Fechar</button><button class="ob-next" onclick="obSkip()" style="background:var(--blue)">Entendido! ✓</button></div>
-        </div>
-    </div>
-</div>
 
 <!-- SCRIPTS: Leaflet primeiro, depois dados -->
 <script src="js/leaflet.js"></script>
@@ -1495,13 +1436,6 @@ function toggleLegendGroup(id, titleEl){
     titleEl.classList.toggle('open', !isOpen);
 }
 
-// ── ONBOARDING ───────────────────────────────────────────
-var obS=1,OBK='bp_webgis_infra_ob_done';
-function obInit(){try{if(localStorage.getItem(OBK)){document.getElementById('onboarding-overlay').classList.add('hidden');return;}}catch(e){}obShowStep(1);}
-function obShowStep(n){obS=n;for(var i=1;i<=4;i++){var el=document.getElementById('ob-step-'+i);if(el)el.classList.toggle('active',i===n);}}
-function obNext(){if(obS<4)obShowStep(obS+1);else obSkip();}
-function obSkip(){document.getElementById('onboarding-overlay').classList.add('hidden');try{localStorage.setItem(OBK,'1');}catch(e){}}
-setTimeout(obInit,900);
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

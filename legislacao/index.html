@@ -7,7 +7,6 @@
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <link rel="stylesheet" href="css/leaflet.css">
-        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
         <link rel="stylesheet" href="css/L.Control.Locate.min.css">
         <link rel="stylesheet" href="css/qgis2web.css">
         <link rel="stylesheet" href="css/fontawesome-all.min.css">
@@ -20,48 +19,41 @@
             padding: 0;
             margin: 0;
         }
-        .li{display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer;border-radius:4px;padding:2px 4px;transition:opacity .15s;}.li:hover{background:rgba(255,255,255,.06);}.li.off{opacity:.3;text-decoration:line-through;}.li.off .sw,.li.off .swl{filter:grayscale(1);}
+.li.off{opacity:.3;text-decoration:line-through;}.li.off .sw,.li.off .swl{filter:grayscale(1);}
     
     /* Layer toggle — same pattern as other maps */
-    .layer-toggle { position: relative; width: 32px; height: 18px; flex-shrink: 0; }
     .layer-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-track {
-        position: absolute; inset: 0; background: var(--bg-card);
-        border-radius: 9px; cursor: pointer; transition: background 0.2s;
-        border: 1px solid var(--border);
-    }
     .toggle-track::after {
         content: ''; position: absolute; left: 2px; top: 2px;
         width: 12px; height: 12px; background: var(--text-muted);
         border-radius: 50%; transition: all 0.2s;
     }
-    .layer-toggle input:checked + .toggle-track { background: rgba(255,239,0,0.15); border-color: var(--accent); }
     .layer-toggle input:checked + .toggle-track::after { background: var(--accent); left: 16px; }
 
     /* Legend item toggle */
-    .li-toggle { position: relative; width: 28px; height: 16px; flex-shrink: 0; }
-    .li-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .li-toggle .toggle-track { border-radius: 8px; }
-    .li-toggle .toggle-track::after { width: 10px; height: 10px; }
-    .li-toggle input:checked + .toggle-track { background: rgba(255,239,0,0.15); border-color: var(--accent); }
-    .li-toggle input:checked + .toggle-track::after { background: var(--accent); left: 14px; }
 
-    .li.off { opacity: .35; }
     .li.off .sw, .li.off .swl { filter: grayscale(1); }
 
     
         .badge {
-            font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+            font-family: 'Outfit',sans-serif; font-size: 10px; font-weight: 700;
             color: var(--accent); border: 1px solid rgba(255,239,0,.4);
             padding: 3px 8px; border-radius: 4px; white-space: nowrap;
         }
         .hdr-sep { flex: 1; }
-        </style>
-        <title></title>
+        
+    /* Secoes de painel — padrao comum a todos os mapas */
+    .panel-section{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+    .panel-section:last-child{border-bottom:none;}
+    #rb .panel-section{padding:14px 16px 0;}
+    .section-label{font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;}
+</style>
+        <title>Legislação Urbanística · Bragança Paulista</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
     *,*::before,*::after{box-sizing:border-box;}
@@ -70,12 +62,16 @@
       --bg:#0d1b2a;--bg-panel:#0f2236;--bg-panel2:#132b42;--bg-card:#1a3550;
       --border:rgba(255,255,255,0.10);--text:#e8eaf0;--text-muted:#7a9ab5;
       --header-h:52px;--sidebar-w:300px;
-    }
+  --rw: 300px;
+  --muted: #7a9ab5;
+}
     html,body{margin:0;padding:0;height:100%;overflow:hidden;
-      font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);}
+      font-family:'Raleway',sans-serif;background:var(--bg);color:var(--text);}
     /* map fills below header */
-    #map{position:fixed!important;top:var(--header-h)!important;left:0;right:0;bottom:0;
-      width:auto!important;height:auto!important;}
+    #map{position:fixed!important;top:var(--header-h)!important;
+  left:var(--sidebar-w);right:var(--rw);bottom:0;
+  width:auto!important;height:auto!important;
+  transition:left .25s,right .25s;}
     /* hide ALL qgis controls */
     .leaflet-top,.leaflet-bottom,.leaflet-control{display:none!important;}
     /* HEADER */
@@ -84,23 +80,23 @@
       display:flex;align-items:center;padding:0 16px;z-index:9000;gap:12px;}
     #pd-header .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;
       box-shadow:0 0 10px var(--accent);flex-shrink:0;}
-    #pd-header h1{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:#fff;
+    #pd-header h1{font-family:'Outfit',sans-serif;font-weight:700;font-size:15px;color:#fff;
       text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
     #pd-header h1 span{color:var(--accent);}
     #pd-header .sub{font-size:11px;color:rgba(255,255,255,.65);font-weight:300;white-space:nowrap;}
     #pd-header .sep{flex:1;}
-    .hbadge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
+    .hbadge{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;color:var(--accent);
       border:1px solid rgba(255,239,0,.4);padding:3px 8px;border-radius:4px;white-space:nowrap;}
     #pd-back{background:rgba(255,239,0,.08);border:1px solid rgba(255,239,0,.25);
-      color:rgba(255,255,255,.8);font-family:'DM Sans',sans-serif;font-size:12px;
+      color:rgba(255,255,255,.8);font-family:'Raleway',sans-serif;font-size:12px;
       padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .15s;
       text-decoration:none;display:flex;align-items:center;gap:6px;}
     #pd-back:hover{color:var(--accent);border-color:rgba(255,239,0,.6);}
-    #pd-export,#pd-panel{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);
-      color:var(--accent);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
+    #pd-export,#pd-panel, #pd-legenda{background:rgba(255,239,0,.1);border:1px solid rgba(255,239,0,.4);
+      color:var(--accent);font-family:'Raleway',sans-serif;font-size:12px;font-weight:500;
       padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;
       white-space:nowrap;display:flex;align-items:center;gap:6px;}
-    #pd-export:hover,#pd-panel:hover{background:rgba(255,239,0,.18);}
+    #pd-export:hover,#pd-panel:hover, #pd-legenda:hover{background:rgba(255,239,0,.18);}
     /* SIDEBAR */
     #pd-sidebar{position:fixed;top:var(--header-h);left:0;width:var(--sidebar-w);
       height:calc(100vh - var(--header-h));background:var(--bg-panel);
@@ -108,30 +104,17 @@
       display:flex;flex-direction:column;transition:transform .25s ease;overflow:hidden;}
     #pd-sidebar.hidden{transform:translateX(-100%);}
     .sb-section{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
-    .sb-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+    .sb-label{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;
       color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
-    .ltr{display:flex;align-items:center;gap:10px;padding:7px 0;
-      border-bottom:1px solid rgba(255,255,255,.04);}
     .ltr:last-of-type{border-bottom:none;}
-    .lsw{width:14px;height:14px;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,.2);}
-    .lsw.ln{height:3px;border-radius:2px;border:none;margin-top:5px;}
     .ltr label:not(.layer-toggle){flex:1;font-size:12px;color:var(--text);cursor:pointer;}
     .ltr .layer-toggle{flex:0 0 32px;width:32px;}
-
-    .opr{display:flex;align-items:center;gap:10px;padding:4px 0 4px 24px;}
-    .opr label{font-size:10px;color:var(--text-muted);width:70px;flex-shrink:0;}
-    .opr input[type=range]{flex:1;height:3px;accent-color:var(--accent);cursor:pointer;}
-    .opr span{font-size:10px;color:var(--text-muted);width:30px;text-align:right;}
     /* LEGEND */
-    #pd-legend{flex:1;overflow-y:auto;padding:12px 14px;}
     #pd-legend::-webkit-scrollbar{width:4px;}
     #pd-legend::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
     .lg{margin-bottom:14px;}
-    .lg-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
-      color:var(--text-muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px;}
     .li{display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer;border-radius:4px;padding:2px 4px;transition:background .1s;}
     .li:hover{background:rgba(255,255,255,.06);}
-    .li.off{opacity:.35;}
     .li .sw,.li .swl{flex-shrink:0;}
     .sw{width:16px;height:12px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
     .swl{width:22px;height:4px;border-radius:2px;flex-shrink:0;}
@@ -139,7 +122,7 @@
     /* BASEMAP */
     .bmr{display:flex;gap:8px;margin-top:6px;}
     .bmb{flex:1;background:var(--bg-card);border:1px solid var(--border);
-      color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:11px;
+      color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:11px;
       padding:6px 4px;border-radius:6px;cursor:pointer;text-align:center;}
     .bmb.on{border-color:var(--accent);color:var(--accent);background:rgba(255,239,0,.08);}
     /* POPUP */
@@ -147,7 +130,7 @@
       border:1px solid var(--border)!important;border-radius:10px!important;
       box-shadow:0 8px 32px rgba(0,0,0,.5)!important;}
     .leaflet-popup-tip{background:var(--bg-panel2)!important;}
-    .leaflet-popup-content{color:var(--text)!important;font-family:'DM Sans',sans-serif!important;font-size:12px!important;}
+    .leaflet-popup-content{color:var(--text)!important;font-family:'Raleway',sans-serif!important;font-size:12px!important;}
     .leaflet-popup-content table{width:100%;border-collapse:collapse;}
     .leaflet-popup-content td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.06);
       vertical-align:top;font-size:11px;color:var(--text-muted);}
@@ -158,51 +141,149 @@
     #pd-modal.open{display:flex;}
     #pd-mbox{background:var(--bg-panel2);border:1px solid var(--border);border-radius:14px;
       padding:28px 32px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.6);}
-    #pd-mtitle{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+    #pd-mtitle{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
       color:var(--text);margin-bottom:8px;}
     #pd-mdesc{font-size:12px;color:var(--text-muted);margin:0 0 20px;}
     #pd-mbtns{display:flex;gap:10px;margin-bottom:16px;}
     #pd-mstatus{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:12px;text-align:center;}
     #pd-mclose{width:100%;background:none;border:1px solid var(--border);border-radius:6px;
-      color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;cursor:pointer;}
+      color:var(--text-muted);font-family:'Raleway',sans-serif;font-size:12px;padding:8px;cursor:pointer;}
     .eb{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
-      color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:12px;
+      color:var(--text);font-family:'Raleway',sans-serif;font-size:13px;padding:12px;
       cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
     .eb:hover{border-color:var(--accent);color:var(--accent);}
-    /* ONBOARDING */
-    #pd-ob{position:fixed;inset:0;z-index:99999;background:rgba(1,48,90,.92);
-      backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;}
-    #pd-ob.visible{display:flex;}
-    #pd-obbox{background:var(--bg-panel2);border:1px solid var(--border);border-radius:16px;
-      padding:32px;max-width:420px;width:90%;}
-    #pd-obicon{font-size:32px;margin-bottom:12px;}
-    #pd-obtitle{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
-      color:#fff;margin-bottom:8px;}
-    #pd-obdesc{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;}
-    #pd-obbtn{width:100%;background:var(--accent);color:#000;font-family:'Syne',sans-serif;
-      font-size:14px;font-weight:700;padding:12px;border:none;border-radius:8px;cursor:pointer;}
     .leaflet-tooltip{background:transparent!important;border:none!important;
       box-shadow:none!important;font-weight:700;font-size:10px;color:#fff;
       text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;}
-    .leaflet-tooltip::before{display:none!important;}
-    
-/* ── header uniformizado (padrão IPVS) ─────────────────────────────── */
-#hd h1, #header h1, #pd-header h1 {
-  font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:#fff;
+    .leaflet-tooltip::before{display:none!important;}#pd-header h1{
+  font-family:'Outfit',sans-serif; font-weight:700; font-size:14px; color:#fff;
   text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; margin:0; line-height:1.2;
-}
-#hd h1 span, #header h1 span, #pd-header h1 span { color: var(--accent); }
-#hd .sub, #header .sub, #pd-header .sub,
-#hd .subtitle, #header .subtitle, #pd-header .subtitle {
+}#pd-header h1 span{ color: var(--accent); }#pd-header .sub{
   font-size:11px; color:rgba(255,255,255,.65); font-weight:300;
   white-space:nowrap; margin:0; line-height:1.3;
-}
-#hd .badge, #header .badge, #pd-header .badge,
-#hd .header-badge, #header .header-badge, #pd-header .hbadge, #header .hbadge {
-  font-family:'Syne',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
+}#pd-header .badge, #pd-header .hbadge, #header .hbadge{
+  font-family:'Outfit',sans-serif; font-size:10px; font-weight:700; color:var(--accent);
   border:1px solid rgba(255,239,0,.4); background:transparent;
   padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:.02em;
-}
+}/* ── tipografia e cor: textos longos e valores numéricos ──────────────── */
+/* ── painel direito: legenda e informações (padrão dos demais mapas) ──── */
+#rb{position:fixed;top:var(--header-h);right:0;width:var(--rw,300px);
+  height:calc(100vh - var(--header-h));background:var(--bg-panel);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;z-index:1000;transition:transform .25s;}
+#rb.hidden{transform:translateX(100%);}
+.rb-head{padding:12px 15px 9px;border-bottom:1px solid var(--border);flex-shrink:0;
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.07em;}
+.rb-body{flex:1;overflow-y:auto;min-height:0;
+  scrollbar-width:thin;scrollbar-color:var(--bg-card) transparent;}
+#rb #info-content{padding:14px 16px;}
+.info-title .tag{font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;
+  color:var(--accent);border:1px solid rgba(255,239,0,.4);padding:2px 6px;
+  border-radius:4px;margin-left:6px;text-transform:uppercase;letter-spacing:.04em;}
+@media(max-width:1100px){#rb{box-shadow:-6px 0 20px rgba(0,0,0,.4);}}
+
+/* ── busca de endereço (padrão do mapa censitário) ─────────────────────── */
+#map-search{position:fixed;top:calc(var(--header-h) + 14px);
+  left:var(--sidebar-w);right:var(--rw);margin-inline:auto;
+  max-width:420px;width:auto;min-width:0;
+  z-index:2000;background:var(--bg-panel);border:1px solid var(--border);
+  border-radius:24px;display:flex;align-items:center;gap:8px;padding:8px 14px;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);transition:border-color .15s,left .25s,right .25s;}
+#map-search-icon{color: var(--text-muted); font-size: 13px; flex-shrink: 0;}
+#addr-input{flex: 1; background: transparent; border: none; color: var(--text); font-family: 'Raleway',sans-serif; font-size: 13px; outline: none; min-width: 0;}
+#addr-input::placeholder{color: var(--text-muted);}
+#addr-clear-btn{background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px 4px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: color 0.15s; flex-shrink: 0;}
+#addr-clear-btn:hover{color: var(--accent);}
+#addr-suggestions{position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; flex-direction: column;}
+#addr-suggestions:empty{display:none;}
+.addr-item{font-size: 12px; color: var(--text-muted); padding: 9px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.1s, color 0.1s; line-height: 1.4;}
+.addr-item:hover{background: var(--bg-card); color: var(--text);}
+.addr-item:last-child{border-bottom: none;}
+
+/* ── alternador de camadas (padrão do mapa de equipamentos) ───────────── */
+.ltr{display:flex;align-items:center;gap:10px;padding:7px 0;
+  border-bottom:1px solid var(--border);}
+.ltr > label:first-child{flex:1;font-size:12px;color:var(--text);font-weight:500;
+  cursor:pointer;line-height:1.3;}
+.layer-toggle{position:relative;width:32px;height:18px;flex-shrink:0;cursor:pointer;}
+.toggle-track{position:absolute;inset:0;background:var(--bg-card);border-radius:9px;
+  cursor:pointer;transition:background .2s;border:1px solid var(--border);}
+.layer-toggle input:checked + .toggle-track{background:rgba(255,239,0,0.15);
+  border-color:var(--accent);}
+
+/* ── legenda dentro do painel direito ─────────────────────────────────── */
+#pd-legend{padding:0 16px 16px;}
+.lg-title{font-family:'Outfit',sans-serif;font-size:9.5px;font-weight:700;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.07em;
+  margin:0 0 6px;padding-top:9px;border-top:1px solid var(--border);}
+.lg .li span{font-size:11px;color:var(--text);line-height:1.35;}
+.lg .li .cnt{font-family:'Outfit',sans-serif;color:var(--accent);font-weight:600;
+  font-variant-numeric:tabular-nums;margin-left:4px;}
+#lg-empty{font-size:11.5px;color:var(--muted);line-height:1.6;
+  padding:11px 12px;background:rgba(255,255,255,.03);border-radius:6px;}
+    /* Painel de leitura — mesmo desenho do mapa de renda */
+    .info-card{background:rgba(255,239,0,.07);border-left:2px solid var(--accent);
+      border-radius:0 5px 5px 0;padding:9px 11px;margin-bottom:12px;}
+    .info-title{font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:700;
+      color:#fff;line-height:1.25;margin:0;padding:0;border:none;}
+    .info-cls{font-size:9.5px;color:var(--muted);margin-top:2px;line-height:1.3;}
+    .info-desc{font-size:11.5px;color:var(--text);line-height:1.6;margin-top:8px;}
+    .info-sub{font-family:'Outfit',sans-serif;font-size:9.5px;font-weight:700;
+      color:var(--muted);letter-spacing:.07em;text-transform:uppercase;
+      margin:13px 0 6px;padding:0;border:none;}
+    .info-tab{width:100%;border-collapse:collapse;}
+    .info-tab th{text-align:left;padding:5px 8px 5px 0;font-size:10px;font-weight:600;
+      text-transform:uppercase;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.06);
+      width:52%;line-height:1.35;}
+    .info-tab tr:last-child th,.info-tab tr:last-child td{border-bottom:none;}
+    .info-tab td{padding:5px 0 5px 8px;font-size:11.5px;color:var(--text);
+      border-bottom:1px solid rgba(255,255,255,.06);text-align:right;
+      font-variant-numeric:tabular-nums;font-family:'Outfit',sans-serif;
+      overflow-wrap:break-word;hyphens:none;}
+    .info-vazio{font-size:11.5px;color:var(--muted);line-height:1.65;
+      padding:11px 12px;background:rgba(255,255,255,.03);border-radius:6px;}
+    /* valor textual longo: rotulo em cima, prosa embaixo, alinhada a esquerda */
+    .info-bloco{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+    .info-bloco:last-child{border-bottom:none;}
+    .info-bloco b{display:block;font-size:10px;font-weight:600;text-transform:uppercase;
+      color:var(--muted);letter-spacing:.03em;margin-bottom:3px;line-height:1.35;}
+    .info-bloco span{display:block;font-size:11.5px;color:var(--text);line-height:1.55;}
+    /* botão de rótulo, em cada linha de camada */
+    .rot-btn{flex:0 0 auto;width:19px;height:19px;padding:0;cursor:pointer;
+      font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;line-height:1;
+      color:var(--text-muted);background:var(--bg-card);border:1px solid var(--border);
+      border-radius:4px;transition:color .15s,border-color .15s,background .15s;}
+    .rot-btn:hover{color:var(--text);border-color:rgba(255,239,0,.4);}
+    .rot-btn.on{color:var(--accent);border-color:var(--accent);
+      background:rgba(255,239,0,.15);}
+    /* rótulo desenhado sobre o mapa */
+    .leaflet-tooltip.pd-rot{background:rgba(10,20,34,.78);border:none;box-shadow:none;
+      color:#fff;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;
+      letter-spacing:.02em;padding:1px 5px;border-radius:3px;white-space:nowrap;
+      text-shadow:0 1px 2px rgba(0,0,0,.8);}
+    .leaflet-tooltip.pd-rot::before{display:none;}
+    .info-link{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(255,239,0,.35);
+      font-size:11px;white-space:nowrap;}
+    .info-link:hover{border-bottom-color:var(--accent);}
+    /* bloco por classificação da via de testada */
+    .via-bloco{border-left:2px solid rgba(255,239,0,.35);padding:7px 0 8px 10px;
+      margin-bottom:10px;}
+    .via-bloco:last-child{margin-bottom:0;}
+    .via-rot{font-family:'Outfit',sans-serif;font-size:10.5px;font-weight:700;
+      color:var(--text);line-height:1.3;margin-bottom:5px;}
+    .via-rot span{display:inline-block;font-size:9px;font-weight:700;color:var(--accent);
+      border:1px solid rgba(255,239,0,.4);border-radius:3px;padding:1px 4px;
+      margin-left:4px;vertical-align:1px;letter-spacing:.03em;}
+    .via-tab th{width:56%;font-size:9.5px;padding:4px 8px 4px 0;}
+    .via-tab td{font-size:11px;padding:4px 0 4px 8px;}
+    .via-uso{font-size:11px;color:var(--text);line-height:1.55;margin-top:6px;}
+    /* via: nome e hierarquia numa linha so */
+    .info-via{background:rgba(255,239,0,.07);border-left:2px solid var(--accent);
+      border-radius:0 5px 5px 0;padding:9px 11px;}
+    .info-via b{font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:700;
+      color:#fff;line-height:1.3;}
+    .info-via i{font-style:normal;color:var(--muted);font-weight:400;}
 </style>
 </head>
     <body>
@@ -219,148 +300,91 @@
       <a id="pd-back" href="../portal.html">&#8592; Portal</a>
       <button id="pd-export" onclick="pdExport()">&#8595; Exportar</button>
       <button id="pd-panel" onclick="pdToggleSidebar()">&#9776; Painel</button>
+      <button id="pd-legenda" onclick="toggleLegenda()">&#9636; Legenda</button>
     </div>
+
+        
 
     <!-- SIDEBAR -->
     <div id="pd-sidebar">
       <div class="sb-section">
         <div class="sb-label">Camadas</div>
-
         <div class="ltr">
-          <label for="t-zona">Zoneamento (Plano Diretor)</label>
-          <label class="layer-toggle"><input data-pd-layer="zona" type="checkbox" id="t-zona" checked onchange="pdToggle('zona',this.checked)"><span class="toggle-track"></span></label>
+          <label for="t-macro">Macrozoneamento</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('macro',this)">A</button><label class="layer-toggle"><input data-pd-layer="macro" type="checkbox" checked id="t-macro" onchange="pdToggle('macro',this.checked)"><span class="toggle-track"></span></label>
         </div>
-        <div class="opr">
-          <label>Opacidade</label>
-          <input type="range" min="0" max="1" step="0.05" value="0.65"
-            oninput="pdOpacity('zona',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-          <span>65%</span>
+
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-zona">Zoneamento</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('zona',this)">A</button><label class="layer-toggle"><input data-pd-layer="zona" type="checkbox" checked id="t-zona" onchange="pdToggle('zona',this.checked)"><span class="toggle-track"></span></label>
         </div>
 
         <div class="ltr" style="margin-top:6px">
           <label for="t-cod">Código de Urbanismo</label>
-          <label class="layer-toggle"><input data-pd-layer="cod" type="checkbox" id="t-cod" onchange="pdToggle('cod',this.checked)"><span class="toggle-track"></span></label>
-        </div>
-        <div class="opr">
-          <label>Opacidade</label>
-          <input type="range" min="0" max="1" step="0.05" value="0.65"
-            oninput="pdOpacity('cod',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-          <span>65%</span>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('cod',this)">A</button><label class="layer-toggle"><input data-pd-layer="cod" type="checkbox" checked id="t-cod" onchange="pdToggle('cod',this.checked)"><span class="toggle-track"></span></label>
         </div>
 
         <div class="ltr" style="margin-top:6px">
-          <label for="t-macro">Macrozoneamento (Plano Diretor)</label>
-          <label class="layer-toggle"><input data-pd-layer="macro" type="checkbox" id="t-macro" onchange="pdToggle('macro',this.checked)"><span class="toggle-track"></span></label>
-        </div>
-        <div class="opr">
-          <label>Opacidade</label>
-          <input type="range" min="0" max="1" step="0.05" value="0.65"
-            oninput="pdOpacity('macro',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-          <span>65%</span>
+          <label for="t-macrot">Macrozoneamento (Tomo)</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('macrot',this)">A</button><label class="layer-toggle"><input data-pd-layer="macrot" type="checkbox" checked id="t-macrot" onchange="pdToggle('macrot',this.checked)"><span class="toggle-track"></span></label>
         </div>
 
         <div class="ltr" style="margin-top:6px">
-          <label for="t-zepam">ZEPAM (Plano Diretor)</label>
-          <label class="layer-toggle"><input data-pd-layer="zepam" type="checkbox" id="t-zepam" onchange="pdToggle('zepam',this.checked)"><span class="toggle-track"></span></label>
-        </div>
-        <div class="opr">
-          <label>Opacidade</label>
-          <input type="range" min="0" max="1" step="0.05" value="0.65"
-            oninput="pdOpacity('zepam',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-          <span>65%</span>
+          <label for="t-zonat">Zoneamento (Tomo)</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('zonat',this)">A</button><label class="layer-toggle"><input data-pd-layer="zonat" type="checkbox" checked id="t-zonat" onchange="pdToggle('zonat',this.checked)"><span class="toggle-track"></span></label>
         </div>
 
-        <div class="ltr">
-          <label for="t-zepec">ZEPEC (Plano Diretor)</label>
-          <label class="layer-toggle"><input data-pd-layer="zepec" type="checkbox" id="t-zepec" onchange="pdToggle('zepec',this.checked)"><span class="toggle-track"></span></label>
-        </div>
-        <div class="opr">
-          <label>Opacidade</label>
-          <input type="range" min="0" max="1" step="0.05" value="0.65"
-            oninput="pdOpacity('zepec',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-          <span>65%</span>
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-lotes">Zoneamento de Loteamentos</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('lotes',this)">A</button><label class="layer-toggle"><input data-pd-layer="lotes" type="checkbox" checked id="t-lotes" onchange="pdToggle('lotes',this.checked)"><span class="toggle-track"></span></label>
         </div>
 
-        <div class="ltr">
-          <label for="t-bacias">Bacias Hidrográficas (Plano Diretor)</label>
-          <label class="layer-toggle"><input data-pd-layer="bacias" type="checkbox" id="t-bacias" onchange="pdToggle('bacias',this.checked)"><span class="toggle-track"></span></label>
-        </div>
-        <div class="opr">
-          <label>Opacidade</label>
-          <input type="range" min="0" max="1" step="0.05" value="0.65"
-            oninput="pdOpacity('bacias',this.value);this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-          <span>65%</span>
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-aero">Curvas de Ruído — Aeroporto</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('aero',this)">A</button><label class="layer-toggle"><input data-pd-layer="aero" type="checkbox" checked id="t-aero" onchange="pdToggle('aero',this.checked)"><span class="toggle-track"></span></label>
         </div>
 
-        <div class="ltr">
-          <label for="t-viarias">Diretrizes Viárias (Plano Diretor)</label>
-          <label class="layer-toggle"><input data-pd-layer="viarias" type="checkbox" id="t-viarias" onchange="pdToggle('viarias',this.checked)"><span class="toggle-track"></span></label>
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-zerfu">ZERFUs</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('zerfu',this)">A</button><label class="layer-toggle"><input data-pd-layer="zerfu" type="checkbox" checked id="t-zerfu" onchange="pdToggle('zerfu',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-zepec">ZEPEC</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('zepec',this)">A</button><label class="layer-toggle"><input data-pd-layer="zepec" type="checkbox" checked id="t-zepec" onchange="pdToggle('zepec',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-zepam">ZEPAM</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('zepam',this)">A</button><label class="layer-toggle"><input data-pd-layer="zepam" type="checkbox" checked id="t-zepam" onchange="pdToggle('zepam',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-eixos">Hierarquia Viária</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('eixos',this)">A</button><label class="layer-toggle"><input data-pd-layer="eixos" type="checkbox" checked id="t-eixos" onchange="pdToggle('eixos',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-viariast">Diretrizes Viárias (Tomo)</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('viariast',this)">A</button><label class="layer-toggle"><input data-pd-layer="viariast" type="checkbox" checked id="t-viariast" onchange="pdToggle('viariast',this.checked)"><span class="toggle-track"></span></label>
+        </div>
+
+        <div class="ltr" style="margin-top:6px">
+          <label for="t-viarias">Diretrizes Viárias</label>
+          <button class="rot-btn" type="button" title="Mostrar rótulos no mapa" aria-label="Rótulos" onclick="pdRotulo('viarias',this)">A</button><label class="layer-toggle"><input data-pd-layer="viarias" type="checkbox" checked id="t-viarias" onchange="pdToggle('viarias',this.checked)"><span class="toggle-track"></span></label>
         </div>
       </div>
 
       <div class="sb-section">
         <div class="sb-label">Mapa base</div>
         <div class="bmr">
-          <button class="bmb on" onclick="pdBasemap('satellite',this)">Satélite</button>
+          <button class="bmb" onclick="pdBasemap('dark',this)">Escuro</button>
           <button class="bmb" onclick="pdBasemap('osm',this)">Mapa</button>
-          <button class="bmb" onclick="pdBasemap('dark',this)">Dark</button>
+          <button class="bmb on" onclick="pdBasemap('satellite',this)">Satélite</button>
         </div>
       </div>
 
-      <div id="pd-legend">
-        <div class="lg" id="lg-zona" style="display:">
-          <div class="lg-title">Zoneamento (Plano Diretor)</div>
-          <div class="li" data-layer="zona" data-val="ZDU 1"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDU 1')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(186,186,186)"></div><span>ZDU 1 — Densificação Urbana 1</span></div>
-          <div class="li" data-layer="zona" data-val="ZDU 2"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDU 2')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,127,0)"></div><span>ZDU 2 — Densificação Urbana 2</span></div>
-          <div class="li" data-layer="zona" data-val="ZDU 3"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDU 3')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,255,0)"></div><span>ZDU 3 — Densificação Urbana 3</span></div>
-          <div class="li" data-layer="zona" data-val="ZDE 1"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDE 1')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(112,0,149)"></div><span>ZDE 1 — Desenv. Econômico 1</span></div>
-          <div class="li" data-layer="zona" data-val="ZDE 2"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZDE 2')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(243,204,255)"></div><span>ZDE 2 — Desenv. Econômico 2</span></div>
-          <div class="li" data-layer="zona" data-val="ZEU"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','ZEU')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,0,255)"></div><span>ZEU — Expansão Urbana</span></div>
-          <div class="li" data-layer="zona" data-val="MZR"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zona','MZR')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(145,207,156)"></div><span>MZR — Macrozona Rural</span></div>
-        </div>
-        <div class="lg" id="lg-cod" style="display:none">
-          <div class="lg-title">Código de Urbanismo</div>
-          <div class="li" data-layer="cod" data-val="Z"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','Z')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(186,186,186)"></div><span>Z</span></div>
-          <div class="li" data-layer="cod" data-val="ZC"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZC')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(0,255,0)"></div><span>ZC</span></div>
-          <div class="li" data-layer="cod" data-val="ZE"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZE')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,191,0)"></div><span>ZE</span></div>
-          <div class="li" data-layer="cod" data-val="ZE4"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZE4')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,126,0)"></div><span>ZE4</span></div>
-          <div class="li" data-layer="cod" data-val="ZE5"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZE5')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(230,255,154)"></div><span>ZE5</span></div>
-          <div class="li" data-layer="cod" data-val="ZE6"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZE6')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,255,0)"></div><span>ZE6</span></div>
-          <div class="li" data-layer="cod" data-val="ZEIS"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZEIS')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(221,110,0)"></div><span>ZEIS</span></div>
-          <div class="li" data-layer="cod" data-val="ZI"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZI')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,0,255)"></div><span>ZI</span></div>
-          <div class="li" data-layer="cod" data-val="ZM"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZM')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(0,0,255)"></div><span>ZM</span></div>
-          <div class="li" data-layer="cod" data-val="ZR"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'cod','ZR')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,0,0)"></div><span>ZR</span></div>
-        </div>
-        <div class="lg" id="lg-macro" style="display:none">
-          <div class="lg-title">Macrozoneamento (Plano Diretor)</div>
-          <div class="li" data-layer="macro" data-val="Macrozona Rural (MZR)"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'macro','Macrozona Rural (MZR)')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(92,183,80)"></div><span>Macrozona Rural (MZR)</span></div>
-          <div class="li" data-layer="macro" data-val="Macrozona Urbana (MZU)"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'macro','Macrozona Urbana (MZU)')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(251,132,29)"></div><span>Macrozona Urbana (MZU)</span></div>
-        </div>
-        <div class="lg" id="lg-zepam" style="display:none">
-          <div class="lg-title">ZEPAM (Plano Diretor)</div>
-          <div class="li"><div class="sw" style="background:rgb(0,255,0)"></div><span>Zona Esp. Proteção Ambiental</span></div>
-        </div>
-        <div class="lg" id="lg-zepec" style="display:none">
-          <div class="lg-title">ZEPEC (Plano Diretor)</div>
-          <div class="li" data-layer="zepec" data-val="ZEPEC 1 - Região Central"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zepec','ZEPEC 1 - Região Central')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(193,110,221)"></div><span>ZEPEC 1 — Região Central</span></div>
-          <div class="li" data-layer="zepec" data-val="ZEPEC 2 - Guaripocaba"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zepec','ZEPEC 2 - Guaripocaba')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,191,0)"></div><span>ZEPEC 2 — Guaripocaba</span></div>
-          <div class="li" data-layer="zepec" data-val="ZEPEC 3 - Região da Serrinha"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'zepec','ZEPEC 3 - Região da Serrinha')"><span class="toggle-track"></span></label><div class="sw" style="background:rgb(255,127,127)"></div><span>ZEPEC 3 — Região da Serrinha</span></div>
-        </div>
-        <div class="lg" id="lg-bacias" style="display:none">
-          <div class="lg-title">Bacias Hidrográficas (Plano Diretor)</div>
-          <div class="li"><div class="sw" style="background:rgb(255,158,23)"></div><span>Bacias (11 unidades)</span></div>
-        </div>
-        <div class="lg" id="lg-viarias" style="display:none">
-          <div class="lg-title">Diretrizes Viárias (Plano Diretor)</div>
-          <div class="li" data-layer="viarias" data-val="Via Arterial"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'viarias','Via Arterial')"><span class="toggle-track"></span></label><div class="swl" style="background:rgb(0,255,255)"></div><span>Via Arterial</span></div>
-          <div class="li" data-layer="viarias" data-val="Via Arterial Secundária"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'viarias','Via Arterial Secundária')"><span class="toggle-track"></span></label><div class="swl" style="background:rgb(138,184,0)"></div><span>Via Arterial Secundária</span></div>
-          <div class="li" data-layer="viarias" data-val="Via Regional"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'viarias','Via Regional')"><span class="toggle-track"></span></label><div class="swl" style="background:rgb(221,0,221)"></div><span>Via Regional</span></div>
-          <div class="li" data-layer="viarias" data-val="Via Rural Coletora"><label class="li-toggle"><input type="checkbox" checked onchange="pdFilterItem(this.closest('.li'),'viarias','Via Rural Coletora')"><span class="toggle-track"></span></label><div class="swl" style="background:rgb(255,191,0)"></div><span>Via Rural Coletora</span></div>
-        </div>
-        <div id="lg-empty" style="padding:20px 0;text-align:center;font-size:11px;color:var(--text-muted)">
-          Nenhuma camada ativa.<br>Ative uma camada acima para ver a legenda.
-        </div>
-      </div>
+      
     </div>
 
     <!-- EXPORT MODAL -->
@@ -377,23 +401,166 @@
       </div>
     </div>
 
-    <!-- ONBOARDING -->
-    <div id="pd-ob">
-      <div id="pd-obbox">
-        <div id="pd-obicon">&#128506;</div>
-        <div id="pd-obtitle">Legislação Urbanística</div>
-        <div id="pd-obdesc">Mapa interativo com as camadas do Plano Diretor e do Código de Urbanismo de Bragança Paulista. Clique em qualquer zona para ver os parâmetros. Use o painel à esquerda para ativar camadas adicionais.</div>
-        <button id="pd-obbtn" onclick="pdCloseOb()">Explorar o mapa</button>
-      </div>
-    </div>
         <div id="map">
         </div>
+
+    <!-- Barra de busca flutuante -->
+    <div id="map-search">
+      <span id="map-search-icon">&#128269;</span>
+      <input type="text" id="addr-input" placeholder="Buscar endereço…" autocomplete="off"
+        oninput="onAddrInput()" onkeydown="if(event.key==='Enter') doAddrSearch()">
+      <button id="addr-clear-btn" onclick="clearAddrSearch()" title="Limpar pesquisa" style="display:none">&#10005;</button>
+      <div id="addr-suggestions"></div>
+    </div>
+
+    <!-- PAINEL DE LEGENDA -->
+    <div id="rb">
+      <div class="rb-head">Legenda e informações</div>
+      <div class="rb-body">
+      <div id="info-panel" class="panel-section">
+        <p class="section-label">Informações da zona</p>
+        <div id="info-content"></div>
+      </div>
+      <div class="panel-section">
+        <p class="section-label">Legenda</p>
+        <div id="pd-legend">
+                <div class="lg" id="lg-macro">
+                  <div class="lg-title">Macrozoneamento (Plano Diretor)</div>
+                  <div class="li" data-layer="macro" data-val="Macrozona Rural (MZR)"><div class="sw" style="background:rgb(92,183,80)"></div><span>Macrozona Rural (MZR)</span></div>
+                  <div class="li" data-layer="macro" data-val="Macrozona Urbana (MZU)"><div class="sw" style="background:rgb(251,132,29)"></div><span>Macrozona Urbana (MZU)</span></div>
+                </div>
+        <div class="lg" id="lg-zona">
+                  <div class="lg-title">Zoneamento (Plano Diretor)</div>
+                  <div class="li" data-layer="zona" data-val="ZDU 1"><div class="sw" style="background:rgb(186,186,186)"></div><span>ZDU 1 — Densificação Urbana 1</span></div>
+                  <div class="li" data-layer="zona" data-val="ZDU 2"><div class="sw" style="background:rgb(255,127,0)"></div><span>ZDU 2 — Densificação Urbana 2</span></div>
+                  <div class="li" data-layer="zona" data-val="ZDU 3"><div class="sw" style="background:rgb(255,255,0)"></div><span>ZDU 3 — Densificação Urbana 3</span></div>
+                  <div class="li" data-layer="zona" data-val="ZDE 1"><div class="sw" style="background:rgb(112,0,149)"></div><span>ZDE 1 — Desenv. Econômico 1</span></div>
+                  <div class="li" data-layer="zona" data-val="ZDE 2"><div class="sw" style="background:rgb(243,204,255)"></div><span>ZDE 2 — Desenv. Econômico 2</span></div>
+                  <div class="li" data-layer="zona" data-val="ZEU"><div class="sw" style="background:rgb(255,0,255)"></div><span>ZEU — Expansão Urbana</span></div>
+                  <div class="li" data-layer="zona" data-val="MZR"><div class="sw" style="background:rgb(145,207,156)"></div><span>MZR — Macrozona Rural</span></div>
+                </div>
+        <div class="lg" id="lg-cod">
+                  <div class="lg-title">Código de Urbanismo</div>
+                  <div class="li" data-layer="cod" data-val="Z"><div class="sw" style="background:rgb(186,186,186)"></div><span>Z</span></div>
+                  <div class="li" data-layer="cod" data-val="ZC"><div class="sw" style="background:rgb(0,255,0)"></div><span>ZC</span></div>
+                  <div class="li" data-layer="cod" data-val="ZE"><div class="sw" style="background:rgb(255,191,0)"></div><span>ZE</span></div>
+                  <div class="li" data-layer="cod" data-val="ZE4"><div class="sw" style="background:rgb(255,126,0)"></div><span>ZE4</span></div>
+                  <div class="li" data-layer="cod" data-val="ZE5"><div class="sw" style="background:rgb(230,255,154)"></div><span>ZE5</span></div>
+                  <div class="li" data-layer="cod" data-val="ZE6"><div class="sw" style="background:rgb(255,255,0)"></div><span>ZE6</span></div>
+                  <div class="li" data-layer="cod" data-val="ZEIS"><div class="sw" style="background:rgb(221,110,0)"></div><span>ZEIS</span></div>
+                  <div class="li" data-layer="cod" data-val="ZI"><div class="sw" style="background:rgb(255,0,255)"></div><span>ZI</span></div>
+                  <div class="li" data-layer="cod" data-val="ZM"><div class="sw" style="background:rgb(0,0,255)"></div><span>ZM</span></div>
+                  <div class="li" data-layer="cod" data-val="ZR"><div class="sw" style="background:rgb(255,0,0)"></div><span>ZR</span></div>
+                </div>
+        <div class="lg" id="lg-macrot">
+          <div class="lg-title">Macrozoneamento (Tomo)</div>
+          <div class="li" data-layer="macrot" data-val="MUR"><div class="sw" style="background:rgba(231,153,39,1.0);border-color:rgb(231,153,39)"></div><span>MUR — Macrozona Urbana <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="macrot" data-val="MEX 1"><div class="sw" style="background:rgba(255,255,66,1.0);border-color:rgb(255,255,66)"></div><span>MEX 1 — Expansão Urbana 1 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="macrot" data-val="MEX 2"><div class="sw" style="background:rgba(255,61,51,1.0);border-color:rgb(255,61,51)"></div><span>MEX 2 — Expansão Urbana 2 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="macrot" data-val="MADE"><div class="sw" style="background:rgba(223,114,255,1.0);border-color:rgb(223,114,255)"></div><span>MADE — Desenvolvimento Econômico <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="macrot" data-val="MAPA 1"><div class="sw" style="background:rgba(0,171,0,1.0);border-color:rgb(0,171,0)"></div><span>MAPA 1 — Proteção Ambiental 1 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="macrot" data-val="MAPA 2"><div class="sw" style="background:rgba(0,171,0,1.0);border-color:rgb(0,171,0)"></div><span>MAPA 2 — Proteção Ambiental 2 <span class="cnt">1</span></span></div>
+        </div>
+        <div class="lg" id="lg-zonat">
+          <div class="lg-title">Zoneamento (Tomo)</div>
+          <div class="li" data-layer="zonat" data-val="ZIA"><div class="sw" style="background:rgba(12,184,0,1.0);border-color:rgb(12,184,0)"></div><span>ZIA <span class="cnt">39</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z2R1"><div class="sw" style="background:rgba(255,196,194,1.0);border-color:rgb(255,196,194)"></div><span>Z2R1 <span class="cnt">12</span></span></div>
+          <div class="li" data-layer="zonat" data-val="NURI1"><div class="sw" style="background:rgba(255,170,0,1.0);border-color:rgb(255,170,0)"></div><span>NURI1 · NURI2 · NURI3 · NURI4 +4 <span class="cnt">11</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z20M2"><div class="sw" style="background:rgba(0,255,249,1.0);border-color:rgb(0,255,249)"></div><span>Z20M2 <span class="cnt">11</span></span></div>
+          <div class="li" data-layer="zonat" data-val="ZM"><div class="sw" style="background:rgba(255,255,114,1.0);border-color:rgb(255,255,114)"></div><span>ZM <span class="cnt">11</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z1M2"><div class="sw" style="background:rgba(158,168,255,1.0);border-color:rgb(158,168,255)"></div><span>Z1M2 · Z1M3 · Z2M3 · Z3M4 <span class="cnt">9</span></span></div>
+          <div class="li" data-layer="zonat" data-val="ZE8"><div class="sw" style="background:rgba(255,235,175,1.0);border-color:rgb(255,235,175)"></div><span>ZE8 <span class="cnt">9</span></span></div>
+          <div class="li" data-layer="zonat" data-val="ZISA1"><div class="sw" style="background:rgba(0,237,0,1.0);border-color:rgb(0,237,0)"></div><span>ZISA1 · ZISA2 · ZISA3 <span class="cnt">9</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z18M2"><div class="sw" style="background:rgba(0,65,114,1.0);border-color:rgb(0,65,114)"></div><span>Z18M2 · Z18M3 <span class="cnt">7</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z1R3"><div class="sw" style="background:rgba(255,0,0,1.0);border-color:rgb(255,0,0)"></div><span>Z1R3 · ZRO1 · ZRO2 <span class="cnt">5</span></span></div>
+          <div class="li" data-layer="zonat" data-val="ZCO"><div class="sw" style="background:rgba(173,207,168,1.0);border-color:rgb(173,207,168)"></div><span>ZCO <span class="cnt">5</span></span></div>
+          <div class="li" data-layer="zonat" data-val="ZDE2"><div class="sw" style="background:rgba(232,190,255,1.0);border-color:rgb(232,190,255)"></div><span>ZDE2 <span class="cnt">4</span></span></div>
+          <div class="li" data-layer="zonat" data-val="ZIET"><div class="sw" style="background:rgba(209,255,114,1.0);border-color:rgb(209,255,114)"></div><span>ZIET <span class="cnt">4</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z21M4"><div class="sw" style="background:rgba(138,105,207,1.0);border-color:rgb(138,105,207)"></div><span>Z21M4 <span class="cnt">3</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z19M9"><div class="sw" style="background:rgba(33,191,173,1.0);border-color:rgb(33,191,173)"></div><span>Z19M4 · Z19M9 <span class="cnt">2</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z1R1"><div class="sw" style="background:rgba(169,0,230,1.0);border-color:rgb(169,0,230)"></div><span>Z1R1 <span class="cnt">2</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z2R2"><div class="sw" style="background:rgba(255,189,194,1.0);border-color:rgb(255,189,194)"></div><span>Z2R2 <span class="cnt">2</span></span></div>
+          <div class="li" data-layer="zonat" data-val="ZIT"><div class="sw" style="background:rgba(217,212,0,1.0);border-color:rgb(217,212,0)"></div><span>ZIT <span class="cnt">2</span></span></div>
+          <div class="li" data-layer="zonat" data-val="ZOL"><div class="sw" style="background:rgba(114,38,0,1.0);border-color:rgb(114,38,0)"></div><span>ZOL · ZOR <span class="cnt">2</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z11R3"><div class="sw" style="background:rgba(255,127,127,1.0);border-color:rgb(255,127,127)"></div><span>Z11R3 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z15M5"><div class="sw" style="background:rgba(230,76,0,1.0);border-color:rgb(230,76,0)"></div><span>Z15M5 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z16C4"><div class="sw" style="background:rgba(181,255,173,1.0);border-color:rgb(181,255,173)"></div><span>Z16C4 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z17M2"><div class="sw" style="background:rgba(168,97,0,1.0);border-color:rgb(168,97,0)"></div><span>Z17M2 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z22M4"><div class="sw" style="background:rgba(212,150,112,1.0);border-color:rgb(212,150,112)"></div><span>Z22M4 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z23M4"><div class="sw" style="background:rgba(0,112,255,1.0);border-color:rgb(0,112,255)"></div><span>Z23M4 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z24M9"><div class="sw" style="background:rgba(255,140,0,1.0);border-color:rgb(255,140,0)"></div><span>Z24M9 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z3R1"><div class="sw" style="background:rgba(199,0,0,1.0);border-color:rgb(199,0,0)"></div><span>Z3R1 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="zonat" data-val="ZDE1"><div class="sw" style="background:rgba(223,114,255,1.0);border-color:rgb(223,114,255)"></div><span>ZDE1 <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="zonat" data-val="Z8M4"><div class="sw" style="background:rgba(113,69,233,1.0);border-color:rgb(113,69,233)"></div><span>Z8M4 <span class="cnt">1</span></span></div>
+        </div>
+        <div class="lg" id="lg-lotes">
+          <div class="lg-title">Zoneamento de Loteamentos</div>
+          <div class="li" data-layer="lotes" data-val="ZR"><div class="sw" style="background:rgba(255,0,0,0.349);border-color:rgb(255,0,0)"></div><span>ZR — Residencial <span class="cnt">475</span></span></div>
+          <div class="li" data-layer="lotes" data-val="ZE"><div class="sw" style="background:rgba(255,191,0,0.349);border-color:rgb(255,191,0)"></div><span>ZE — Especial <span class="cnt">305</span></span></div>
+          <div class="li" data-layer="lotes" data-val="ZM"><div class="sw" style="background:rgba(0,0,255,0.349);border-color:rgb(0,0,255)"></div><span>ZM — Mista <span class="cnt">221</span></span></div>
+          <div class="li" data-layer="lotes" data-val="ZC"><div class="sw" style="background:rgba(0,255,0,0.349);border-color:rgb(0,255,0)"></div><span>ZC — Central <span class="cnt">12</span></span></div>
+          <div class="li" data-layer="lotes" data-val="ZE6"><div class="sw" style="background:rgba(255,255,0,0.749);border-color:rgb(255,255,0)"></div><span>ZE6 — Especial 6 <span class="cnt">8</span></span></div>
+          <div class="li" data-layer="lotes" data-val="ZR1"><div class="sw" style="background:rgba(255,0,0,0.349);border-color:rgb(255,0,0)"></div><span>Bella Vita — ZR1 <span class="cnt">21</span></span></div>
+          <div class="li" data-layer="lotes" data-val="ZR3 + ZC4 + ZI2"><div class="sw" style="background:rgba(0,0,255,0.349);border-color:rgb(0,0,255)"></div><span>Bella Vita — ZR3 + ZC4 + ZI2 <span class="cnt">10</span></span></div>
+          <div class="li" data-layer="lotes" data-val="ZR1 + ZC2 + ZI3"><div class="sw" style="background:rgba(0,0,255,0.349);border-color:rgb(0,0,255)"></div><span>Bella Vita — ZR1 + ZC2 + ZI3 <span class="cnt">7</span></span></div>
+          <div class="li" data-layer="lotes" data-val="ZR2"><div class="sw" style="background:rgba(255,0,0,0.349);border-color:rgb(255,0,0)"></div><span>Bella Vita — ZR2 <span class="cnt">3</span></span></div>
+          <div class="li" data-layer="lotes" data-val="ZR1 + ZC3 + ZI4"><div class="sw" style="background:rgba(0,0,255,0.349);border-color:rgb(0,0,255)"></div><span>Bella Vita — ZR1 + ZC3 + ZI4 <span class="cnt">2</span></span></div>
+        </div>
+        <div class="lg" id="lg-aero">
+          <div class="lg-title">Curvas de Ruído — Aeroporto</div>
+          <div class="li" data-layer="aero" data-val="Curva 80 dB"><div class="sw" style="background:rgba(255,83,95,1.0);border-color:rgb(255,83,95)"></div><span>Curva 80 dB <span class="cnt">16</span></span></div>
+          <div class="li" data-layer="aero" data-val="Curva 75 dB"><div class="sw" style="background:rgba(224,222,38,1.0);border-color:rgb(224,222,38)"></div><span>Curva 75 dB <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="aero" data-val="Curva 70 dB"><div class="sw" style="background:rgba(33,199,60,1.0);border-color:rgb(33,199,60)"></div><span>Curva 70 dB <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="aero" data-val="Curva 65 dB"><div class="sw" style="background:rgba(17,216,208,1.0);border-color:rgb(17,216,208)"></div><span>Curva 65 dB <span class="cnt">1</span></span></div>
+          <div class="li" data-layer="aero" data-val="Curva abaixo de 65 dB"><div class="sw" style="background:rgba(230,255,154,0.502);border-color:rgb(230,255,154)"></div><span>Curva abaixo de 65 dB <span class="cnt">1</span></span></div>
+        </div>
+        <div class="lg" id="lg-zerfu">
+          <div class="lg-title">ZERFUs</div>
+          <div class="li" data-layer="zerfu" data-val="ZERFU"><div class="sw" style="background:rgba(147,49,203,0.0);border:2px solid rgb(147,49,203)"></div><span>Núcleo de regularização <span class="cnt">11</span></span></div>
+        </div>
+        <div class="lg" id="lg-zepec">
+                  <div class="lg-title">ZEPEC (Plano Diretor)</div>
+                  <div class="li" data-layer="zepec" data-val="ZEPEC 1 - Região Central"><div class="sw" style="background:rgb(193,110,221)"></div><span>ZEPEC 1 — Região Central</span></div>
+                  <div class="li" data-layer="zepec" data-val="ZEPEC 2 - Guaripocaba"><div class="sw" style="background:rgb(255,191,0)"></div><span>ZEPEC 2 — Guaripocaba</span></div>
+                  <div class="li" data-layer="zepec" data-val="ZEPEC 3 - Região da Serrinha"><div class="sw" style="background:rgb(255,127,127)"></div><span>ZEPEC 3 — Região da Serrinha</span></div>
+                </div>
+        <div class="lg" id="lg-zepam">
+                  <div class="lg-title">ZEPAM (Plano Diretor)</div>
+                  <div class="li"><div class="sw" style="background:rgb(0,255,0)"></div><span>Zona Esp. Proteção Ambiental</span></div>
+                </div>
+        <div class="lg" id="lg-eixos">
+                  <div class="lg-title">Hierarquia Viária (SMP 2025)</div>
+                  <div class="li"><div class="sw" style="background:#1a1a1a;height:4px;border-radius:2px"></div><span>Arterial e Regional <span style="color:var(--text-muted)">33</span></span></div>
+                  <div class="li"><div class="sw" style="background:#2d2d2d;height:4px;border-radius:2px"></div><span>Arterial Secundária <span style="color:var(--text-muted)">15</span></span></div>
+                  <div class="li"><div class="sw" style="background:#404040;height:4px;border-radius:2px"></div><span>Coletora <span style="color:var(--text-muted)">254</span></span></div>
+                  <div class="li"><div class="sw" style="background:#666666;height:4px;border-radius:2px"></div><span>Local <span style="color:var(--text-muted)">62</span></span></div>
+                  <div class="li"><div class="sw" style="background:#8ba3b8;height:4px;border-radius:2px"></div><span>Sem classificação <span style="color:var(--text-muted)">3.460</span></span></div>
+                  <div class="li" style="margin-top:6px"><span style="font-size:10px;color:var(--text-muted);line-height:1.5">3.824 eixos · decretos PA-16330/25 e D-4691/25</span></div>
+                </div>
+        <div class="lg" id="lg-viariast">
+          <div class="lg-title">Diretrizes Viárias (Tomo)</div>
+          <div class="li" data-layer="viariast" data-val="Via arterial (VA)"><div class="sw" style="background:rgb(255,0,0);height:4px;border-radius:2px"></div><span>Via arterial (VA) <span class="cnt">122</span></span></div>
+          <div class="li" data-layer="viariast" data-val="Via coletora de 2ª categoria (VC2)"><div class="sw" style="background:rgb(0,165,255);height:4px;border-radius:2px"></div><span>Via coletora de 2ª categoria (VC2) <span class="cnt">116</span></span></div>
+          <div class="li" data-layer="viariast" data-val="Via coletora de 1ª categoria (VC1)"><div class="sw" style="background:rgb(0,77,168);height:4px;border-radius:2px"></div><span>Via coletora de 1ª categoria (VC1) <span class="cnt">64</span></span></div>
+          <div class="li" data-layer="viariast" data-val="Parque linear - PE 1"><div class="sw" style="background:rgb(56,168,0);height:4px;border-radius:2px"></div><span>Parque linear - PE 1 <span class="cnt">12</span></span></div>
+        </div>
+        <div class="lg" id="lg-viarias">
+                  <div class="lg-title">Diretrizes Viárias (Plano Diretor)</div>
+                  <div class="li" data-layer="viarias" data-val="Via Arterial"><div class="swl" style="background:rgb(0,255,255)"></div><span>Via Arterial</span></div>
+                  <div class="li" data-layer="viarias" data-val="Via Arterial Secundária"><div class="swl" style="background:rgb(138,184,0)"></div><span>Via Arterial Secundária</span></div>
+                  <div class="li" data-layer="viarias" data-val="Via Regional"><div class="swl" style="background:rgb(221,0,221)"></div><span>Via Regional</span></div>
+                  <div class="li" data-layer="viarias" data-val="Via Rural Coletora"><div class="swl" style="background:rgb(255,191,0)"></div><span>Via Rural Coletora</span></div>
+                </div>
+                <div id="lg-empty" style="padding:20px 0;text-align:center;font-size:11px;color:var(--text-muted)">
+                  Nenhuma camada ativa.<br>Ative uma camada acima para ver a legenda.
+                </div>
+              </div>
+      </div>
+      </div>
+    </div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
-        <script src="js/L.Control.Layers.Tree.min.js"></script>
         <script src="js/L.Control.Locate.min.js"></script>
-        <script src="js/leaflet.rotatedMarker.js"></script>
-        <script src="js/leaflet.pattern.js"></script>
         <script src="js/leaflet-hash.js"></script>
         <script src="js/Autolinker.min.js"></script>
         <script src="js/rbush.min.js"></script>
@@ -401,9 +568,15 @@
         <script src="js/labels.js"></script>
         <script src="js/leaflet.photon.js"></script>
         <script src="js/leaflet-measure.js"></script>
-        <script src="data/BACIASHIDROGRAFICAS_2.js"></script>
-        <script src="data/COD_URB_5.js"></script>
+                <script src="data/COD_URB_5.js"></script>
         <script src="data/DIRETRIZESVIARIAS_1.js"></script>
+        <script src="data/EIXO_LOGRADOURO_8.js"></script>
+        <script src="data/MACROZONEAMENTO_TOMO_9.js"></script>
+        <script src="data/ZONEAMENTO_TOMO_8.js"></script>
+        <script src="data/LOTEAMENTOS_11.js"></script>
+        <script src="data/ZERFUS_13.js"></script>
+        <script src="data/AEROPORTO_14.js"></script>
+        <script src="data/DIRETRIZESVIARIAS_TOMO_10.js"></script>
         <script src="data/ZEPAM_3.js"></script>
         <script src="data/ZEPEC_4.js"></script>
         <script src="data/ZONEAMENTO_6.js"></script>
@@ -432,7 +605,7 @@
         }
         var map = L.map('map', {
             zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[-22.98380518613056,-46.54982083946273],[-22.961347906605393,-46.50234763204534]]);
+        }).fitBounds([[-23.0530,-46.7220],[-22.8210,-46.4050]]);
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
@@ -620,7 +793,7 @@
             }
         }
         map.createPane('pane_DIRETRIZESVIARIAS_1');
-        map.getPane('pane_DIRETRIZESVIARIAS_1').style.zIndex = 401;
+        map.getPane('pane_DIRETRIZESVIARIAS_1').style.zIndex = 413;
         map.getPane('pane_DIRETRIZESVIARIAS_1').style['mix-blend-mode'] = 'normal';
         var layer_DIRETRIZESVIARIAS_1 = new L.geoJson(json_DIRETRIZESVIARIAS_1, {
             attribution: '',
@@ -632,75 +805,10 @@
             style: style_DIRETRIZESVIARIAS_1_0,
         });
         bounds_group.addLayer(layer_DIRETRIZESVIARIAS_1);
-        function pop_BACIASHIDROGRAFICAS_2(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (window._pdPopupLocked && e.target === window._pdLockedLayer) return;
-                    if (window._pdIsFiltered && window._pdIsFiltered(e.target)) return;
-                    var _op = window._pdGetOpacity ? window._pdGetOpacity(e.target) : 0.65;
-                    for (var i in e.target._eventParents) {
-                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
-                            e.target._eventParents[i].resetStyle(e.target);
-                            // After resetStyle, re-apply correct state
-                            if (e.target._pdFiltered) {
-                                // Was filtered — re-hide it
-                                e.target.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
-                                if (e.target._path) {
-                                    e.target._path.style.pointerEvents = 'none';
-                                    e.target._path.style.fillOpacity = '0';
-                                    e.target._path.style.strokeOpacity = '0';
-                                }
-                            } else {
-                                e.target.setStyle({ fillOpacity: _op });
-                            }
-                        }
-                    }
-                    // Never close popup on mouseout
-                },
-                mouseover: highlightFeature,
-            });
-            var popupContent = '<table>\
-                    <tr>\
-                        <th scope="row">NOME</th>\
-                        <td class="visible-with-data" id="NOME">' + (feature.properties['NOME'] !== null ? autolinker.link(String(feature.properties['NOME']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                </table>';
-            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
-			layer.on('popupopen', function(e) {
-				addClassToPopupIfMedia(content, e.popup);
-			});
-			layer.bindPopup(content, { maxHeight: 400 });
-        }
+        
 
-        function style_BACIASHIDROGRAFICAS_2_0() {
-            return {
-                pane: 'pane_BACIASHIDROGRAFICAS_2',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(255,158,23,1.0)',
-                interactive: true,
-            }
-        }
-        map.createPane('pane_BACIASHIDROGRAFICAS_2');
-        map.getPane('pane_BACIASHIDROGRAFICAS_2').style.zIndex = 402;
-        map.getPane('pane_BACIASHIDROGRAFICAS_2').style['mix-blend-mode'] = 'normal';
-        var layer_BACIASHIDROGRAFICAS_2 = new L.geoJson(json_BACIASHIDROGRAFICAS_2, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_BACIASHIDROGRAFICAS_2',
-            layerName: 'layer_BACIASHIDROGRAFICAS_2',
-            pane: 'pane_BACIASHIDROGRAFICAS_2',
-            onEachFeature: pop_BACIASHIDROGRAFICAS_2,
-            style: style_BACIASHIDROGRAFICAS_2_0,
-        });
-        bounds_group.addLayer(layer_BACIASHIDROGRAFICAS_2);
-        function pop_ZEPAM_3(feature, layer) {
+        
+                function pop_ZEPAM_3(feature, layer) {
             layer.on({
                 mouseout: function(e) {
                     if (window._pdPopupLocked && e.target === window._pdLockedLayer) return;
@@ -760,7 +868,7 @@
             }
         }
         map.createPane('pane_ZEPAM_3');
-        map.getPane('pane_ZEPAM_3').style.zIndex = 403;
+        map.getPane('pane_ZEPAM_3').style.zIndex = 410;
         map.getPane('pane_ZEPAM_3').style['mix-blend-mode'] = 'normal';
         var layer_ZEPAM_3 = new L.geoJson(json_ZEPAM_3, {
             attribution: '',
@@ -866,7 +974,7 @@
             }
         }
         map.createPane('pane_ZEPEC_4');
-        map.getPane('pane_ZEPEC_4').style.zIndex = 404;
+        map.getPane('pane_ZEPEC_4').style.zIndex = 409;
         map.getPane('pane_ZEPEC_4').style['mix-blend-mode'] = 'normal';
         var layer_ZEPEC_4 = new L.geoJson(json_ZEPEC_4, {
             attribution: '',
@@ -957,14 +1065,6 @@
                     <tr>\
                         <th scope="row">PERMISSÕES DE USO</th>\
                         <td class="visible-with-data" id="PERM USO_2">' + (feature.properties['PERM USO_2'] !== null ? autolinker.link(String(feature.properties['PERM USO_2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">ANEXO CLASSIFICAÇÃO DAS ATIVIDADES INDUSTRIAIS</th>\
-                        <td class="visible-with-data" id="ANX INDUST">' + (feature.properties['ANX INDUST'] !== null ? autolinker.link(String(feature.properties['ANX INDUST']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">ANEXO CLASSIFICAÇÃO DAS PERMISSÕES DE USO</th>\
-                        <td class="visible-with-data" id="ANX PERM">' + (feature.properties['ANX PERM'] !== null ? autolinker.link(String(feature.properties['ANX PERM']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
                         <th scope="row">ATENÇÃO</th>\
@@ -1133,7 +1233,7 @@
             }
         }
         map.createPane('pane_COD_URB_5');
-        map.getPane('pane_COD_URB_5').style.zIndex = 405;
+        map.getPane('pane_COD_URB_5').style.zIndex = 403;
         map.getPane('pane_COD_URB_5').style['mix-blend-mode'] = 'normal';
         var layer_COD_URB_5 = new L.geoJson(json_COD_URB_5, {
             attribution: '',
@@ -1269,10 +1369,6 @@
                         <th scope="row">OBSERVAÇÕES</th>\
                         <td class="visible-with-data" id="OBS">' + (feature.properties['OBS'] !== null ? autolinker.link(String(feature.properties['OBS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
                     </tr>\
-                    <tr>\
-                        <th scope="row">ANEXO CLASSIFICAÇÃO DAS ATIVIDADES INDUSTRIAIS</th>\
-                        <td class="visible-with-data" id="ANX ATV IN">' + (feature.properties['ANX ATV IN'] !== null ? autolinker.link(String(feature.properties['ANX ATV IN']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
                 </table>';
             var content = removeEmptyRowsFromPopupContent(popupContent, feature);
 			layer.on('popupopen', function(e) {
@@ -1396,7 +1492,7 @@
             }
         }
         map.createPane('pane_ZONEAMENTO_6');
-        map.getPane('pane_ZONEAMENTO_6').style.zIndex = 406;
+        map.getPane('pane_ZONEAMENTO_6').style.zIndex = 402;
         map.getPane('pane_ZONEAMENTO_6').style['mix-blend-mode'] = 'normal';
         var layer_ZONEAMENTO_6 = new L.geoJson(json_ZONEAMENTO_6, {
             attribution: '',
@@ -1487,8 +1583,136 @@
                     break;
             }
         }
+        // ── Simbologia original, herdada do projeto QGIS PD_SITE ──────────────
+var PD_PAL = {
+  macrot: {campo:"MACROZONEAMENTO", cats:{"MADE":{f:'rgba(223,114,255,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"MAPA 1":{f:'rgba(0,171,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"MEX 1":{f:'rgba(255,255,66,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"MEX 2":{f:'rgba(255,61,51,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"MUR":{f:'rgba(231,153,39,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"MAPA 2":{f:'rgba(0,171,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26}}},
+  zonat: {campo:"ZONA", cats:{"NULL":{f:'rgba(238,113,121,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"NURI1":{f:'rgba(255,170,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"NURI2":{f:'rgba(255,170,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"NURI3":{f:'rgba(255,170,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"NURI4":{f:'rgba(255,170,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"NURI5":{f:'rgba(255,170,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"NURI6":{f:'rgba(255,170,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"NURI7":{f:'rgba(255,170,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"NURI8":{f:'rgba(255,170,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z11R3":{f:'rgba(255,127,127,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z15M5":{f:'rgba(230,76,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z16C4":{f:'rgba(181,255,173,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z17M2":{f:'rgba(168,97,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z18M2":{f:'rgba(0,65,114,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z18M3":{f:'rgba(0,65,114,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z19M9":{f:'rgba(33,191,173,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z1M2":{f:'rgba(158,168,255,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z1M3":{f:'rgba(158,168,255,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z1R1":{f:'rgba(169,0,230,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z1R3":{f:'rgba(255,0,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z20M2":{f:'rgba(0,255,249,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z21M4":{f:'rgba(138,105,207,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z22M4":{f:'rgba(212,150,112,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z23M4":{f:'rgba(0,112,255,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z24M9":{f:'rgba(255,140,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z2M3":{f:'rgba(158,168,255,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z2R1":{f:'rgba(255,196,194,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z2R2":{f:'rgba(255,189,194,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z3R1":{f:'rgba(199,0,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZCO":{f:'rgba(173,207,168,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZDE1":{f:'rgba(223,114,255,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZDE2":{f:'rgba(232,190,255,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZE8":{f:'rgba(255,235,175,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZIA":{f:'rgba(12,184,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZIET":{f:'rgba(209,255,114,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZISA1":{f:'rgba(0,237,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZISA2":{f:'rgba(0,237,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZISA3":{f:'rgba(0,237,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZIT":{f:'rgba(217,212,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZM":{f:'rgba(255,255,114,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZOL":{f:'rgba(114,38,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZRO1":{f:'rgba(255,0,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z19M4":{f:'rgba(33,191,173,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z3M4":{f:'rgba(158,168,255,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"Z8M4":{f:'rgba(113,69,233,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZOR":{f:'rgba(114,38,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26},"ZRO2":{f:'rgba(255,0,0,1.0)',s:'rgba(35,35,35,1.0)',w:0.26}}},
+  viariast: {campo:"HIERARQUIA", cats:{"Via arterial (VA)":{f:'rgba(255,0,0,1.0)',s:'rgba(35,35,35,1)',w:0.66},"Via coletora de 2\u00aa categoria (VC2)":{f:'rgba(0,165,255,1.0)',s:'rgba(35,35,35,1)',w:0.66},"Via coletora de 1\u00aa categoria (VC1)":{f:'rgba(0,77,168,1.0)',s:'rgba(35,35,35,1)',w:0.66},"Parque linear - PE 1":{f:'rgba(56,168,0,1.0)',s:'rgba(35,35,35,1)',w:1.86}}},
+  aero: {campo:"Identifica\u00e7\u00e3o_Curva", cats:{"Curva 80 dB":{f:'rgba(255,83,95,1.0)',s:'rgba(255,83,95,1.0)',w:0.5},"Curva 75 dB":{f:'rgba(224,222,38,1.0)',s:'rgba(224,222,38,1.0)',w:0.5},"Curva 70 dB":{f:'rgba(33,199,60,1.0)',s:'rgba(33,199,60,1.0)',w:0.5},"Curva 65 dB":{f:'rgba(17,216,208,1.0)',s:'rgba(17,216,208,1.0)',w:0.5},"Curva abaixo de 65 dB":{f:'rgba(230,255,154,0.502)',s:'rgba(230,255,154,0.502)',w:0.26}}},
+  lotes: {campo:"para legenda", cats:{"ZC":{f:'rgba(0,255,0,0.349)',s:'rgba(0,255,0,1.0)',w:0.66},"ZE":{f:'rgba(255,191,0,0.349)',s:'rgba(255,191,0,1.0)',w:0.66},"ZE6":{f:'rgba(255,255,0,0.749)',s:'rgba(255,255,0,1.0)',w:0.26},"ZM":{f:'rgba(0,0,255,0.349)',s:'rgba(0,0,255,1.0)',w:0.66},"ZR":{f:'rgba(255,0,0,0.349)',s:'rgba(255,0,0,1.0)',w:0.66}}, bv:{"ZR1":{f:'rgba(255,0,0,0.349)',s:'rgba(255,0,0,1.0)',w:0.66},"ZR2":{f:'rgba(255,0,0,0.349)',s:'rgba(255,0,0,1.0)',w:0.66},"ZR1 + ZC2 + ZI3":{f:'rgba(0,0,255,0.349)',s:'rgba(0,0,255,1.0)',w:0.66},"ZR1 + ZC3 + ZI4":{f:'rgba(0,0,255,0.349)',s:'rgba(0,0,255,1.0)',w:0.66},"ZR3 + ZC4 + ZI2":{f:'rgba(0,0,255,0.349)',s:'rgba(0,0,255,1.0)',w:0.66},"ZE8":{f:'rgba(255,191,0,0.349)',s:'rgba(255,191,0,1.0)',w:0.66}}},
+};
+var PD_ZERFU = {f:'rgba(147,49,203,0.0)', s:'rgba(147,49,203,1.0)', w:0.66};
+
+// Resolve a categoria de uma feicao. Nos loteamentos, as feicoes do Bella Vita
+// trazem o codigo de zona apos ":" e usam a paleta propria daquele loteamento.
+function _pdCat(key, props) {
+    var p = PD_PAL[key]; if (!p) return null;
+    var v = props[p.campo];
+    if (v === null || v === undefined) return null;
+    v = String(v);
+    if (p.cats[v]) return p.cats[v];
+    if (p.bv) { var suf = v.split(':').pop().trim(); if (p.bv[suf]) return p.bv[suf]; }
+    return null;
+}
+function _pdEstiloCat(key, pane, feature, fb) {
+    var c = _pdCat(key, feature.properties) || fb;
+    return {pane: pane, opacity: 1, color: c.s, dashArray: '', lineCap: 'butt',
+            lineJoin: 'miter', weight: c.w || 0.8, fill: true, fillOpacity: 1,
+            fillColor: c.f, interactive: true};
+}
+function _pdEstiloLinhaCat(key, pane, feature, fb) {
+    var c = _pdCat(key, feature.properties) || fb;
+    return {pane: pane, opacity: 1, color: c.f, weight: (c.w || 0.66) * 2.2,
+            lineCap: 'round', lineJoin: 'round', fillOpacity: 0, interactive: true};
+}
+
+        function style_MACROZONEAMENTO_TOMO_9_0(feature){return _pdEstiloCat('macrot','pane_MACROZONEAMENTO_TOMO_9',feature,{f:'rgba(200,200,200,1)',s:'rgba(35,35,35,1)',w:0.26});}
+        function pop_MACROZONEAMENTO_TOMO_9(feature, layer) {}
+        map.createPane('pane_MACROZONEAMENTO_TOMO_9');
+        map.getPane('pane_MACROZONEAMENTO_TOMO_9').style.zIndex = 404;
+        map.getPane('pane_MACROZONEAMENTO_TOMO_9').style['mix-blend-mode'] = 'normal';
+        var layer_MACROZONEAMENTO_TOMO_9 = new L.geoJson(json_MACROZONEAMENTO_TOMO_9, {
+            attribution: '', interactive: true,
+            dataVar: 'json_MACROZONEAMENTO_TOMO_9', layerName: 'layer_MACROZONEAMENTO_TOMO_9',
+            pane: 'pane_MACROZONEAMENTO_TOMO_9', onEachFeature: pop_MACROZONEAMENTO_TOMO_9, style: style_MACROZONEAMENTO_TOMO_9_0,
+        });
+        bounds_group.addLayer(layer_MACROZONEAMENTO_TOMO_9);
+        function style_ZONEAMENTO_TOMO_8_0(feature){return _pdEstiloCat('zonat','pane_ZONEAMENTO_TOMO_8',feature,{f:'rgba(200,200,200,1)',s:'rgba(35,35,35,1)',w:0.26});}
+        function pop_ZONEAMENTO_TOMO_8(feature, layer) {}
+        map.createPane('pane_ZONEAMENTO_TOMO_8');
+        map.getPane('pane_ZONEAMENTO_TOMO_8').style.zIndex = 405;
+        map.getPane('pane_ZONEAMENTO_TOMO_8').style['mix-blend-mode'] = 'normal';
+        var layer_ZONEAMENTO_TOMO_8 = new L.geoJson(json_ZONEAMENTO_TOMO_8, {
+            attribution: '', interactive: true,
+            dataVar: 'json_ZONEAMENTO_TOMO_8', layerName: 'layer_ZONEAMENTO_TOMO_8',
+            pane: 'pane_ZONEAMENTO_TOMO_8', onEachFeature: pop_ZONEAMENTO_TOMO_8, style: style_ZONEAMENTO_TOMO_8_0,
+        });
+        bounds_group.addLayer(layer_ZONEAMENTO_TOMO_8);
+        function style_LOTEAMENTOS_11_0(feature){return _pdEstiloCat('lotes','pane_LOTEAMENTOS_11',feature,{f:'rgba(200,200,200,0.35)',s:'rgba(120,120,120,1)',w:0.66});}
+        function pop_LOTEAMENTOS_11(feature, layer) {}
+        map.createPane('pane_LOTEAMENTOS_11');
+        map.getPane('pane_LOTEAMENTOS_11').style.zIndex = 406;
+        map.getPane('pane_LOTEAMENTOS_11').style['mix-blend-mode'] = 'normal';
+        var layer_LOTEAMENTOS_11 = new L.geoJson(json_LOTEAMENTOS_11, {
+            attribution: '', interactive: true,
+            dataVar: 'json_LOTEAMENTOS_11', layerName: 'layer_LOTEAMENTOS_11',
+            pane: 'pane_LOTEAMENTOS_11', onEachFeature: pop_LOTEAMENTOS_11, style: style_LOTEAMENTOS_11_0,
+        });
+        bounds_group.addLayer(layer_LOTEAMENTOS_11);
+        function style_ZERFUS_13_0(){return {pane:'pane_ZERFUS_13',opacity:1,color:PD_ZERFU.s,dashArray:'',lineCap:'butt',lineJoin:'miter',weight:PD_ZERFU.w*2.4,fill:true,fillOpacity:1,fillColor:PD_ZERFU.f,interactive:true};}
+        function pop_ZERFUS_13(feature, layer) {}
+        map.createPane('pane_ZERFUS_13');
+        map.getPane('pane_ZERFUS_13').style.zIndex = 408;
+        map.getPane('pane_ZERFUS_13').style['mix-blend-mode'] = 'normal';
+        var layer_ZERFUS_13 = new L.geoJson(json_ZERFUS_13, {
+            attribution: '', interactive: true,
+            dataVar: 'json_ZERFUS_13', layerName: 'layer_ZERFUS_13',
+            pane: 'pane_ZERFUS_13', onEachFeature: pop_ZERFUS_13, style: style_ZERFUS_13_0,
+        });
+        bounds_group.addLayer(layer_ZERFUS_13);
+        function style_AEROPORTO_14_0(feature){return _pdEstiloCat('aero','pane_AEROPORTO_14',feature,{f:'rgba(200,200,200,1)',s:'rgba(35,35,35,1)',w:0.5});}
+        function pop_AEROPORTO_14(feature, layer) {}
+        map.createPane('pane_AEROPORTO_14');
+        map.getPane('pane_AEROPORTO_14').style.zIndex = 407;
+        map.getPane('pane_AEROPORTO_14').style['mix-blend-mode'] = 'normal';
+        var layer_AEROPORTO_14 = new L.geoJson(json_AEROPORTO_14, {
+            attribution: '', interactive: true,
+            dataVar: 'json_AEROPORTO_14', layerName: 'layer_AEROPORTO_14',
+            pane: 'pane_AEROPORTO_14', onEachFeature: pop_AEROPORTO_14, style: style_AEROPORTO_14_0,
+        });
+        bounds_group.addLayer(layer_AEROPORTO_14);
+        function style_DIRETRIZESVIARIAS_TOMO_10_0(feature){return _pdEstiloLinhaCat('viariast','pane_DIRETRIZESVIARIAS_TOMO_10',feature,{f:'rgba(150,150,150,1)',s:'rgba(150,150,150,1)',w:0.66});}
+        function pop_DIRETRIZESVIARIAS_TOMO_10(feature, layer) {}
+        map.createPane('pane_DIRETRIZESVIARIAS_TOMO_10');
+        map.getPane('pane_DIRETRIZESVIARIAS_TOMO_10').style.zIndex = 412;
+        map.getPane('pane_DIRETRIZESVIARIAS_TOMO_10').style['mix-blend-mode'] = 'normal';
+        var layer_DIRETRIZESVIARIAS_TOMO_10 = new L.geoJson(json_DIRETRIZESVIARIAS_TOMO_10, {
+            attribution: '', interactive: true,
+            dataVar: 'json_DIRETRIZESVIARIAS_TOMO_10', layerName: 'layer_DIRETRIZESVIARIAS_TOMO_10',
+            pane: 'pane_DIRETRIZESVIARIAS_TOMO_10', onEachFeature: pop_DIRETRIZESVIARIAS_TOMO_10, style: style_DIRETRIZESVIARIAS_TOMO_10_0,
+        });
+        bounds_group.addLayer(layer_DIRETRIZESVIARIAS_TOMO_10);
+        // Hierarquia viária — herdada do mapa de Equipamentos Públicos (eixos unidos)
+        var VIA_ST = {
+            'Arterial':                  {color:'#1a1a1a', weight:3.4},
+            'Arterial - Estrada Parque': {color:'#1a1a1a', weight:3.4},
+            'Arterial Secundária':       {color:'#2d2d2d', weight:2.8},
+            'Regional':                  {color:'#1a1a1a', weight:3.4},
+            'Coletora':                  {color:'#404040', weight:2.1},
+            'Local':                     {color:'#666666', weight:0.9}
+        };
+        function style_EIXO_LOGRADOURO_8_0(feature) {
+            var s = VIA_ST[feature.properties.hierarquia] || {color:'#8ba3b8', weight:0.55};
+            return {pane:'pane_EIXO_LOGRADOURO_8', opacity:0.75, color:s.color,
+                    weight:s.weight, lineCap:'round', lineJoin:'round',
+                    fillOpacity:0, interactive:true};
+        }
+        function pop_EIXO_LOGRADOURO_8(feature, layer) {}
+        map.createPane('pane_EIXO_LOGRADOURO_8');
+        map.getPane('pane_EIXO_LOGRADOURO_8').style.zIndex = 411;
+        map.getPane('pane_EIXO_LOGRADOURO_8').style['mix-blend-mode'] = 'normal';
+        var layer_EIXO_LOGRADOURO_8 = new L.geoJson(json_EIXO_LOGRADOURO_8, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_EIXO_LOGRADOURO_8',
+            layerName: 'layer_EIXO_LOGRADOURO_8',
+            pane: 'pane_EIXO_LOGRADOURO_8',
+            onEachFeature: pop_EIXO_LOGRADOURO_8,
+            style: style_EIXO_LOGRADOURO_8_0,
+        });
+        bounds_group.addLayer(layer_EIXO_LOGRADOURO_8);
         map.createPane('pane_MACROZONEAMENTO_7');
-        map.getPane('pane_MACROZONEAMENTO_7').style.zIndex = 407;
+        map.getPane('pane_MACROZONEAMENTO_7').style.zIndex = 401;
         map.getPane('pane_MACROZONEAMENTO_7').style['mix-blend-mode'] = 'normal';
         var layer_MACROZONEAMENTO_7 = new L.geoJson(json_MACROZONEAMENTO_7, {
             attribution: '',
@@ -1504,16 +1728,9 @@
         "France BAN": "https://api-adresse.data.gouv.fr/search/?"}
         // photon removed
         setBounds();
-        resetLabels([]);
-        map.on("zoomend", function(){
-            resetLabels([]);
-        });
-        map.on("layeradd", function(){
-            resetLabels([]);
-        });
-        map.on("layerremove", function(){
-            resetLabels([]);
-        });
+        
+        
+        
         </script>        
     
 <script>
@@ -1538,99 +1755,34 @@
 
     // Layer map
     var PD_LAYERS = {
+        macro:   layer_MACROZONEAMENTO_7,
         zona:    layer_ZONEAMENTO_6,
         cod:     layer_COD_URB_5,
-        macro:   layer_MACROZONEAMENTO_7,
         zepam:   layer_ZEPAM_3,
         zepec:   layer_ZEPEC_4,
-        bacias:  layer_BACIASHIDROGRAFICAS_2,
         viarias: layer_DIRETRIZESVIARIAS_1,
+        eixos:   layer_EIXO_LOGRADOURO_8,
+        macrot: layer_MACROZONEAMENTO_TOMO_9,
+        zonat: layer_ZONEAMENTO_TOMO_8,
+        lotes: layer_LOTEAMENTOS_11,
+        zerfu: layer_ZERFUS_13,
+        aero: layer_AEROPORTO_14,
+        viariast: layer_DIRETRIZESVIARIAS_TOMO_10,
     };
 
     // Per-layer opacity store (user-set values)
     var PD_OPACITY = {
         zona: 0.65, cod: 0.65, macro: 0.65,
-        zepam: 0.65, zepec: 0.65, bacias: 0.65, viarias: 0.65,
-    };
-
-    // Per-layer item filter (null = all visible; Set = only these values shown)
-    var PD_FILTER = {
-        zona: null, cod: null, macro: null,
-        zepam: null, zepec: null, bacias: null, viarias: null,
-    };
-    // Field name used by each layer's style function
-    var PD_FILTER_FIELD = {
-        zona:    'ZONEAMENTO',
-        cod:     'para legen',
-        macro:   'MACROZONA',
-        zepec:   'NOME',
-        viarias: 'HIERARQUIA',
+        zepam: 0.65, zepec: 0.65, viarias: 0.65, eixos: 0.75,
+        macrot: 0.65, zonat: 0.65, lotes: 0.65, zerfu: 0.65, aero: 0.65, viariast: 0.65,
     };
 
     // Toggle a legend item on/off
 
     // ── Check if a Leaflet layer is currently filtered out ───────────────────
-    function _pdIsFiltered(leafletLayer) {
-        // O(1): we store filter state directly on the layer object
-        return leafletLayer && leafletLayer._pdFiltered === true;
-    }
-
     // ── After filter change: set pointer-events on SVG paths ─────────────────
-    function _pdRefreshPointerEvents(key) {
-        var gl = PD_LAYERS[key];
-        if (!gl) return;
-        gl.eachLayer(function(layer) {
-            var filtered = false;
-            if (PD_FILTER[key] && PD_FILTER_FIELD[key]) {
-                var v = layer.feature && layer.feature.properties[PD_FILTER_FIELD[key]];
-                filtered = !!(v !== undefined && !PD_FILTER[key].has(String(v)));
-            }
-            // Store on layer object for O(1) lookup
-            layer._pdFiltered = filtered;
-            // SVG path: disable mouse events entirely
-            if (layer._path) {
-                layer._path.style.pointerEvents = filtered ? 'none' : '';
-                // Also ensure style is correct
-                if (filtered) {
-                    layer._path.style.fillOpacity = '0';
-                    layer._path.style.strokeOpacity = '0';
-                }
-            }
-        });
-    }
-
-    window.pdFilterItem = function(liEl, key, val) {
-        // liEl is the .li div containing the toggle checkbox
-        var on = liEl.querySelector('input[type=checkbox]').checked;
-        if (!PD_FILTER[key]) {
-            // Init: all values active
-            var allVals = [];
-            document.querySelectorAll('.li[data-layer="' + key + '"]').forEach(function(li) {
-                allVals.push(li.getAttribute('data-val'));
-            });
-            PD_FILTER[key] = new Set(allVals);
-        }
-        if (on) {
-            PD_FILTER[key].add(val);
-            liEl.classList.remove('off');
-        } else {
-            PD_FILTER[key].delete(val);
-            liEl.classList.add('off');
-        }
-        // If all items re-enabled, reset to null (all visible)
-        var total = document.querySelectorAll('.li[data-layer="' + key + '"]').length;
-        if (PD_FILTER[key] && PD_FILTER[key].size === total) PD_FILTER[key] = null;
-        // Redraw the layer
-        if (PD_LAYERS[key]) {
-            PD_LAYERS[key].setStyle(function(feature) {
-                return _pdStyleWithFilter(key, feature);
-            });
-            _pdRefreshPointerEvents(key);
-        }
-    };
-
     // Style wrapper that applies filter
-    function _pdStyleWithFilter(key, feature) {
+    function _pdEstilo(key, feature) {
         // Get the original QGIS style function result
         var styleFns = {
             zona:    style_ZONEAMENTO_6_0,
@@ -1638,19 +1790,18 @@
             macro:   style_MACROZONEAMENTO_7_0,
             zepam:   style_ZEPAM_3_0,
             zepec:   style_ZEPEC_4_0,
-            bacias:  style_BACIASHIDROGRAFICAS_2_0,
             viarias: style_DIRETRIZESVIARIAS_1_0,
+            eixos:   style_EIXO_LOGRADOURO_8_0,
+            macrot: style_MACROZONEAMENTO_TOMO_9_0,
+            zonat: style_ZONEAMENTO_TOMO_8_0,
+            lotes: style_LOTEAMENTOS_11_0,
+            zerfu: style_ZERFUS_13_0,
+            aero: style_AEROPORTO_14_0,
+            viariast: style_DIRETRIZESVIARIAS_TOMO_10_0,
         };
         var s = styleFns[key] ? styleFns[key](feature) : {};
         if (!s) return s;
-        // Apply filter
-        if (PD_FILTER[key] && PD_FILTER_FIELD[key]) {
-            var featureVal = feature.properties[PD_FILTER_FIELD[key]];
-            if (!PD_FILTER[key].has(String(featureVal))) {
-                return { fillOpacity: 0, opacity: 0, weight: 0 };
-            }
-        }
-        // Apply user opacity
+        // Opacidade fixa por camada
         var op = (PD_OPACITY[key] !== undefined) ? PD_OPACITY[key] : 0.65;
         return Object.assign({}, s, { fillOpacity: op });
     }
@@ -1660,13 +1811,23 @@
     // todas como ligadas. Sem esta sincronizacao o mapa abre praticamente vazio.
     Object.keys(PD_LAYERS).forEach(function(key) {
         var gl = PD_LAYERS[key];
-        if (!gl) return;
-        var cb = document.querySelector('input[type=checkbox][data-pd-layer="' + key + '"]');
+        if (!gl) { console.warn('[PD] camada ausente:', key); return; }
+        // getElementById e mais robusto que o seletor de atributo
+        var cb = document.getElementById('t-' + key) ||
+                 document.querySelector('input[type=checkbox][data-pd-layer="' + key + '"]');
         var ligada = cb ? cb.checked : true;
-        if (ligada && !map.hasLayer(gl)) gl.addTo(map);
-        if (!ligada && map.hasLayer(gl)) map.removeLayer(gl);
-        if (map.hasLayer(gl)) {
-            gl.setStyle(function(feature) { return _pdStyleWithFilter(key, feature); });
+        if (cb) cb.checked = ligada;          // mantem o painel coerente
+        try {
+            if (ligada && !map.hasLayer(gl)) gl.addTo(map);
+            if (!ligada && map.hasLayer(gl)) map.removeLayer(gl);
+            if (map.hasLayer(gl)) {
+                gl.setStyle(function(feature) { return _pdEstilo(key, feature); });
+            }
+            // PD_LEGENDS so e declarado adiante: o bloco de legendas
+            // e sincronizado logo apos, fora deste laco.
+        } catch (err) {
+            // uma camada com problema nao pode impedir o carregamento das demais
+            console.error('[PD] falha ao preparar a camada', key, err);
         }
     });
     // mantem os mapas base atras das camadas tematicas
@@ -1675,15 +1836,6 @@
     });
 
     // Expose opacity getter for QGIS script patches
-        window._pdIsFiltered = _pdIsFiltered;
-    window._pdGetOpacity = function(leafletLayer) {
-        for (var key in PD_LAYERS) {
-            var found = false;
-            PD_LAYERS[key].eachLayer(function(l) { if (l === leafletLayer) found = true; });
-            if (found) return (PD_OPACITY[key] !== undefined) ? PD_OPACITY[key] : 0.65;
-        }
-        return 0.65;
-    };
 
     // Expose locked state for QGIS script patches
     Object.defineProperty(window, '_pdPopupLocked', {
@@ -1738,7 +1890,6 @@
             // Click: pin the popup
             layer.on('click', function(e) {
                 L.DomEvent.stopPropagation(e);
-                if (_pdIsFiltered(layer)) return; // filtered — let click pass through
 
                 // If clicking the already-locked layer → unlock and close
                 if (_pdPopupLocked && _pdLockedLayer === layer) {
@@ -1845,14 +1996,17 @@
     document.head.appendChild(popupStyle);
     var PD_LEGENDS = {
         zona:'lg-zona', cod:'lg-cod', macro:'lg-macro',
-        zepam:'lg-zepam', zepec:'lg-zepec', bacias:'lg-bacias', viarias:'lg-viarias',
+        zepam:'lg-zepam', zepec:'lg-zepec', viarias:'lg-viarias', eixos:'lg-eixos',
+        macrot:'lg-macrot', zonat:'lg-zonat', lotes:'lg-lotes', zerfu:'lg-zerfu', aero:'lg-aero', viariast:'lg-viariast',
     };
 
     function pdUpdateLegendEmpty() {
         var any = Object.keys(PD_LEGENDS).some(function(k) {
-            return document.getElementById(PD_LEGENDS[k]).style.display !== 'none';
+            var el = document.getElementById(PD_LEGENDS[k]);
+            return el && el.style.display !== 'none';
         });
-        document.getElementById('lg-empty').style.display = any ? 'none' : '';
+        var vazio = document.getElementById('lg-empty');
+        if (vazio) vazio.style.display = any ? 'none' : '';
     }
 
     function _pdApplyToggle(key, on) {
@@ -1860,19 +2014,637 @@
         if (!layer) return;
         if (on) {
             layer.addTo(map);
-            _pdRefreshPointerEvents(key); // restore filter state on re-add
-            layer.setStyle(function(f){ return _pdStyleWithFilter(key,f); });
+            layer.setStyle(function(f){ return _pdEstilo(key,f); });
             pdBasemaps.satellite.bringToBack();
             pdBasemaps.osm.bringToBack();
             pdBasemaps.dark.bringToBack();
         } else {
             map.removeLayer(layer);
         }
-        var lgId = PD_LEGENDS[key];
-        if (lgId) document.getElementById(lgId).style.display = on ? '' : 'none';
-        pdUpdateLegendEmpty();
+        var lgEl = PD_LEGENDS[key] ? document.getElementById(PD_LEGENDS[key]) : null;
+        if (lgEl) lgEl.style.display = on ? '' : 'none';
+        try { pdUpdateLegendEmpty(); } catch (e) { /* legenda ausente nao bloqueia o toggle */ }
     }
-    window.pdToggle = function(key, on) { _pdApplyToggle(key, on); };
+    // ── Sincroniza os blocos de legenda com o estado das camadas ─────────────
+    Object.keys(PD_LEGENDS).forEach(function(key) {
+        var el = document.getElementById(PD_LEGENDS[key]);
+        if (!el) return;
+        var gl = PD_LAYERS[key];
+        el.style.display = (gl && map.hasLayer(gl)) ? '' : 'none';
+    });
+    if (typeof pdUpdateLegendEmpty === 'function') pdUpdateLegendEmpty();
+
+    // ── Painel de informacoes da zona (hover + clique) ──────────────────────
+    var _izTravado = false, _izEl = null;
+    var IZ_CAM = {
+        zona:    {rot:'Zoneamento'},
+        cod:     {rot:'Código de Urbanismo'},
+        macro:   {rot:'Macrozoneamento'},
+        zepam:   {rot:'ZEPAM'},
+        zepec:   {rot:'ZEPEC'},
+        viarias: {rot:'Diretriz Viária'},
+        eixos:   {rot:'Hierarquia Viária'},
+        macrot: {rot:'Macrozoneamento (Tomo)'},
+        zonat: {rot:'Zoneamento (Tomo)'},
+        lotes: {rot:'Zoneamento de Loteamentos'},
+        zerfu: {rot:'ZERFUs'},
+        aero: {rot:'Curvas de Ruído — Aeroporto'},
+        viariast: {rot:'Diretrizes Viárias (Tomo)'}
+    };
+    // Rotulos legiveis para os campos abreviados do shapefile
+    var IZ_CAMPOS = {
+        zona: [['AREA MIN','Área mínima do lote','m²'],['AREA MAX','Área máxima do lote','m²'],
+               ['TO','Taxa de ocupação','%'],['COEF MIN','Coeficiente mínimo',''],
+               ['COEF BAS','Coeficiente básico',''],['COEF MAX','Coeficiente máximo',''],
+               ['TX PERMEA','Taxa de permeabilidade','%'],['TESTADA MI','Testada mínima','m'],
+               ['RC FRONTAL','Recuo frontal','m'],['RC DIREITO','Recuo direito','m'],
+               ['RC ESQUERD','Recuo esquerdo','m'],['RC FUNDOS','Recuo de fundos','m']],
+        cod:  [['MIN LOTE','Lote mínimo','m²'],['TO BAS TT','Taxa de ocupação','%'],
+               ['CA','Coeficiente de aproveitamento',''],['TX IMPER','Taxa de impermeabilização','%'],
+               ['GABARITO','Gabarito',''],['TEST MIN','Testada mínima','m'],
+               ['RC FRENTE','Recuo frontal','m'],['RC DIREITO','Recuo direito','m'],
+               ['RC ESQUERD','Recuo esquerdo','m'],['COEF URB','Coeficiente urbanístico','']],
+        viarias: [],
+        eixos: [['hierarquia','Hierarquia',''],['diretriz','Diretriz','']],
+        lotes: [['LOTEAMENTO','Origem',''],
+                ['ÁREA MÍNIMA DO LOTE (m²)','Área mínima do lote','m²'],
+                ['ÁREA MÁX. LOTE (m²)','Área máxima do lote','m²'],
+                ['TAXA DE OCUPAÇAO BÁSICA TOTAL (%)','Taxa de ocupação','%'],
+                ['COEFICIENTE DE APROVEITAMENTO','Coeficiente de aproveitamento',''],
+                ['COEFICIENTE APROVEITAMENTO MÍNIMO','Coeficiente mínimo',''],
+                ['COEFICIENTE APROVEITAMENTO MÁXIMO','Coeficiente máximo',''],
+                ['TAXA DE IMPERMEABILIZAÇÃO MÁXIMA TOTAL (%)','Taxa de impermeabilização','%'],
+                ['TAXA DE PERMEABILIDADE (%)','Taxa de permeabilidade','%'],
+                ['GABARITO DE ALTURA','Gabarito',''],
+                ['TESTADA MÍNIMA (m)','Testada mínima','m'],
+                ['RECUO DE FRENTE MÍNIMO (m)','Recuo frontal','m'],
+                ['RECUO LATERAL DIREITO MÍNIMO (m)','Recuo direito','m'],
+                ['RECUO LATERAL ESQUERDO MÍNIMO (m)','Recuo esquerdo','m'],
+                ['RECUO FUNDOS (m)','Recuo de fundos','m'],
+                ['PERMISSÕES DE USO','Permissões de uso','']],
+        zonat: [['MACROZONA','Macrozona',''],
+                ['ÁREA MÍNIMA DO LOTE (m²)','Área mínima do lote','m²'],
+                ['TAXA MÁXIMA DE OCUPAÇÃO (TO - %)','Taxa de ocupação','%'],
+                ['COEFICIENTE DE APROVEITAMENTO','Coeficiente de aproveitamento',''],
+                ['OUTROS COEFICIENTES','Outros coeficientes',''],
+                ['TAXA DE IMPERMEABILIZAÇÃO MÁXIMA (%)','Taxa de impermeabilização','%'],
+                ['GABARITO DE ALTURA (nº máximo de pv acima do nível da guia)','Gabarito','pavimentos'],
+                ['TESTADA MÍNIMA (m)','Testada mínima','m'],
+                ['RECUO DE FRENTE (m)','Recuo frontal','m'],
+                ['ÁREA LIVRE POR m²/h. (condom verti)','Área livre por m²','']],
+        zerfu: [['LEI COMPLEMENTAR DE CRIAÇÃO DA ZERFU','Lei de criação',''],
+                ['TIPO DE OCUPAÇÃO','Tipo de ocupação',''],
+                ['TAXA DE OCUPAÇÃO BÁSICA TOTAL (%)','Taxa de ocupação','%'],
+                ['COEFICIENTE DE APROVEITAMENTO MÁXIMO TOTAL (%)','Coeficiente máximo',''],
+                ['TAXA DE PERMEABILIDADE MÍNIMA (%)','Taxa de permeabilidade','%'],
+                ['TAXA DE IMPERMEABILIZAÇÃO MÁXIMO TOTAL (%)','Taxa de impermeabilização','%'],
+                ['RECUO DE FRENTE MÍNIMO (m)','Recuo frontal','m'],
+                ['RECUO LATERAL MÍNIMO (m)','Recuo lateral','m'],
+                ['GABARITO DE ALTURA (m)','Gabarito','m'],
+                ['GABARITO DE ALTURA (nº máximo de pavimentos)','Gabarito','pavimentos']],
+        macrot: [['MACROZONEAMENTO','Sigla','']],
+        aero: [],
+        viariast: [['HIERARQUIA','Hierarquia','']]
+    };
+        // ── Parâmetros e usos por classificação viária (ZM do tomo) ───────────
+    // Alguns campos trazem um valor por classificação da via de testada, no
+    // formato "VA: 500 VC1-PS: 250 ...". A leitura fica por via, como na
+    // ZDU 2 do Zoneamento, e não numa linha única ilegível.
+    var PD_VIAS = [
+        ['VA',     'Via Arterial'],
+        ['VC1-PS', 'Via Coletora de 1ª categoria — pista simples'],
+        ['VC1-PD', 'Via Coletora de 1ª categoria — pista dupla'],
+        ['VC2-PS', 'Via Coletora de 2ª categoria — pista simples'],
+        ['VC2-PD', 'Via Coletora de 2ª categoria — pista dupla'],
+        ['VL',     'Viário local']
+    ];
+    var PD_VIA_ROT = {};
+    PD_VIAS.forEach(function(v) { PD_VIA_ROT[v[0]] = v[1]; });
+
+    // Reparte "VA: 500 VC1-PS: 250 ..." num objeto por sigla.
+    // VCA-PS aparece uma vez no campo de gabarito onde as demais colunas
+    // trazem VC1-PS: lido como VC1-PS.
+    function _pdPorVia(txt) {
+        var s = String(txt).replace(/\bVCA-PS\b/g, 'VC1-PS');
+        var re = /\b(VA|VC1-PS|VC1-PD|VC2-PS|VC2-PD)\s*:\s*/g;
+        var pos = [], m;
+        while ((m = re.exec(s)) !== null) pos.push([m[1], m.index, re.lastIndex]);
+        if (pos.length < 2) return null;
+        // texto antes da primeira sigla é o nome real do parâmetro
+        // (ex.: "Outorga Onerosa VA: 1,5 VC1-PS: 1,2 ...")
+        var out = {_rot: s.slice(0, pos[0][1]).trim().replace(/[:;,]+$/, '').trim()};
+        for (var i = 0; i < pos.length; i++) {
+            var fim = (i + 1 < pos.length) ? pos[i + 1][1] : s.length;
+            var v = s.slice(pos[i][2], fim).trim().replace(/[;,]+$/, '').trim();
+            if (v && v !== '-') out[pos[i][0]] = v;
+        }
+        return out;
+    }
+
+    // Reparte as permissões, que vêm com o nome por extenso e a sigla entre
+    // parênteses, e descarta o anexo pendurado no fim do texto.
+    function _pdUsosPorVia(txt) {
+        var s = String(txt).replace(/\s*Anexo\s+classifica[^:]*:\s*\S+\s*$/i, '').trim();
+        var marcas = [];
+        ['VA','VC1-PS','VC1-PD','VC2-PS','VC2-PD'].forEach(function(c) {
+            var re = new RegExp('\\(' + c.replace('-', '\\-') + '\\)\\s*:\\s*', 'g'), m;
+            while ((m = re.exec(s)) !== null) marcas.push([c, m.index, re.lastIndex]);
+        });
+        var rl = /VI[ÁA]RIO\s+LOCAL\s*:\s*/gi, m2;
+        while ((m2 = rl.exec(s)) !== null) marcas.push(['VL', m2.index, rl.lastIndex]);
+        if (marcas.length < 2) return null;
+        marcas.sort(function(a, b) { return a[1] - b[1]; });
+        var out = {};
+        for (var i = 0; i < marcas.length; i++) {
+            var fim = (i + 1 < marcas.length) ? marcas[i + 1][1] : s.length;
+            var v = s.slice(marcas[i][2], fim).trim()
+                     .replace(/^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9ªº\s\-]{6,}$/,'')
+                     .replace(/[;,]+$/, '').trim();
+            // corta o nome por extenso da próxima via, que sobra no fim do trecho
+            v = v.replace(/\s*VIA\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9ªº\s]+$/,'').trim();
+            if (v) out[marcas[i][0]] = v;
+        }
+        return out;
+    }
+    function _izNome(key, p) {
+        if (key === 'zona' || key === 'cod') return p['ZONEAMENTO'] || '—';
+        if (key === 'macro') return p['MACROZONA'] || '—';
+        if (key === 'zepam' || key === 'zepec') return p['NOME'] || '—';
+        if (key === 'viarias') return p['HIERARQUIA'] || 'Diretriz viária';
+        if (key === 'eixos') return (p['nome_via'] && String(p['nome_via']).trim()) || 'Via sem nome';
+        if (key === 'macrot') return p['NOME'] || p['MACROZONEAMENTO'] || '—';
+        if (key === 'zonat') return p['ZONA'] || '—';
+        if (key === 'lotes') return p['ZONEAMENTO'] || '—';
+        if (key === 'zerfu') return p['NUCLEO'] || '—';
+        if (key === 'aero') return p['Identificação_Curva'] || '—';
+        if (key === 'viariast') return p['NOME'] || p['HIERARQUIA'] || 'Diretriz viária';
+        return '—';
+    }
+    function _izDesc(key, p) {
+        return p['DESCR'] || p['DESC'] || p['para legen'] || p['para legenda'] ||
+               p['RESTRIÇÕES À USOS E OCUPAÇÃO'] || p['Permissões de Uso do Solo'] || '';
+    }
+        // Valores do shapefile misturam numeros e texto ("1,5" vs "CONFORME CODIGO
+    // SANITARIO ESTADUAL"): a unidade so faz sentido no caso numerico.
+    function _izNum(v) { return /^-?[\d.,]+$/.test(String(v).trim()); }
+    function _izVal(v, un) {
+        var s = String(v).trim();
+        // abreviaturas do shapefile expandidas para leitura
+        if (/^outorga\s*oner\.?$/i.test(s)) s = 'Outorga Onerosa';
+        return s + (un && _izNum(s) ? ' ' + un : '');
+    }
+    function izMostrar(key, p) {
+        var el = document.getElementById('info-content');
+        if (!el) return;
+        var cam = IZ_CAM[key] || {rot: key};
+        var n = function(v) { return (v === null || v === undefined || v === '' || String(v).trim() === '-') ? null : v; };
+        var esc = function(v) { return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+        // Valor curto vai na coluna da direita; prosa longa vira bloco a esquerda,
+        // porque texto corrido alinhado a direita em coluna estreita nao se le.
+        var curto = function(v) { return String(v).trim().length <= 22; };
+        // URL crua no meio do texto estoura a coluna: vira um link curto.
+        var _izLink = function(t) {
+            return String(t).replace(/https?:\/\/\S+/g, function(u) {
+                return '<a class="info-link" href="' + u + '" target="_blank" rel="noopener">abrir documento ↗</a>';
+            });
+        };
+
+        // Vias sao camada de referencia: so o nome e a hierarquia, numa linha.
+        if (key === 'eixos' || key === 'viariast') {
+            var via = _izNome(key, p);
+            var hier = n(p['hierarquia']) || n(p['HIERARQUIA']) || '';
+            hier = String(hier).replace(/\s*\([A-Z0-9]+\)\s*$/, '').trim();
+            el.innerHTML = '<div class="info-via"><b>' + esc(via) +
+                (hier ? ' <i>— ' + esc(hier) + '</i>' : '') + '</b></div>';
+            return;
+        }
+
+        var html = '<div class="info-card"><div class="info-title">' + esc(_izNome(key, p)) + '</div>' +
+                   '<div class="info-cls">' + esc(cam.rot) + '</div>';
+        var d = _izDesc(key, p);
+        if (d && String(d).trim() === String(_izNome(key, p)).trim()) d = '';
+        if (d) html += '<div class="info-desc">' + _izLink(d) + '</div>';
+        html += '</div>';
+
+        var linhas = '', blocos = '';
+        var porVia = {}, temPorVia = false;   // sigla -> [[rotulo, valor], ...]
+        var campos = IZ_CAMPOS[key];
+        if (campos) {
+            campos.forEach(function(c) {
+                var v = n(p[c[0]]);
+                if (v === null) return;
+                // valor repartido por classificação da via de testada
+                var pv = _pdPorVia(v);
+                if (pv) {
+                    temPorVia = true;
+                    var rot = pv._rot || c[1];
+                    Object.keys(pv).forEach(function(sig) {
+                        if (sig === '_rot') return;
+                        (porVia[sig] = porVia[sig] || []).push([rot, _izVal(pv[sig], c[2])]);
+                    });
+                    return;
+                }
+                // Tres valores concatenados por "|" viram uma linha cada.
+                if (String(v).indexOf('|') > -1) {
+                    String(v).split('|').forEach(function(parte) {
+                        parte = parte.trim();
+                        if (!parte) return;
+                        var k = parte.indexOf(':');
+                        var rot = (k > -1) ? parte.slice(0, k).trim() : '';
+                        var val = (k > -1) ? parte.slice(k + 1).trim() : parte;
+                        if (!val || val === '-') return;
+                        var vq = _izVal(val, c[2]);
+                        var rq = c[1] + (rot ? ' — ' + rot : '');
+                        if (curto(vq)) linhas += '<tr><th>' + rq + '</th><td>' + vq + '</td></tr>';
+                        else blocos += '<div class="info-bloco"><b>' + rq + '</b><span>' + _izLink(vq) + '</span></div>';
+                    });
+                    return;
+                }
+                var vv = _izVal(v, c[2]);
+                if (curto(vv)) linhas += '<tr><th>' + c[1] + '</th><td>' + vv + '</td></tr>';
+                else blocos += '<div class="info-bloco"><b>' + c[1] + '</b><span>' + _izLink(vv) + '</span></div>';
+            });
+            if (linhas) html += '<div class="info-sub">Parâmetros urbanísticos</div>' +
+                                '<table class="info-tab">' + linhas + '</table>';
+            if (blocos) html += (linhas ? '' : '<div class="info-sub">Parâmetros urbanísticos</div>') + blocos;
+        }
+
+        // ── parâmetros e usos por classificação viária ─────────────────────
+        var usosVia = null;
+        var txtPerm = n(p['PERMISSÕES']) || n(p['PERMISSOES']);
+        if (txtPerm) usosVia = _pdUsosPorVia(txtPerm);
+        if (temPorVia || usosVia) {
+            var sec = '';
+            PD_VIAS.forEach(function(vv) {
+                var sig = vv[0];
+                var pars = porVia[sig], uso = usosVia ? usosVia[sig] : null;
+                if (!pars && !uso) return;
+                sec += '<div class="via-bloco"><div class="via-rot">' + vv[1] +
+                       ' <span>' + sig + '</span></div>';
+                if (pars) {
+                    sec += '<table class="info-tab via-tab">';
+                    pars.forEach(function(pr) {
+                        sec += '<tr><th>' + pr[0] + '</th><td>' + pr[1] + '</td></tr>';
+                    });
+                    sec += '</table>';
+                }
+                if (uso) sec += '<div class="via-uso">' + _izLink(uso) + '</div>';
+                sec += '</div>';
+            });
+            if (sec) html += '<div class="info-sub">Por classificação da via de testada</div>' + sec;
+        }
+        if (campos) {
+        }
+
+        var usos = [['USO VLSS','Via local sem saída'],['USO VL','Via local'],['USO VC','Via coletora'],
+                    ['USO VA','Via arterial'],['USO VR','Via regional']];
+        var lu = '';
+        usos.forEach(function(u) {
+            var v = n(p[u[0]]);
+            if (v === null) return;
+            lu += '<div class="info-bloco"><b>' + u[1] + '</b><span>' + _izLink(v) + '</span></div>';
+        });
+        if (lu) html += '<div class="info-sub">Usos permitidos por via</div>' + lu;
+
+        if (key === 'viarias') {
+            var imp = n(p['IMPORT']);
+            if (imp) html += '<div class="info-sub">Importância</div><div class="info-desc">' + _izLink(imp) + '</div>';
+        }
+        if (txtPerm && !usosVia) html += '<div class="info-sub">Permissões de uso</div>' +
+            '<div class="info-bloco"><span>' + txtPerm + '</span></div>';
+        var obs = n(p['OBS']) || n(p['OBSERVAÇÕES']) || n(p['OBSERVACOES']);
+        if (obs) html += '<div class="info-sub">Observações</div><div class="info-desc">' + _izLink(obs) + '</div>';
+
+        el.innerHTML = html;
+    }
+    function izLimpar() {
+        if (_izTravado) return;
+        var el = document.getElementById('info-content');
+        if (el) el.innerHTML = '<div class="info-vazio">Passe o cursor sobre o mapa para ver a zona, sua descrição e os parâmetros urbanísticos. Clique para travar a leitura.</div>';
+    }
+    window.toggleLegenda = function() {
+        var el = document.getElementById('rb');
+        if (!el) return;
+        el.classList.toggle('hidden');
+        _pdAjustaMapa();
+    };
+    // Liga o hover em todas as camadas tematicas
+    function izLigar() {
+        Object.keys(PD_LAYERS).forEach(function(key) {
+            var gl = PD_LAYERS[key];
+            if (!gl || !gl.eachLayer) return;
+            gl.eachLayer(function(l) {
+                if (!l.feature || l._izOn) return;
+                l._izOn = true;
+                l.on('mouseover', function() { if (!_izTravado) izMostrar(key, l.feature.properties); });
+                l.on('mouseout',  function() { izLimpar(); });
+                // A hierarquia viária é camada de referência: mostra o nome no
+                // hover, mas não trava a leitura nem bloqueia o clique na zona
+                // que está por baixo.
+                if (key === 'eixos') return;
+                l.on('click', function(e) {
+                    _izTravado = true; _izEl = l;
+                    izMostrar(key, l.feature.properties);
+                    if (L.DomEvent) L.DomEvent.stopPropagation(e);
+                });
+            });
+        });
+    }
+    // Protegido: uma falha aqui nao pode impedir a definicao de window.pdToggle
+    // e demais funcoes expostas adiante, que o painel usa.
+    try { izLigar(); } catch (e) { console.error('[PD] izLigar:', e); }
+    try { izLimpar(); } catch (e) { console.error('[PD] izLimpar:', e); }
+    try { _pdAjustaMapa(); } catch (e) { console.error('[PD] ajuste do mapa:', e); }
+    map.on('click', function() { _izTravado = false; _izEl = null; izLimpar(); });
+    // ao religar uma camada, reconectar o hover das feicoes novas
+    var _izToggleOrig = _pdApplyToggle;
+    _pdApplyToggle = function(key, on) { _izToggleOrig(key, on); if (on) izLigar(); };
+
+    // ── Busca de endereço (padrão do mapa censitário) ────────────────────────
+    var addrDebounce = null, addrMarker = null;
+    window.onAddrInput = function() {
+            clearTimeout(addrDebounce);
+            var q = document.getElementById('addr-input').value.trim();
+            var clearBtn = document.getElementById('addr-clear-btn');
+            clearBtn.style.display = q.length ? 'flex' : 'none';
+            if (q.length < 3) { document.getElementById('addr-suggestions').innerHTML = ''; return; }
+            addrDebounce = setTimeout(function() { fetchAddrSuggestions(q); }, 400);
+        }
+    window.doAddrSearch = function() {
+            var q = document.getElementById('addr-input').value.trim();
+            if (q.length < 2) return;
+            fetchAddrSuggestions(q);
+        }
+    window.clearAddrSearch = function() {
+            if (addrMarker) { map.removeLayer(addrMarker); addrMarker = null; }
+            document.getElementById('addr-input').value = '';
+            document.getElementById('addr-suggestions').innerHTML = '';
+            document.getElementById('addr-clear-btn').style.display = 'none';
+            document.getElementById('addr-input').focus();
+        }
+    window.fetchAddrSuggestions = function(q) {
+            fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=' + encodeURIComponent(q))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var box = document.getElementById('addr-suggestions');
+                    if (!data.length) { box.innerHTML = '<div class="addr-item" style="cursor:default;opacity:0.5">Nenhum resultado</div>'; return; }
+                    box.innerHTML = data.map(function(item) {
+                        return '<div class="addr-item" onclick="selectAddr(' + item.lat + ',' + item.lon + ',\'' + (item.display_name||'').replace(/'/g,"&#39;") + '\')">'
+                            + (item.display_name || '') + '</div>';
+                    }).join('');
+                })
+                .catch(function() {});
+        }
+    window.selectAddr = function(lat, lon, label) {
+            if (addrMarker) map.removeLayer(addrMarker);
+            addrMarker = L.marker([lat, lon])
+                .bindPopup('<b>' + label + '</b>')
+                .addTo(map)
+                .openPopup();
+            map.setView([lat, lon], 16);
+            document.getElementById('addr-suggestions').innerHTML = '';
+            var shortLabel = label.split(',')[0];
+            document.getElementById('addr-input').value = shortLabel;
+            document.getElementById('addr-clear-btn').style.display = 'flex';
+        }
+
+    // ── Âncora do rótulo ──────────────────────────────────────────────────
+    // O centro do bounding box cai fora de polígono côncavo ou em forma de L,
+    // e o rótulo acaba sobre o vizinho. O polo de inacessibilidade (polylabel)
+    // é o ponto mais distante de qualquer borda, garantidamente interno.
+function polylabel(polygon, precision) {
+            precision = precision || 1.0;
+            var minX, minY, maxX, maxY;
+            var outerRing = polygon[0];
+            for (var i = 0; i < outerRing.length; i++) {
+                var p = outerRing[i];
+                if (!i || p[0] < minX) minX = p[0];
+                if (!i || p[1] < minY) minY = p[1];
+                if (!i || p[0] > maxX) maxX = p[0];
+                if (!i || p[1] > maxY) maxY = p[1];
+            }
+            var width  = maxX - minX;
+            var height = maxY - minY;
+            var cellSize = Math.min(width, height);
+            if (cellSize === 0) return [minX, minY];
+
+            // priority queue (max-heap por potencial máximo)
+            var queue = [];
+            function compare(a, b) { return b.max - a.max; }
+            function qpush(cell) {
+                queue.push(cell);
+                queue.sort(compare);
+            }
+
+            function Cell(x, y, h, polygon) {
+                this.x = x; this.y = y; this.h = h;
+                this.d = pointToPolygonDist(x, y, polygon);
+                this.max = this.d + this.h * Math.SQRT2;
+            }
+
+            // preenche com células iniciais
+            for (var x = minX; x < maxX; x += cellSize) {
+                for (var y = minY; y < maxY; y += cellSize) {
+                    qpush(new Cell(x + cellSize / 2, y + cellSize / 2, cellSize / 2, polygon));
+                }
+            }
+
+            var bestCell = new Cell(minX + width / 2, minY + height / 2, 0, polygon);
+            var bboxCell = new Cell(minX + width / 2, minY + height / 2, 0, polygon);
+            if (bboxCell.d > bestCell.d) bestCell = bboxCell;
+
+            var numIter = 0;
+            while (queue.length) {
+                var cell = queue.shift();
+                if (cell.d > bestCell.d) bestCell = cell;
+                if (cell.max - bestCell.d <= precision) continue;
+                var h = cell.h / 2;
+                qpush(new Cell(cell.x - h, cell.y - h, h, polygon));
+                qpush(new Cell(cell.x + h, cell.y - h, h, polygon));
+                qpush(new Cell(cell.x - h, cell.y + h, h, polygon));
+                qpush(new Cell(cell.x + h, cell.y + h, h, polygon));
+            }
+            return [bestCell.x, bestCell.y];
+        }
+
+        function pointToPolygonDist(x, y, polygon) {
+            var inside = false;
+            var minDistSq = Infinity;
+            for (var k = 0; k < polygon.length; k++) {
+                var ring = polygon[k];
+                for (var i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+                    var a = ring[i], b = ring[j];
+                    if ((a[1] > y) !== (b[1] > y) &&
+                        (x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0])) {
+                        inside = !inside;
+                    }
+                    minDistSq = Math.min(minDistSq, getSegDistSq(x, y, a, b));
+                }
+            }
+            return (inside ? 1 : -1) * Math.sqrt(minDistSq);
+        }
+function getSegDistSq(px, py, a, b) {
+            var x = a[0], y = a[1], dx = b[0] - x, dy = b[1] - y;
+            if (dx !== 0 || dy !== 0) {
+                var t = ((px - x) * dx + (py - y) * dy) / (dx * dx + dy * dy);
+                if (t > 1) { x = b[0]; y = b[1]; }
+                else if (t > 0) { x += dx * t; y += dy * t; }
+            }
+            dx = px - x; dy = py - y;
+            return dx * dx + dy * dy;
+        }
+
+    // area aproximada do anel, para escolher a maior parte de um multipoligono
+    function _pdAreaAnel(anel) {
+        var s = 0;
+        for (var i = 0, j = anel.length - 1; i < anel.length; j = i++) {
+            s += (anel[j][0] + anel[i][0]) * (anel[j][1] - anel[i][1]);
+        }
+        return Math.abs(s / 2);
+    }
+    // ponto dentro do anel, pela regra do cruzamento
+    function _pdDentroAnel(pt, anel) {
+        var d = false;
+        for (var i = 0, j = anel.length - 1; i < anel.length; j = i++) {
+            var a = anel[i], c = anel[j];
+            if (((a[1] > pt[1]) !== (c[1] > pt[1])) &&
+                (pt[0] < (c[0] - a[0]) * (pt[1] - a[1]) / (c[1] - a[1]) + a[0])) d = !d;
+        }
+        return d;
+    }
+    function _pdAncora(l) {
+        if (l._pdAnc !== undefined) return l._pdAnc;
+        var anc = null;
+        try {
+            var g = l.feature && l.feature.geometry;
+            if (g && (g.type === 'Polygon' || g.type === 'MultiPolygon')) {
+                // maior parte do multipoligono: o rotulo vai onde ha area
+                var partes = (g.type === 'Polygon') ? [g.coordinates] : g.coordinates;
+                var melhor = null, maior = -1;
+                for (var i = 0; i < partes.length; i++) {
+                    var a = _pdAreaAnel(partes[i][0]);
+                    if (a > maior) { maior = a; melhor = partes[i]; }
+                }
+                if (melhor) {
+                    // precisao proporcional ao tamanho, em graus
+                    var xs = melhor[0].map(function(p){return p[0];});
+                    var ys = melhor[0].map(function(p){return p[1];});
+                    var w = Math.max.apply(null, xs) - Math.min.apply(null, xs);
+                    var hh = Math.max.apply(null, ys) - Math.min.apply(null, ys);
+                    // Em feicao muito pequena ou muito fina, a precisao grosseira
+                    // pode fazer o polo cair fora do proprio anel. Confere o
+                    // resultado e refina ate ele ficar dentro; nao ficando, usa
+                    // um ponto do proprio contorno.
+                    var prec = Math.max(Math.min(w, hh) / 60, 1e-9);
+                    var pole = null;
+                    for (var t = 0; t < 4; t++) {
+                        var cand = polylabel(melhor, prec);
+                        if (cand && isFinite(cand[0]) && isFinite(cand[1])
+                            && _pdDentroAnel(cand, melhor[0])) { pole = cand; break; }
+                        prec = prec / 20;
+                    }
+                    if (!pole) {
+                        var r0 = melhor[0];
+                        var v = r0[0], v2 = r0[1] || r0[0];
+                        pole = [(v[0] + v2[0]) / 2, (v[1] + v2[1]) / 2];
+                    }
+                    if (pole && isFinite(pole[0]) && isFinite(pole[1])) anc = L.latLng(pole[1], pole[0]);
+                }
+            } else if (g && (g.type === 'LineString' || g.type === 'MultiLineString')) {
+                // em linha, o meio do traçado: sempre sobre a própria via
+                var lns = (g.type === 'LineString') ? [g.coordinates] : g.coordinates;
+                var ml = null, maiorN = -1;
+                for (var k = 0; k < lns.length; k++) if (lns[k].length > maiorN) { maiorN = lns[k].length; ml = lns[k]; }
+                if (ml && ml.length) { var p = ml[Math.floor(ml.length / 2)]; anc = L.latLng(p[1], p[0]); }
+            }
+        } catch (e) { anc = null; }
+        if (!anc) { try { anc = l.getBounds().getCenter(); } catch (e2) { anc = null; } }
+        l._pdAnc = anc;
+        return anc;
+    }
+
+    // ── Rótulos por camada ────────────────────────────────────────────────
+    // Usa o mecanismo de rótulo do qgis2web (labelgun) ja carregado: rotula
+    // apenas o que esta na vista e deixa o labelgun esconder o que colide.
+    var PD_ROT = {};            // camadas com rotulo ligado
+    var PD_ROT_MAX = 250;       // teto por camada, para nao travar a tela
+    var PD_ROT_CAMPO = {
+        macro:    ['MACROZONA'],
+        zona:     ['ZONEAMENTO'],
+        cod:      ['ZONEAMENTO'],
+        macrot:   ['MACROZONEAMENTO'],
+        zonat:    ['ZONA'],
+        lotes:    ['ZONEAMENTO'],
+        aero:     ['Identificação_Curva'],
+        zerfu:    ['NUCLEO'],
+        zepec:    ['NOME'],
+        zepam:    ['NOME'],
+        eixos:    ['nome_via'],
+        viariast: ['NOME'],
+        viarias:  ['HIERARQUIA']
+    };
+    function _pdRotTexto(key, p) {
+        var cs = PD_ROT_CAMPO[key] || [];
+        for (var i = 0; i < cs.length; i++) {
+            var v = p[cs[i]];
+            if (v === null || v === undefined) continue;
+            v = String(v).trim();
+            if (!v || v === '-' || v.toLowerCase() === 'nan') continue;
+            // "Macrozona Rural (MZR)" -> "MZR": no mapa a sigla basta
+            var m = v.match(/\(([^)]{1,12})\)\s*$/);
+            if (m) return m[1];
+            return v.length > 32 ? v.slice(0, 30) + '…' : v;
+        }
+        return '';
+    }
+    function _pdAtualizaRotulos() {
+        if (!map) return;
+        var vis = map.getBounds(), grupos = [];
+        Object.keys(PD_LAYERS).forEach(function(key) {
+            var gl = PD_LAYERS[key];
+            if (!gl || !gl.eachLayer) return;
+            var ligado = PD_ROT[key] && map.hasLayer(gl);
+            var n = 0;
+            gl.eachLayer(function(l) {
+                var mostra = false;
+                if (ligado && n < PD_ROT_MAX) {
+                    try {
+                        mostra = l.getBounds ? vis.intersects(l.getBounds())
+                                             : vis.contains(l.getLatLng());
+                    } catch (e) { mostra = false; }
+                }
+                if (mostra) {
+                    var t = l.feature ? _pdRotTexto(key, l.feature.properties) : '';
+                    if (t) {
+                        if (!l.getTooltip()) {
+                            l.bindTooltip(t, {permanent: true, direction: 'center',
+                                              className: 'pd-rot', opacity: 1,
+                                              offset: [0, 0]});
+                        } else if (l.getTooltip().getContent() !== t) {
+                            l.setTooltipContent(t);
+                        }
+                        // mantem o rotulo no ponto interno, nao no centro do bounds
+                        var pa = _pdAncora(l);
+                        if (pa) { try { l.getTooltip().setLatLng(pa); } catch (e3) {} }
+                        n++;
+                        return;
+                    }
+                }
+                if (l.getTooltip && l.getTooltip()) { l.unbindTooltip(); l.added = false; }
+            });
+            if (ligado) grupos.push(gl);
+        });
+        try { resetLabels(grupos); } catch (e) { /* labelgun ausente nao bloqueia */ }
+    }
+    window._pdAncora = _pdAncora;   // exposto para auditoria da âncora
+    window.pdRotulo = function(key, el) {
+        PD_ROT[key] = !PD_ROT[key];
+        if (el) el.classList.toggle('on', !!PD_ROT[key]);
+        _pdAtualizaRotulos();
+    };
+
+    window.pdToggle = function(key, on) { _pdApplyToggle(key, on); _pdAtualizaRotulos(); };
+    ['moveend','zoomend'].forEach(function(ev) { map.on(ev, _pdAtualizaRotulos); });
 
     window.pdOpacity = function(key, val) {
         val = parseFloat(val);
@@ -1885,7 +2657,7 @@
             PD_LAYERS[key].eachLayer(function(l) { if (l === _pdLockedLayer) isLocked = true; });
             if (isLocked) return;
         }
-        layer.setStyle(function(feature) { return _pdStyleWithFilter(key, feature); });
+        layer.setStyle(function(feature) { return _pdEstilo(key, feature); });
     };
 
     window.pdBasemap = function(name, btn) {
@@ -1898,7 +2670,24 @@
 
     window.pdToggleSidebar = function() {
         document.getElementById('pd-sidebar').classList.toggle('hidden');
+        _pdAjustaMapa();
     };
+
+    // O mapa e a barra de busca ocupam apenas o espaco entre os paineis:
+    // recolher um deles devolve a area ao mapa.
+    function _pdAjustaMapa() {
+        var sbOff = document.getElementById('pd-sidebar').classList.contains('hidden');
+        var rbEl  = document.getElementById('rb');
+        var rbOff = rbEl ? rbEl.classList.contains('hidden') : true;
+        var l = sbOff ? '0' : 'var(--sidebar-w)';
+        var r = rbOff ? '0' : 'var(--rw)';
+        ['map','map-search'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.style.left = l; el.style.right = r;
+        });
+        setTimeout(function() { if (map && map.invalidateSize) map.invalidateSize(); }, 280);
+    }
 
     // Zoneamento is already on map — show its legend and hide empty msg
     document.getElementById('lg-zona').style.display = '';
@@ -1987,13 +2776,12 @@
             }
 
             // Render in Z-order using filter-aware style
-            rl('macro',  layer_MACROZONEAMENTO_7,   function(f){return _pdStyleWithFilter('macro',f);});
-            rl('bacias', layer_BACIASHIDROGRAFICAS_2,function(f){return _pdStyleWithFilter('bacias',f);});
-            rl('zona',   layer_ZONEAMENTO_6,         function(f){return _pdStyleWithFilter('zona',f);});
-            rl('cod',    layer_COD_URB_5,             function(f){return _pdStyleWithFilter('cod',f);});
-            rl('zepam',  layer_ZEPAM_3,               function(f){return _pdStyleWithFilter('zepam',f);});
-            rl('zepec',  layer_ZEPEC_4,               function(f){return _pdStyleWithFilter('zepec',f);});
-            rl('viarias',layer_DIRETRIZESVIARIAS_1,   function(f){return _pdStyleWithFilter('viarias',f);});
+            rl('macro',  layer_MACROZONEAMENTO_7,   function(f){return _pdEstilo('macro',f);});
+            rl('zona',   layer_ZONEAMENTO_6,         function(f){return _pdEstilo('zona',f);});
+            rl('cod',    layer_COD_URB_5,             function(f){return _pdEstilo('cod',f);});
+            rl('zepam',  layer_ZEPAM_3,               function(f){return _pdEstilo('zepam',f);});
+            rl('zepec',  layer_ZEPEC_4,               function(f){return _pdEstilo('zepec',f);});
+            rl('viarias',layer_DIRETRIZESVIARIAS_1,   function(f){return _pdEstilo('viarias',f);});
 
             ctx.globalAlpha = 1;
 
@@ -2050,9 +2838,6 @@
                     {color:'rgb(255,191,0)',  label:'ZEPEC 2 — Guaripocaba',fv:'ZEPEC 2 - Guaripocaba'},
                     {color:'rgb(255,127,127)',label:'ZEPEC 3 — Região da Serrinha',fv:'ZEPEC 3 - Região da Serrinha'},
                 ]},
-                bacias:  {title:'Bacias Hidrográficas (Plano Diretor)', items:[
-                    {color:'rgb(255,158,23)', label:'Bacias (11 unidades)'},
-                ]},
                 viarias: {title:'Diretrizes Viárias (Plano Diretor)', items:[
                     {color:'rgb(0,255,255)',  label:'Via Arterial', line:true, fv:'Via Arterial'},
                     {color:'rgb(138,184,0)',  label:'Via Arterial Secundária', line:true, fv:'Via Arterial Secundária'},
@@ -2062,7 +2847,7 @@
             };
 
             // Collect active layers in order
-            var activeKeys = ['macro','bacias','zona','cod','zepam','zepec','viarias'].filter(function(k){
+            var activeKeys = ['macrot','macro','zonat','zona','cod','lotes','zepam','zepec','zerfu','aero','viariast','viarias','eixos'].filter(function(k){
                 return map.hasLayer(PD_LAYERS[k]) && (PD_OPACITY[k] !== undefined ? PD_OPACITY[k] : 0.65) > 0;
             });
 
@@ -2108,7 +2893,7 @@
 
                     def.items.forEach(function(it,ii){
                         // Skip items filtered off
-                        if(it.fv && PD_FILTER[k] && !PD_FILTER[k].has(it.fv)) return;
+                        
                         var sx=legX+PAD, sy=cy+1;
                         if(it.line) {
                             // Line symbol
@@ -2149,16 +2934,6 @@
         },30);
     };
 
-    // Onboarding
-    var OB_KEY='bp_legislacao_v7';
-    window.pdCloseOb = function(){
-        document.getElementById('pd-ob').classList.remove('visible');
-        localStorage.setItem(OB_KEY,'1');
-    };
-    // Show onboarding only if not seen before
-    if(!localStorage.getItem(OB_KEY)){
-        document.getElementById('pd-ob').classList.add('visible');
-    }
 })();
 </script>
 </body>
